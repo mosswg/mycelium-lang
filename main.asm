@@ -4,6 +4,7 @@
 %include "std/out.asm"
 %include "std/int.asm"
 %include "std/str.asm"
+%include "std/arg.asm"
 global _start
 
 section .data

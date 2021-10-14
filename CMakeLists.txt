@@ -18,4 +18,5 @@ add_executable(mxs
 include_directories(mxs .)
 if (BUILD_STD_LIB)
         add_subdirectory(std)
+        add_dependencies(mxs mxs_std)
 endif()

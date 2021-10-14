@@ -106,6 +106,7 @@ int~println:
   mov   rbp, rsp
 
   push  rax
+  push  rsi
 
   mov   rbx, rax
   mov   rax, rsp
@@ -121,6 +122,7 @@ int~println:
   add   rbx, 1
   call  out~puts
 
+  pop   rsi
   pop   rax
   pop   rbp
   ret

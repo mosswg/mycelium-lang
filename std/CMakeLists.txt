@@ -16,5 +16,6 @@ add_library(mxs_std
         str.asm
         out.asm
         sys.asm
+        arg.asm
         sys/x86_64.asm
         )
