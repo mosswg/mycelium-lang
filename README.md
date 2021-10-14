@@ -1,9 +1,8 @@
  # mxs
 
  ## std library
- ![](https://img.shields.io/github/directory-file-count/mossx-dev/mxs/std?type=asm)
- The mxs std library is entirely written in assembly by hand.
- Currently the std library is the only part of the language. Once the std library is extensive enough 
+ The mxs std library is entirely written in assembly by hand. <br>
+ Currently the std library is the only part of the project. Once the std library is extensive enough work on the actual language will begin. <br>
 
 
  ## How to Contribute
