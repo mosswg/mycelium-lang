@@ -7,7 +7,7 @@
 
  ## How to Contribute
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)<br>
-  - Pull requests are welcome and appreciated.
+  - Pull requests are very appreciated.
   - Please submit any issue you have [here](https://github.com/mossx-dev/mxs/issues/new/choose)
   - If you need to contact me directly send an email to moss@mossx.net
 
