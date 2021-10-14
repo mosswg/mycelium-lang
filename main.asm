@@ -15,8 +15,8 @@ section .text
 
 _start:
   call  main
-  mov   eax, esi              ; exit code
-  call  sys~exit             ; call exit
+  mov   eax, esi                ; exit code
+  call  sys~exit                ; call exit
 
 main:
   mov   r8, 1
