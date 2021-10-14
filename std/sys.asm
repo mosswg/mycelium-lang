@@ -6,8 +6,8 @@
 
   ;; Get platform specific file
 %ifdef _sys_x86_32_
-  %include "sys/x86_32.asm"
+  %include "std/sys/x86_32.asm"
 %else
-  %include "sys/x86_64.asm"
+  %include "std/sys/x86_64.asm"
 %endif
 %endif

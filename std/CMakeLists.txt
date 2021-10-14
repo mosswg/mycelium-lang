@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 3.15)
+project(mxs_std)
+
+set(CMAKE_ASM_NASM_LINK_EXECUTABLE "ld <CMAKE_ASM_NASM_LINK_FLAGS> <LINK_FLAGS> <OBJECTS>  -o <TARGET> <LINK_LIBRARIES>")
+
+include_directories(.)
+
+set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
+
+enable_language(ASM_NASM)
+
+set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
+
+add_library(mxs_std
+        int.asm
+        str.asm
+        out.asm
+        sys.asm
+        sys/x86_64.asm
+        )
