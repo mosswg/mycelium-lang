@@ -1,0 +1,9 @@
+# Ignore everything
+*
+
+# Unignore anything with an extention
+!*.*
+# Unignore folders
+!*/
+# Unignore makefile
+!makefile
