@@ -1,8 +1,8 @@
   ;; Author: Moss Gallagher
   ;; Data: 13-Oct-21
 
-%ifndef _std_out_asm_
-%define _std_out_asm_
+%ifndef _mxs_std_out_
+%define _mxs_std_out_
 
 
 %include "std/sys.asm"
@@ -66,4 +66,4 @@ out~putc:
   pop   rdi
   ret
 
-%endif
+%endif                          ; ifdef guard

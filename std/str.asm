@@ -1,5 +1,7 @@
   ;; Author: Moss Gallagher
   ;; Data: 13-Oct-21
+%ifndef _mxs_std_str_
+%define _mxs_std_str_
 
 %include "std/sys.asm"
 %include "std/out.asm"
@@ -96,3 +98,5 @@ str~println:
 
   pop   rbp
   ret
+
+%endif                          ; ifdef guard
