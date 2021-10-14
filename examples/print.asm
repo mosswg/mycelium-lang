@@ -1,20 +1,19 @@
   ;; Author: Moss Gallagher
   ;; Date: 12-Oct-21
 
-%include "std/out.asm"
-%include "std/int.asm"
+%include "std/sys.asm"
 %include "std/str.asm"
-%include "std/arg.asm"
+
 global _start
 
 section .data
   str:      db "Hello"
-  number: equ 128
-  loop_num: equ 100
+  loop_num: equ 25
 
 section .text
 
 _start:
+  mov   r15, rsp
   call  main
   mov   eax, esi                ; exit code
   call  sys~exit                ; call exit
