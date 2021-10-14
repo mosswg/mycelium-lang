@@ -58,9 +58,7 @@ int~to_string:
     sub rsi, 1
   .loop_check:
     cmp rsi, 0
-    jge .loop
-
-
+  jge .loop
 
   .return:
   mov rax, r9
