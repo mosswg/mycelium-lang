@@ -54,8 +54,8 @@ str~print:
   mov   rbx, rsi
   call  out~puts
 
-  pop   rbx
   pop   rsi
+  pop   rbx
   pop   rbp
   ret
 
