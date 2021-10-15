@@ -47,6 +47,66 @@ arr~del:
 
 ; Args
 ;   rax: pointer to the array
+;   rbx: string between the elements
+; Returns
+;   void
+arr~print:
+    push    rax
+    push    rcx
+    push    rdx
+    push    rsi
+    push    r9
+    push    r10
+    push    r11
+    mov     rcx, [rax]          ; Get length
+    lea     rdx, [rax]
+    add     rdx, rcx
+    mov     rcx, rdx            ; Get the end address
+
+    mov     r10, rax
+    mov     r11, rbx
+
+    mov     rdx, [r10+8]        ; Get the type into rax
+    mov     rax, rdx
+    call    type~sizeof         ; Get the size of each element into rsi
+    mov     r9, rsi             ; Move the size to a usable location
+
+    lea     r10, [r10+16]       ; Offset by 16 to account for size and type variables
+
+    ;; rax: vol
+    ;; rbx: vol
+    ;; rcx: end addr
+    ;; rdx: type
+    ;; r9:  size
+    ;; r10: ptr
+    ;; r11: print
+
+    .loop:
+        mov rax, [r10]
+        mov rbx, rdx
+        call type~print
+
+        mov     rax, 0xA
+        call    out~putc
+
+        add     r10, r9            ; Increment the index
+    .loop_check:
+        cmp     rcx, r10
+        jle     .loop
+
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     rsi
+    pop     rdx
+    pop     rcx
+    pop     rax                 ; Perserve the pointer to the start of the array
+    ret
+
+
+
+; Args
+;   rax: pointer to the array
 ; Returns
 ;   rsi: length of the array
 arr~len:
@@ -86,6 +146,32 @@ arr~get:
     pop     rax                 ; Perserve the pointer to the start of the array
     ret
 
+; Args
+;   rax: pointer to the array
+;   rbx: new size
+; Returns
+;   rsi: new pointer if needed
+arr~resize:
+    push    r11
+    push    r12
+    push    rax
+    mov     rcx, rbx
+    mov     r12, rbx
+    mov     rbx, [rax]
+    mov     rax, [rax+8]        ; Get type
+    call    type~sizeof
+    mov     rax, rcx
+    mul     rsi
+    mov     rcx, rax
+    mov     rax, rbx
+    mul     rsi
+    mov     rbx, rax
+    pop     rax
+    call    mem~reallocate
+    mov     [rsi], r12
+    pop     r12
+    pop     r11
+    ret
 
 
 %endif                          ; ifdef guard

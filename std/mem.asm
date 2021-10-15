@@ -34,4 +34,21 @@ mem~deallocate:
     syscall
     ret
 
+
+; Args
+;   rax: pointer to the current buffer
+;   rbx: current size
+;   rcx: new size
+; Returns
+;   rsi: new pointer (same as rax if not moved)
+mem~reallocate:
+    mov     rdi, rax
+    mov     rsi, rbx
+    mov     rdx, rcx
+    mov     r10, 0x1            ; Flags = MREMAP_MAYMOVE
+    mov     rax, sys~id~mremap
+    syscall
+    mov     rsi, rax
+    ret
+
 %endif                          ; ifdef guard
