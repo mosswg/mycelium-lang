@@ -3,7 +3,7 @@ project(mxs_std)
 
 set(CMAKE_ASM_NASM_LINK_EXECUTABLE "ld <CMAKE_ASM_NASM_LINK_FLAGS> <LINK_FLAGS> <OBJECTS>  -o <TARGET> <LINK_LIBRARIES>")
 
-include_directories(.)
+include_directories(..)
 
 set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
 
