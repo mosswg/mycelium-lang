@@ -18,6 +18,20 @@
   sys~id~mprotect:          equ 0x0A
   sys~id~munmap:            equ 0x0B
   sys~id~brk:               equ 0x0C
+  sys~id~rt_sigaction:      equ 0x0D
+  sys~id~rt_sigprocmask:    equ 0x0E
+  sys~id~rt_sigreturn:      equ 0x0F
+  sys~id~ioctl:             equ 0x10
+  sys~id~pread64:           equ 0x11
+  sys~id~pwrite64:          equ 0x12
+  sys~id~readv:             equ 0x13
+  sys~id~writev:            equ 0x14
+  sys~id~access:            equ 0x15
+  sys~id~pipe:              equ 0x16
+  sys~id~select:            equ 0x17
+  sys~id~sched_yield:       equ 0x18
+  sys~id~mremap:            equ 0x19
+  sys~id~msync:             equ 0x20
 
   sys~id~exit:              equ 0x3C
 
