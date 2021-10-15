@@ -19,4 +19,8 @@ add_executable(args
         args.asm
         )
 
+add_executable(arr
+        arr.asm
+        )
+
 include_directories(examples ..)
