@@ -132,7 +132,12 @@ int~println:
 int~digits:
   push  rbp
   mov   rbp, rsp
-  
+
+  cmp   rax, 0
+  jne   .non_zero
+  mov   rsi, 1
+  ret
+  .non_zero:
   push  rax
   push  rcx
   push  rdx
