@@ -38,6 +38,8 @@ exception~runtime~throw:
         mov     rbx, exception~runtime~bad_exception_number_len
         call    out~puts
     .switch_end:
+    mov     rax, 0xA
+    call    out~putc            ; New line
     pop     rax
     call sys~exit
     ret
