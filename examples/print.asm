@@ -7,7 +7,7 @@
 global _start
 
 section .data
-  str:      db "Hello"
+  str:      db "Hello", 0
   loop_num: equ 25
 
 section .text

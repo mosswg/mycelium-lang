@@ -29,7 +29,6 @@ str~length:
     mov     rdx, [rcx]
     cmp     dl, 0
     jne .loop
-  sub   rbx, 1
   mov   rsi, rbx
 
   pop   rdx
@@ -69,6 +68,7 @@ str~println:
   push  rbp
   mov   rbp, rsp
                         ; Perserve the used regiser value
+  push  rdi
   push  rbx
   push  rcx
   push  rdx
@@ -77,24 +77,32 @@ str~println:
 
   call  str~length              ; Get the length with the string on rax
 
-  mov   rbx, rsi                ; Store in rbx because puts needs it there
   lea   r8, [rax]               ; Get the start of the string
-  add   r8, rbx                 ; Move to the end of the string
-  mov   cl, 0xA                 ; Store a new line character in cl
-  mov   dl, [r8]                ; Store the current value at the end of the string
-  mov   [r8], cl                ; Put the new line at the end of the array
+  add   r8, rsi                 ; Move to the end of the string
+  mov   dl, 0xA
+  mov   bl, [r8+1]                ; Store the current value at the end of the string
+  mov   [r8], dl                ; Put the new line at the end of the array
+  mov   dl, 0x0
+  mov   [r8+1], dl              ; Put a null terminator at the end of the string
 
-  add   rbx, 1                  ; Increase the length of the string since we added a character
+  mov   rdx, rsi
+  add   rdx, 1                  ; Increase the length of the string since we added a character
+  mov   rsi, rax
+  mov   rdi, sys~fd~out
+  mov   rax, sys~id~write
 
-  call  out~puts                ; Write the string to sys~out
+  syscall                       ; Write the string to sys~out
 
-  mov   [r8], cl                ; Restore the old value at r8
+  mov   dl, 0
+  mov   [r8], dl                ; Re-add the null terminator
+  mov   [r8+1], bl              ; Restore the old value at r8
 
   pop   rsi
   pop   r8
   pop   rdx
   pop   rcx
   pop   rbx
+  pop   rdi
 
   pop   rbp
   ret
