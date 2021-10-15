@@ -17,5 +17,8 @@ add_library(mxs_std
         out.asm
         sys.asm
         arg.asm
+        type.asm
+        arr.asm
+        exception.asm
         sys/x86_64.asm
         )
