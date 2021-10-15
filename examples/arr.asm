@@ -14,7 +14,9 @@ global _start
 section .data
   err:      db "Usage: ./arg <size>", 0
   success:  db "Created array with size: ", 0
-  size:     equ 128
+  resize_success:  db "Resized array to size: ", 0
+  first_size:     equ 128
+  new_size:       equ 256
 
 section .text
 
@@ -35,18 +37,12 @@ main:
   call  sys~exit
 
   .valid_arg:
-    mov   rax, size
+    mov   rax, first_size
     mov   rbx, type~int
 
-    call  arr~new
-    mov   r14, rsi
-
-    mov   rax, 56
-    mov   rbx, type~int
     call  arr~new
     mov   r9, rsi
 
-    mov   rax, r14
     call  arr~len
 
     mov   rax, success
@@ -54,18 +50,22 @@ main:
     mov   rax, rsi
     call  int~println
 
-    mov   rax, success
-    call  str~print
     mov   rax, r9
+    mov   rbx, new_size
+    call  arr~resize
+
+    mov   rax, rsi
     call  arr~len
+
+
+    mov   rax, resize_success
+    call  str~print
     mov   rax, rsi
     call  int~println
 
+  
     mov   rax, r9
     call  arr~del
-    mov   rax, r14
-    call  arr~del
-
 
   mov   rsi, 0
   ret
