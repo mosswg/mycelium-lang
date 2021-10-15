@@ -12,10 +12,10 @@ option(BUILD_EXAMPLES "Build the example files into executables" OFF)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-if (BUILD_EXAMPLES)
-        add_subdirectory(examples)
-endif()
-
 if (BUILD_STD_LIB)
         add_subdirectory(std)
+endif()
+
+if (BUILD_EXAMPLES)
+        add_subdirectory(examples)
 endif()
