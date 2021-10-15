@@ -12,13 +12,15 @@
 ;   rsi: pointer to the string
 arg~get:
     push    rbx
-    lea     rbx, [r15]
 
-    cmp     rax, [rbx]                          ; Verify that the given index exists
-    jl      .valid_arg
+    cmp     rax, [r15]                          ; Verify that the given index exists
+    jle     .valid_arg
     mov     rax, exception~runtime~bad_index
     call    exception~runtime~throw
     .valid_arg:
+    mov     rbx, 8
+    mul     rbx
+    mov     rbx, r15
     add     rbx, rax
     mov     rsi, [rbx]
     pop     rbx
