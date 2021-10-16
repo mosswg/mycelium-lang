@@ -49,21 +49,27 @@ out~puts:
 ; Returns
 ;   void
 out~putc:
-  push  rbx
   push  rcx
+
   push  rdx
+  push  rdi
+  push  rsi
+  push  rbx
 
   push  rax
   mov   rax, sys~id~write
-  mov   rbx, sys~fd~out
-  mov   rcx, rsp        ; Use the stack as a pointer to the character we pushed top it
+  mov   rdi, sys~fd~out
+  mov   rsi, rsp        ; Use the stack as a pointer to the character we pushed top it
   mov   rdx, 1
   syscall
 
   pop   rax
-  pop   rdx
+  pop   rbx
   pop   rsi
   pop   rdi
+  pop   rdx
+
+  pop   rcx
   ret
 
 %endif                          ; ifdef guard
