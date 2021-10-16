@@ -47,9 +47,10 @@ arr~del:
 
 ; Args
 ;   rax: pointer to the array
-;   rbx: string between the elements
 ; Returns
 ;   void
+arr~print_string:
+    .string:    db ", ", 0x0
 arr~print:
     push    rax
     push    rcx
@@ -58,28 +59,156 @@ arr~print:
     push    r9
     push    r10
     push    r11
-    mov     rcx, [rax]          ; Get length
-    lea     rdx, [rax]
-    add     rdx, rcx
-    mov     rcx, rdx            ; Get the end address
-
     mov     r10, rax
     mov     r11, rbx
-
     mov     rdx, [r10+8]        ; Get the type into rax
     mov     rax, rdx
     call    type~sizeof         ; Get the size of each element into rsi
     mov     r9, rsi             ; Move the size to a usable location
 
+    lea     rcx, [r10]
+
+    mov     rax, [r10]          ; Get length
+    mul     r9
+
+    add     rcx, rax            ; Get the end address
+
+    mov     rax, '['
+    call    out~putc
+
     lea     r10, [r10+16]       ; Offset by 16 to account for size and type variables
 
-    ;; rax: vol
-    ;; rbx: vol
-    ;; rcx: end addr
-    ;; rdx: type
-    ;; r9:  size
-    ;; r10: ptr
-    ;; r11: print
+
+    mov rax, [r10]
+    mov rbx, rdx
+    call type~print
+
+    add     r10, r9            ; Increment the index
+
+    .loop:
+        mov     rax, arr~print_string
+        mov     rbx, 2
+        call    out~puts
+
+
+        mov rax, [r10]
+        mov rbx, rdx
+        call type~print
+
+        add     r10, r9            ; Increment the index
+    .loop_check:
+        cmp     r10, rcx
+        jl     .loop
+
+
+    mov     rax, ']'
+    call    out~putc
+
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     rsi
+    pop     rdx
+    pop     rcx
+    pop     rax                 ; Perserve the pointer to the start of the array
+    ret
+
+; Args
+;   rax: pointer to the array
+; Returns
+;   void
+arr~println:
+    push    rax
+    push    rcx
+    push    rdx
+    push    rsi
+    push    r9
+    push    r10
+    push    r11
+    mov     r10, rax
+    mov     r11, rbx
+    mov     rdx, [r10+8]        ; Get the type into rax
+    mov     rax, rdx
+    call    type~sizeof         ; Get the size of each element into rsi
+    mov     r9, rsi             ; Move the size to a usable location
+
+    lea     rcx, [r10]
+
+    mov     rax, [r10]          ; Get length
+    mul     r9
+
+    add     rcx, rax            ; Get the end address
+
+    mov     rax, '['
+    call    out~putc
+
+    lea     r10, [r10+16]       ; Offset by 16 to account for size and type variables
+
+
+    mov rax, [r10]
+    mov rbx, rdx
+    call type~print
+
+    add     r10, r9            ; Increment the index
+
+    .loop:
+        mov     rax, arr~print_string
+        mov     rbx, 2
+        call    out~puts
+
+
+        mov rax, [r10]
+        mov rbx, rdx
+        call type~print
+
+        add     r10, r9            ; Increment the index
+    .loop_check:
+        cmp     r10, rcx
+        jl     .loop
+
+
+    mov     rax, ']'
+    call    out~putc
+    mov     rax, 0xA
+    call    out~putc
+
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     rsi
+    pop     rdx
+    pop     rcx
+    pop     rax                 ; Perserve the pointer to the start of the array
+    ret
+
+
+; Args
+;   rax: pointer to the array
+; Returns
+;   void
+arr~printn:
+    push    rax
+    push    rcx
+    push    rdx
+    push    rsi
+    push    r9
+    push    r10
+    mov     r10, rax
+    mov     rdx, [r10+8]        ; Get the type into rax
+    mov     rax, rdx
+    call    type~sizeof         ; Get the size of each element into rsi
+    mov     r9, rsi             ; Move the size to a usable location
+
+    lea     rcx, [r10]
+
+    mov     rax, [r10]          ; Get length
+    mul     r9
+
+    add     rcx, rax            ; Get the end address
+
+
+
+    lea     r10, [r10+16]       ; Offset by 16 to account for size and type variables
 
     .loop:
         mov rax, [r10]
@@ -91,10 +220,9 @@ arr~print:
 
         add     r10, r9            ; Increment the index
     .loop_check:
-        cmp     rcx, r10
-        jle     .loop
+        cmp     r10, rcx
+        jl     .loop
 
-    pop     r11
     pop     r10
     pop     r9
     pop     rsi
@@ -102,6 +230,7 @@ arr~print:
     pop     rcx
     pop     rax                 ; Perserve the pointer to the start of the array
     ret
+
 
 
 
