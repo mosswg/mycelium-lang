@@ -310,7 +310,7 @@ arr~set:
 ;   rax: pointer to the array
 ;   rbx: new size
 ; Returns
-;   rsi: new pointer if needed
+;   rax: new pointer if needed
 arr~resize:
     push    r11
     push    r12
@@ -328,9 +328,102 @@ arr~resize:
     mov     rbx, rax
     pop     rax
     call    mem~reallocate
-    mov     [rsi], r12
+    mov     [rax], r12
     pop     r12
     pop     r11
+    ret
+
+; Args
+;   rax: pointer to the array
+;   rbx: the amount increase size by
+; Returns
+;   rax: new address pointer if needed
+;   rsi: the new size
+arr~increase_size:
+    push    r11
+    push    r12
+    push    r13
+    push    r14
+    push    rax
+
+    mov     r13, rbx            ; Store the increase amount
+    lea     r12, [rax]          ; Store the address
+    mov     r11, [rax+8]        ; Get the type
+
+    mov     rax, r11
+    call    type~sizeof         ; type.sizeof(rax)
+
+    mov     rbx, rsi            ; rbx = size of each element
+    mov     rax, [r12]          ; size
+    mov     r14, rax
+    add     rax, r13            ; rax = current_length + r13
+
+    mov     rsi, rax
+
+    mul     rbx                 ; rax = rax * rbx a.k.a the byte length of the array
+
+    mov     rcx, rax
+
+    mov     rax, r14
+
+    mul     rbx
+
+    mov     rbx, rax
+
+    pop     rax
+    push    rsi
+    call    mem~reallocate
+    mov     rbx, r14
+    add     rbx, r13
+    mov     [rax], rbx
+
+    pop     rsi
+
+    pop     r14
+    pop     r13
+    pop     r12
+    pop     r11
+    ret
+
+; Args
+;   rax: pointer to the array
+;   rbx: value to push
+; Returns
+;   rax: the new pointer if needed
+;
+; Note: This function is not very performant. It is recommended that if you know how many elements you want to append you use resize then write each element after
+arr~push:
+    push    r9
+    push    r10
+    mov     r9, rbx             ; Store value to push in temp place
+    mov     rbx, 1              ; Increase the size by 1
+    call    arr~increase_size
+
+    mov     rbx, rsi            ; Put the new size as the index for set
+    sub     rbx, 1
+    mov     rcx, r9             ; Put the value as the push value to write the end of the array
+    call    arr~set             ; Set the value
+
+    pop     r10
+    pop     r9
+    ret
+
+; Args
+;   rax: pointer to the array
+; Returns
+;   rsi: value
+arr~pop:
+    push    rbx
+    push    rcx
+    mov     rbx, [rax]          ; Load the size of the array into rbx
+
+    sub     rbx, 1
+
+    call    arr~get             ; rax.get(rbx)
+    mov     [rax], rbx
+
+    pop     rcx
+    pop     rbx
     ret
 
 
