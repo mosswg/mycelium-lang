@@ -57,7 +57,6 @@ main:
   call  out~putc
 
 
-
   mov   rbx, 0
   .loop:
       mov   rax, r9
@@ -67,6 +66,11 @@ main:
   .loop_check:
       cmp   rbx, first_size
       jl    .loop
+
+  mov   rax, r9
+  mov   rbx, 10
+  call  arr~push                ; rax.push(10)
+  mov   r9, rax
 
   mov   rax, write_success
   call  str~print
@@ -80,7 +84,7 @@ main:
   mov   rax, r9
   mov   rbx, new_size
   call  arr~resize
-  mov   r9, rsi
+  mov   r9, rax
 
   mov   rax, resize_success
   call  str~print
