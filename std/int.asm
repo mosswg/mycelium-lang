@@ -136,6 +136,7 @@ int~digits:
   cmp   rax, 0
   jne   .non_zero
   mov   rsi, 1
+  pop   rbp
   ret
   .non_zero:
   push  rax
