@@ -77,7 +77,7 @@ arr~print:
     call    out~putc
 
     lea     r10, [r10+16]       ; Offset by 16 to account for size and type variables
-
+    lea     rcx, [rcx+16]       ; Offset the end address too
 
     mov rax, [r10]
     mov rbx, rdx
@@ -143,7 +143,7 @@ arr~println:
     call    out~putc
 
     lea     r10, [r10+16]       ; Offset by 16 to account for size and type variables
-
+    lea     rcx, [rcx+16]       ; Offset the end address too
 
     mov rax, [r10]
     mov rbx, rdx
@@ -209,6 +209,7 @@ arr~printn:
 
 
     lea     r10, [r10+16]       ; Offset by 16 to account for size and type variables
+    lea     rcx, [rcx+16]       ; Offset the end address too
 
     .loop:
         mov rax, [r10]
