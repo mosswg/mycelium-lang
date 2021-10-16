@@ -5,6 +5,7 @@
 %define _mxs_std_mem_
 
 %include "std/sys.asm"
+%include "std/exception.asm"
 
 ; Args
 ;   rax: amount of memory in bytes
@@ -40,7 +41,7 @@ mem~deallocate:
 ;   rbx: current size
 ;   rcx: new size
 ; Returns
-;   rsi: new pointer (same as rax if not moved)
+;   rax: new pointer (same as rax if not moved)
 mem~reallocate:
     mov     rdi, rax
     mov     rsi, rbx
@@ -48,7 +49,13 @@ mem~reallocate:
     mov     r10, 0x1            ; Flags = MREMAP_MAYMOVE
     mov     rax, sys~id~mremap
     syscall
-    mov     rsi, rax
+    cmp     rax, 0
+    jg      .return
+
+    mov     rax, exception~runtime~bad_allocation
+    call    exception~runtime~throw
+
+    .return:
     ret
 
 %endif                          ; ifdef guard
