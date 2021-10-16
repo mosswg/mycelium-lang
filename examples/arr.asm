@@ -13,10 +13,11 @@ global _start
 
 section .data
   err:      db "Usage: ./arg <size>", 0
-  success:  db "Created array with size: ", 0
-  resize_success:  db "Resized array to size: ", 0
-  first_size:     equ 128
-  new_size:       equ 256
+  success_pre:  db "Created array with size ", 0
+  success_post: db " with an address of ", 0
+  resize_success:  db "Resized array to size ", 0
+  first_size:     equ 8
+  new_size:       equ 16
 
 section .text
 
@@ -27,45 +28,58 @@ _start:
   call  sys~exit                ; call exit
 
 main:
-  call  arg~argc
-  cmp   rsi, 1
-  jne   .valid_arg
+  mov   rax, first_size
+  mov   rbx, type~int
 
-  mov   rax, err
-  call  str~println
-  mov   rax, 1
-  call  sys~exit
+  call  arr~new
+  mov   r9, rsi
 
-  .valid_arg:
-    mov   rax, first_size
-    mov   rbx, type~int
+  mov   rax, success_pre
+  call  str~print
 
-    call  arr~new
-    mov   r9, rsi
+  mov   rax, r9
+  call  arr~len
 
-    call  arr~len
+  mov   rax, rsi
+  call  int~print
 
-    mov   rax, success
-    call  str~print
-    mov   rax, rsi
-    call  int~println
+  mov   rax, success_post
+  call  str~print
 
-    mov   rax, r9
-    mov   rbx, new_size
-    call  arr~resize
+  mov   rax, r9
+  call  int~println
 
-    mov   rax, rsi
-    call  arr~len
+  mov   rax, r9
+  call  arr~println
 
 
-    mov   rax, resize_success
-    call  str~print
-    mov   rax, rsi
-    call  int~println
+
+  mov   rax, r9
+  mov   rbx, new_size
+  call  arr~resize
+  mov   r9, rsi
+
+  mov   rax, resize_success
+  call  str~print
+
+  mov   rax, r9
+  call  arr~len
+
+  mov   rax, rsi
+  call  int~print
+
+  mov   rax, success_post
+  call  str~print
+
+  mov   rax, r9
+  call  int~println
+
+  mov   rax, r9
+  call  arr~println
 
   
-    mov   rax, r9
-    call  arr~del
+  mov   rax, r9
+  call  arr~del
 
   mov   rsi, 0
   ret
