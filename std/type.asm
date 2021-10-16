@@ -23,7 +23,8 @@
 ; Returns
 ;   rsi: the size
 type~sizeof:
-    push rbx
+    push    rax
+    push    rbx
     cmp     rax, 4
     jg      .invalid_type
     cmp     rax, 0
@@ -39,7 +40,8 @@ type~sizeof:
         add     rsi, rax
         lea     rax, [rsi]
     mov     esi, [rax]
-    pop rbx
+    pop     rbx
+    pop     rax
     ret
 
 ; Args
