@@ -61,6 +61,7 @@ main:
   .loop:
       mov   rax, r9
       mov   rcx, rbx
+      mov   rdx, type#int
       call  arr~set
       add   rbx, 1
   .loop_check:
