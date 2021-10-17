@@ -347,25 +347,44 @@ arr~set:
 ; Returns
 ;   rax: new pointer if needed
 arr~resize:
-    push    r11
-    push    r12
+    push    rdx
+    push    rcx
+
+    mov     rcx, [rax]
+    mov     rdx, [rax+arr#meta#user_size]
+
+    call    arr~total_metadata
+    sub     rcx, rsi
+
     push    rax
-    mov     rcx, rbx
-    mov     r12, rbx
-    mov     rbx, [rax]
-    mov     rax, [rax+8]        ; Get type
-    call    type~sizeof
+    push    rbx
+
     mov     rax, rcx
-    mul     rsi
+    mov     rbx, arr#global_element_size
+
+    mul     rbx
     mov     rcx, rax
-    mov     rax, rbx
-    mul     rsi
-    mov     rbx, rax
+
+    pop     rbx
     pop     rax
+
+    add     rdx, rsi
+
+    cmp     rdx, rcx
+    jl      .enough_mem
+
+    push    rbx
+    mov     rbx, rcx
+    add     rcx, arr#global_allocate_stride
     call    mem~reallocate
-    mov     [rax], r12
-    pop     r12
-    pop     r11
+
+    .enough_mem:
+
+    mov     [rax+arr#meta#user_size], rbx
+
+    pop     rcx
+    pop     rdx
+    ret
     ret
 
 ; Args
