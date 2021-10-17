@@ -394,49 +394,45 @@ arr~resize:
 ;   rax: new address pointer if needed
 ;   rsi: the new size
 arr~increase_size:
-    push    r11
-    push    r12
-    push    r13
-    push    r14
+    push    rdx
+    push    rcx
+
+    mov     rcx, [rax]
+    mov     rdx, [rax+arr#meta#user_size]
+
+    call    arr~total_metadata
+    sub     rcx, rsi
+
     push    rax
+    push    rbx
 
-    mov     r13, rbx            ; Store the increase amount
-    lea     r12, [rax]          ; Store the address
-    mov     r11, [rax+8]        ; Get the type
-
-    mov     rax, r11
-    call    type~sizeof         ; type.sizeof(rax)
-
-    mov     rbx, rsi            ; rbx = size of each element
-    mov     rax, [r12]          ; size
-    mov     r14, rax
-    add     rax, r13            ; rax = current_length + r13
-
-    mov     rsi, rax
-
-    mul     rbx                 ; rax = rax * rbx a.k.a the byte length of the array
-
-    mov     rcx, rax
-
-    mov     rax, r14
+    mov     rax, rcx
+    mov     rbx, arr#global_element_size
 
     mul     rbx
+    mov     rcx, rax
 
-    mov     rbx, rax
-
+    pop     rbx
     pop     rax
-    push    rsi
+
+    add     rdx, rsi
+
+    cmp     rdx, rcx
+    jl      .enough_mem
+
+    push    rbx
+    mov     rbx, rcx
+    add     rcx, arr#global_allocate_stride
     call    mem~reallocate
-    mov     rbx, r14
-    add     rbx, r13
-    mov     [rax], rbx
 
-    pop     rsi
+    .enough_mem:
 
-    pop     r14
-    pop     r13
-    pop     r12
-    pop     r11
+    add     [rax+arr#meta#user_size], rbx
+
+    mov     rsi, [rax+arr#meta#user_size]
+
+    pop     rcx
+    pop     rdx
     ret
 
 ; Args
