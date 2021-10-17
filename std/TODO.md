@@ -8,7 +8,8 @@ Currently arrays hold two metadata values, size and data type. They are stored b
  * [x] Add a type specific extra metadata size (the offset from that data to the user data)
 #### Implementation
 Arrays now hold 4 pieces of meta data for every type memory size, user size, array type, and extra metadata size. <br> 
-Additionally each element in the array is store as a set of type and data so repersentation of the whole array looks like [memory size, user size, array type, extra metadata size, extra metadata..., type, data, type, data, etc...]
+Additionally each element in the array is store as a set of type and data so repersentation of the whole array looks like <br>
+`[memory size, user size, array type, extra metadata size, extra metadata..., type, data, type, data, etc...]`
  
 ## std/out
 ### Buffered Output
