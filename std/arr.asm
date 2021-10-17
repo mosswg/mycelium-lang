@@ -16,13 +16,15 @@ arr#meta#user_size              equ 8
 arr#meta#type                   equ 16
 arr#meta#meta_size              equ 24
 
-arr#global_stride:              equ 25*8        ; The memory size of an array is always a multiple of this + the type specific metadata size
+arr#global_allocate_stride:     equ 25*8        ; The memory size of an array is always a multiple of this + the type specific metadata size
 arr#type#global_meta:           equ 4*8
 
 arr#type#basic:                 equ 0
 arr#type#2d:                    equ 1
 arr#type#vector:                equ 2
 arr#type#string:                equ 3
+
+arr#global_element_size         equ 8
 
 arr#type#metadata_sizes:        db 0, 2*8, 4*8, 0
 
@@ -52,11 +54,12 @@ arr#metadata_size:
 ;   void
 arr#populate_metadata:
     push    rax
+    push    rsi
     mov     [rax+arr#meta#user_size], rcx               ; User size
 
     mov     [rax+arr#meta#type], rbx                    ; Array Type
 
-    mov     rcx, arr#global_stride
+    mov     rcx, arr#global_allocate_stride
 
     lea     rdx, [rax]
     mov     rax, rbx
@@ -71,6 +74,7 @@ arr#populate_metadata:
 
     mov     [rax+arr#meta#mem_size], rcx                ; Memory Size
 
+    pop     rsi
     pop     rax
     ret
 
@@ -88,7 +92,7 @@ arr#new:
 
     call    arr#metadata_size               ; Put the total metadata size into rsi
 
-    mov     rax, arr#global_stride          ; Load the stride into rax
+    mov     rax, arr#global_allocate_stride          ; Load the stride into rax
 
     add     rax, rsi                        ; Add the stride and type specific metadata size
     add     rax, arr#type#global_meta       ; Add the global metadata size
@@ -290,10 +294,7 @@ arr~printn:
     push    r9
     push    r10
     mov     r10, rax
-    mov     rdx, [r10+8]        ; Get the type into rax
-    mov     rax, rdx
-    call    type~sizeof         ; Get the size of each element into rsi
-    mov     r9, rsi             ; Move the size to a usable location
+    mov     r9, arr#global_element_size ; Move the size to a usable location
 
     lea     rcx, [r10]
 
@@ -365,7 +366,7 @@ arr~get:
     shr     rbx, 1
 
     add     rsi, rbx
-    mov     rsi, [rsi]
+    mov     rsi, [rsi+arr#global_element_size]
 
     pop     rax                 ; Perserve the pointer to the start of the array
     ret
