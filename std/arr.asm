@@ -109,6 +109,26 @@ arr~del:
     call    mem~deallocate
     ret
 
+; Args
+;   rax: pointer to the array
+; Returns
+;   rsi: amount of metadata in bytes
+arr~total_meta:
+    mov     rsi, [rax+arr#meta#meta_size]
+    add     rsi, arr#type#global_meta
+    ret
+
+; Args
+;   rax: pointer to the array
+; Returns
+;   rsi: pointer to the data after the metadata
+arr~addr_after_meta:
+    push    rax
+    mov     rsi, [rax+arr#meta#meta_size]
+    add     rax, rsi
+    mov     rsi, rax
+    pop     rax
+    ret
 
 ; Args
 ;   rax: pointer to the array
