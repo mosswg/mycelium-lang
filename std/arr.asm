@@ -353,25 +353,20 @@ arr~len:
 ; Returns
 ;   rsi: element
 arr~get:
-    mov     rsi, [rax]
-    cmp     rsi, rbx
+    mov     rsi, [rax]          ; Get the length
+    cmp     rsi, rbx            ; Validate index
     jg      .valid_index
     mov     rax, exception~runtime~bad_index
     call    exception~runtime~throw
 
     .valid_index:
     push    rax
-    push    rax
-    mov     rax, [rax+8]        ; Get the type into rax
-    call    type~sizeof         ; Get the size of each element into rsi
 
-    mov     rax, rbx
-    mul     rsi                 ; Get the byte index of the element
-    mov     rsi, rax
-    pop     rax
-    add     rax, rsi            ; Get move the index minus 16
+    call    arr~addr_after_meta
+    shr     rbx, 1
 
-    mov     rsi, [rax+16]       ; Offset by 16 to account for size and type variables
+    add     rsi, rbx
+    mov     rsi, [rsi]
 
     pop     rax                 ; Perserve the pointer to the start of the array
     ret
@@ -384,25 +379,20 @@ arr~get:
 ; Returns
 ;   void
 arr~set:
-    mov     rsi, [rax]          ; Get size
-    cmp     rsi, rbx            ; Validate Index
+    mov     rsi, [rax]          ; Get the length
+    cmp     rsi, rbx            ; Validate index
     jg      .valid_index
     mov     rax, exception~runtime~bad_index
     call    exception~runtime~throw
 
     .valid_index:
     push    rax
-    push    rax
-    mov     rax, [rax+8]        ; Get the type into rax
-    call    type~sizeof         ; Get the size of each element into rsi
 
-    mov     rax, rbx
-    mul     rsi                 ; Get the byte index of the element
-    mov     rsi, rax
-    pop     rax
-    add     rax, rsi            ; Get move the index minus 16
+    call    arr~addr_after_meta
+    shr     rbx, 1
 
-    mov     [rax+16], rcx       ; Offset by 16 to account for size and type variables
+    add     rsi, rbx
+    mov     [rsi], rcx
 
     pop     rax                 ; Perserve the pointer to the start of the array
     ret
