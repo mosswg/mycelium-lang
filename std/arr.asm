@@ -279,7 +279,7 @@ arr~printn:
 ; Returns
 ;   rsi: length of the array
 arr~len:
-    mov     rsi, [rax]
+    mov     rsi, [rax+arr#meta#user_size]
     ret
 
 
