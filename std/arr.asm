@@ -312,10 +312,12 @@ arr~get:
 ;   rax: pointer to the array
 ;   rbx: index of the element
 ;   rcx: write value
+;   rdx: type
 ; Returns
 ;   void
 arr~set:
-    mov     rsi, [rax]          ; Get the length
+
+    mov     rsi, [rax+arr#meta#user_size]          ; Get the length
     cmp     rsi, rbx            ; Validate index
     jg      .valid_index
     mov     rax, exception~runtime~bad_index
@@ -325,10 +327,14 @@ arr~set:
     push    rax
 
     call    arr~addr_after_meta
-    shr     rbx, 1
+
+    shl     rbx, 1
 
     add     rsi, rbx
-    mov     [rsi], rcx
+    mov     [rsi], rdx
+    mov     [rsi+arr#global_element_size], rcx
+
+    shr     rbx, 1              ; Reset rbx to orignal value
 
     pop     rax                 ; Perserve the pointer to the start of the array
     ret
