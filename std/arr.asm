@@ -129,6 +129,7 @@ arr~total_meta:
 arr~addr_after_meta:
     push    rax
     mov     rsi, [rax+arr#meta#meta_size]
+    add     rsi, arr#type#global_meta
     add     rax, rsi
     mov     rsi, rax
     pop     rax
