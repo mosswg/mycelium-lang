@@ -289,7 +289,7 @@ arr~len:
 ; Returns
 ;   rsi: element
 arr~get:
-    mov     rsi, [rax]          ; Get the length
+    mov     rsi, [rax+arr#meta#user_size]          ; Get the length
     cmp     rsi, rbx            ; Validate index
     jg      .valid_index
     mov     rax, exception~runtime~bad_index
