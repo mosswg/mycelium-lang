@@ -148,25 +148,22 @@ arr~print:
     push    rsi
     push    r9
     push    r10
-    push    r11
     mov     r10, rax
-    mov     r11, rbx
-    mov     rdx, [r10+8]        ; Get the type into rax
-    mov     rax, rdx
-    call    type~sizeof         ; Get the size of each element into rsi
-    mov     r9, rsi             ; Move the size to a usable location
+    mov     r9, arr#global_element_size*2 ; Move the size to a usable location
+
+
+    mov     rax, [r10+arr#meta#user_size]          ; Get length
+
+    mul     r9                  ; Multiple by the size of element stride
 
     lea     rcx, [r10+arr#meta#meta_size]
-
-    mov     rax, [r10]          ; Get length
-    mul     r9
 
     add     rcx, rax            ; Get the end address
 
     mov     rax, '['
     call    out~putc
 
-    lea     r10, [r10+arr#meta#meta_size]       ; Offset by to the amount of metadata
+    lea     r10, [r10+arr#type#global_meta]       ; Offset by to the amount of metadata
 
     mov     rsi, [r10]          ; Get the amount of metadata
 
@@ -174,8 +171,8 @@ arr~print:
 
     add     rcx, rsi            ; Offset the end address too
 
-    mov     rax, [r10]
-    mov     rbx, rdx
+    mov     rax, [r10+8]
+    mov     rbx, [r10]
     call    type~print
 
     add     r10, r9            ; Increment the index
@@ -186,8 +183,8 @@ arr~print:
         call    out~puts
 
 
-        mov     rax, [r10]
-        mov     rbx, rdx
+        mov     rax, [r10+8]
+        mov     rbx, [r10]
         call    type~print
 
         add     r10, r9            ; Increment the index
@@ -199,7 +196,6 @@ arr~print:
     mov     rax, ']'
     call    out~putc
 
-    pop     r11
     pop     r10
     pop     r9
     pop     rsi
