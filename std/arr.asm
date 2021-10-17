@@ -161,8 +161,13 @@ arr~print:
     mov     rax, '['
     call    out~putc
 
-    lea     r10, [r10+16]       ; Offset by 16 to account for size and type variables
-    lea     rcx, [rcx+16]       ; Offset the end address too
+    lea     r10, [r10+arr#meta#meta_size]       ; Offset by to the amount of metadata
+
+    mov     rsi, [r10]          ; Get the amount of metadata
+
+    add     r10, rsi            ; Add metadata offset to
+
+    add     rcx, rsi            ; Offset the end address too
 
     mov rax, [r10]
     mov rbx, rdx
@@ -227,8 +232,13 @@ arr~println:
     mov     rax, '['
     call    out~putc
 
-    lea     r10, [r10+16]       ; Offset by 16 to account for size and type variables
-    lea     rcx, [rcx+16]       ; Offset the end address too
+    lea     r10, [r10+arr#meta#meta_size]       ; Offset by to the amount of metadata
+
+    mov     rsi, [r10]          ; Get the amount of metadata
+
+    add     r10, rsi            ; Add metadata offset to
+
+    add     rcx, rsi            ; Offset the end address too
 
     mov rax, [r10]
     mov rbx, rdx
@@ -292,6 +302,14 @@ arr~printn:
     add     rcx, rax            ; Get the end address
 
 
+    lea     r10, [r10+arr#meta#meta_size]       ; Offset by to the amount of metadata
+    lea     rcx, [rcx+arr#meta#meta_size]       ; Offset the end address too
+
+    mov     rsi, [r10]          ; Get the amount of metadata
+
+    add     r10, rsi            ; Add metadata offset to
+
+    add     rcx, rsi            ; Offset the end address too
 
     lea     r10, [r10+16]       ; Offset by 16 to account for size and type variables
     lea     rcx, [rcx+16]       ; Offset the end address too
