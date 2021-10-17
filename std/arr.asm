@@ -252,8 +252,8 @@ arr~println:
         call    out~puts
 
 
-        mov     rax, [r10]
-        mov     rbx, rdx
+        mov     rax, [r10+8]
+        mov     rbx, [r10]
         call    type~print
 
         add     r10, r9            ; Increment the index
@@ -314,8 +314,8 @@ arr~printn:
 
 
     .loop:
-        mov rax, [r10]
-        mov rbx, rdx
+        mov     rax, [r10+8]
+        mov     rbx, [r10]
         call type~print
 
         mov     rax, 0xA
