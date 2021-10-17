@@ -151,7 +151,7 @@ arr~print:
     call    type~sizeof         ; Get the size of each element into rsi
     mov     r9, rsi             ; Move the size to a usable location
 
-    lea     rcx, [r10]
+    lea     rcx, [r10+arr#meta#meta_size]
 
     mov     rax, [r10]          ; Get length
     mul     r9
@@ -169,9 +169,9 @@ arr~print:
 
     add     rcx, rsi            ; Offset the end address too
 
-    mov rax, [r10]
-    mov rbx, rdx
-    call type~print
+    mov     rax, [r10]
+    mov     rbx, rdx
+    call    type~print
 
     add     r10, r9            ; Increment the index
 
@@ -181,9 +181,9 @@ arr~print:
         call    out~puts
 
 
-        mov rax, [r10]
-        mov rbx, rdx
-        call type~print
+        mov     rax, [r10]
+        mov     rbx, rdx
+        call    type~print
 
         add     r10, r9            ; Increment the index
     .loop_check:
@@ -222,7 +222,7 @@ arr~println:
     call    type~sizeof         ; Get the size of each element into rsi
     mov     r9, rsi             ; Move the size to a usable location
 
-    lea     rcx, [r10]
+    lea     rcx, [r10+arr#meta#meta_size]
 
     mov     rax, [r10]          ; Get length
     mul     r9
@@ -240,9 +240,9 @@ arr~println:
 
     add     rcx, rsi            ; Offset the end address too
 
-    mov rax, [r10]
-    mov rbx, rdx
-    call type~print
+    mov     rax, [r10]
+    mov     rbx, rdx
+    call    type~print
 
     add     r10, r9            ; Increment the index
 
@@ -252,9 +252,9 @@ arr~println:
         call    out~puts
 
 
-        mov rax, [r10]
-        mov rbx, rdx
-        call type~print
+        mov     rax, [r10]
+        mov     rbx, rdx
+        call    type~print
 
         add     r10, r9            ; Increment the index
     .loop_check:
@@ -266,6 +266,7 @@ arr~println:
     call    out~putc
     mov     rax, 0xA
     call    out~putc
+
 
     pop     r11
     pop     r10
@@ -311,8 +312,6 @@ arr~printn:
 
     add     rcx, rsi            ; Offset the end address too
 
-    lea     r10, [r10+16]       ; Offset by 16 to account for size and type variables
-    lea     rcx, [rcx+16]       ; Offset the end address too
 
     .loop:
         mov rax, [r10]
