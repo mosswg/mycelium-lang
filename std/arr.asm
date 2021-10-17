@@ -328,13 +328,13 @@ arr~set:
 
     call    arr~addr_after_meta
 
-    shl     rbx, 1
+    shl     rbx, 4              ; Index * 2 to compensate for types and then index * 8 to compensate for the size of each element
 
     add     rsi, rbx
     mov     [rsi], rdx
     mov     [rsi+arr#global_element_size], rcx
 
-    shr     rbx, 1              ; Reset rbx to orignal value
+    shr     rbx, 4              ; Reset rbx to orignal value
 
     pop     rax                 ; Perserve the pointer to the start of the array
     ret
