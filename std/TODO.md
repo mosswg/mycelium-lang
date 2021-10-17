@@ -2,10 +2,13 @@
 ### More Metadata
 Currently arrays hold two metadata values, size and data type. They are stored before the user data in the format of [size, data type, ...]. <br>
 #### Planned Changes
- * [ ] Change size to used size
- * [ ] Add memory size for more better resize and push performance
+ * [x] Change size to used size
+ * [x] Add memory size for more better resize and push performance
  * [ ] Add array type for 2d, const, and other planned array types
- * [ ] Add a type specific extra metadata size (the offset from that data to the user data)
+ * [x] Add a type specific extra metadata size (the offset from that data to the user data)
+#### Implementation
+Arrays now hold 4 pieces of meta data for every type memory size, user size, array type, and extra metadata size. <br> 
+Additionally each element in the array is store as a set of type and data so repersentation of the whole array looks like [memory size, user size, array type, extra metadata size, extra metadata..., type, data, type, data, etc...]
  
 ## std/out
 ### Buffered Output
