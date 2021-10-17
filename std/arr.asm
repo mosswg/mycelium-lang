@@ -8,29 +8,94 @@
 %include "std/type.asm"
 %include "std/mem.asm"
 
+    ;; Array archtecure
+    ;; [memory size, user size, array type, amount of metadata, metadata..., data type, data, data type, data, etc...]
+
+arr#meta#mem_size               equ 0
+arr#meta#user_size              equ 8
+arr#meta#type                   equ 16
+arr#meta#meta_size              equ 24
+
+arr#global_stride:              equ 25*8        ; The memory size of an array is always a multiple of this + the type specific metadata size
+arr#type#global_meta:           equ 4*8
+
+arr#type#basic:                 equ 0
+arr#type#2d:                    equ 1
+arr#type#vector:                equ 2
+arr#type#string:                equ 3
+
+arr#type#metadata_sizes:        db 0, 2*8, 4*8, 0
+
+
+
 ; Args
-;   rax: the size of the new array in elements
-;   rbx: the type of the elements
+;   rax: array type
+; Returns
+;   rsi: size of the array metadata in bytes
+arr#metadata_size:
+    push    rbx
+
+    mov     rbx, arr#type#metadata_sizes
+    add     rbx, rax
+    mov     bl, [rbx]
+    movzx   rsi, bl
+
+
+    pop     rbx
+    ret
+
+; Args
+;   rax: array pointer
+;   rbx: array type
+;   rcx: array size
+; Returns
+;   void
+arr#populate_metadata:
+    push    rax
+    mov     [rax+arr#meta#user_size], rcx               ; User size
+
+    mov     [rax+arr#meta#type], rbx                    ; Array Type
+
+    mov     rcx, arr#global_stride
+
+    lea     rdx, [rax]
+    mov     rax, rbx
+    call    arr#metadata_size
+
+    mov     [rdx+arr#meta#meta_size], rsi               ; Meta size
+
+    add     rsi, arr#type#global_meta
+
+    add     rcx, rsi
+    lea     rax, [rdx]
+
+    mov     [rax+arr#meta#mem_size], rcx                ; Memory Size
+
+    pop     rax
+    ret
+
+
+; Args
+;   rax: the type of the array
+;   rbx: the size of the new array in elements
 ; Returns
 ;   rsi: pointer to the array
-arr~new:
+arr#new:
     push    rcx
-    push    rax
 
-    mov     rax, rbx
-    call    type~sizeof
-    pop     rax
-    push    rax
+    mov     rcx, rbx
+    mov     rbx, rax
 
-    mul     rsi
-    add     rsi, 16             ; Add Two 8-byte numbers for array size and size of each element
+    call    arr#metadata_size               ; Put the total metadata size into rsi
 
-    call    mem~allocate
+    mov     rax, arr#global_stride          ; Load the stride into rax
 
-    pop     rcx
+    add     rax, rsi                        ; Add the stride and type specific metadata size
+    add     rax, arr#type#global_meta       ; Add the global metadata size
+    call    mem~allocate                    ; Create an array in memory with the size specified in global stride
 
-    mov     [rsi], rcx          ; Store the size of the array
-    mov     [rsi+8], rbx        ; Store the type of the array
+    lea     rax, [rsi]
+    call    arr#populate_metadata
 
     pop     rcx
     ret

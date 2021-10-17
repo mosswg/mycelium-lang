@@ -29,10 +29,10 @@ _start:
   call  sys~exit                ; call exit
 
 main:
-  mov   rax, first_size
-  mov   rbx, type~int
+  mov   rax, arr#type#basic
+  mov   rbx, first_size
 
-  call  arr~new
+  call  arr#new
   mov   r9, rsi
 
   mov   rax, create_success
