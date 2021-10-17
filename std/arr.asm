@@ -213,71 +213,11 @@ arr~print:
 ;   void
 arr~println:
     push    rax
-    push    rcx
-    push    rdx
-    push    rsi
-    push    r9
-    push    r10
-    push    r11
-    mov     r10, rax
-    mov     r11, rbx
-    mov     rdx, [r10+8]        ; Get the type into rax
-    mov     rax, rdx
-    call    type~sizeof         ; Get the size of each element into rsi
-    mov     r9, rsi             ; Move the size to a usable location
+    call    arr~print
 
-    lea     rcx, [r10+arr#meta#meta_size]
-
-    mov     rax, [r10]          ; Get length
-    mul     r9
-
-    add     rcx, rax            ; Get the end address
-
-    mov     rax, '['
-    call    out~putc
-
-    lea     r10, [r10+arr#meta#meta_size]       ; Offset by to the amount of metadata
-
-    mov     rsi, [r10]          ; Get the amount of metadata
-
-    add     r10, rsi            ; Add metadata offset to
-
-    add     rcx, rsi            ; Offset the end address too
-
-    mov     rax, [r10]
-    mov     rbx, rdx
-    call    type~print
-
-    add     r10, r9            ; Increment the index
-
-    .loop:
-        mov     rax, arr~print_string
-        mov     rbx, 2
-        call    out~puts
-
-
-        mov     rax, [r10+8]
-        mov     rbx, [r10]
-        call    type~print
-
-        add     r10, r9            ; Increment the index
-    .loop_check:
-        cmp     r10, rcx
-        jl     .loop
-
-
-    mov     rax, ']'
-    call    out~putc
     mov     rax, 0xA
     call    out~putc
 
-
-    pop     r11
-    pop     r10
-    pop     r9
-    pop     rsi
-    pop     rdx
-    pop     rcx
     pop     rax                 ; Perserve the pointer to the start of the array
     ret
 
