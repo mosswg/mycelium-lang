@@ -85,13 +85,10 @@ str~println:
   mov   dl, 0x0
   mov   [r8+1], dl              ; Put a null terminator at the end of the string
 
-  mov   rdx, rsi
-  add   rdx, 1                  ; Increase the length of the string since we added a character
-  mov   rsi, rax
-  mov   rdi, sys~fd~out
-  mov   rax, sys~id~write
+  mov   rbx, rsi
+  add   rbx, 1                  ; Increase the length of the string since we added a character
 
-  syscall                       ; Write the string to sys~out
+  call  out~puts                ; Write the string to sys~out
 
   mov   dl, 0
   mov   [r8], dl                ; Re-add the null terminator
