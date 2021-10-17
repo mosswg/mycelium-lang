@@ -117,7 +117,7 @@ arr~del:
 ;   rax: pointer to the array
 ; Returns
 ;   rsi: amount of metadata in bytes
-arr~total_meta:
+arr~total_metadata:
     mov     rsi, [rax+arr#meta#meta_size]
     add     rsi, arr#type#global_meta
     ret
