@@ -10,13 +10,13 @@
 %include "std/str.asm"
 %include "std/out.asm"
 
-    type~int:       equ 0       ; Because we're using 64-bit all ints are 64-bit
-    type~ptr:       equ 1       ; Pointers are unsigned ints so
-    type~string:    equ 2       ; Strings are pointers
-    type~array:     equ 3       ; Arrays are pointers
-    type~char:      equ 4
+    type#int:       equ 0       ; Because we're using 64-bit all ints are 64-bit
+    type#ptr:       equ 1       ; Pointers are unsigned ints so
+    type#string:    equ 2       ; Strings are pointers
+    type#array:     equ 3       ; Arrays are pointers
+    type#char:      equ 4
 
-    type~sizes:     dd 8, 8, 8, 8, 1
+    type#sizes:     dd 8, 8, 8, 8, 1
 
 ; Args
 ;   rax: the type
@@ -34,7 +34,7 @@ type~sizeof:
         mov     rax, exception~runtime~bad_type
         call    exception~runtime~throw
     .valid_type:
-        lea     rsi, type~sizes
+        lea     rsi, type#sizes
         mov     rbx, 4
         mul     rbx
         add     rsi, rax
@@ -52,15 +52,15 @@ type~sizeof:
 type~read_mem:
     push    rcx
     ;; -- switch --
-    cmp     rbx, type~int
+    cmp     rbx, type#int
     je      .case_8byte
-    cmp     rbx, type~ptr
+    cmp     rbx, type#ptr
     je      .case_8byte
-    cmp     rbx, type~string
+    cmp     rbx, type#string
     je      .case_8byte
-    cmp     rbx, type~array
+    cmp     rbx, type#array
     je      .case_8byte
-    cmp     rbx, type~char
+    cmp     rbx, type#char
     je      .case_1byte
 
 
@@ -85,15 +85,15 @@ type~read_mem:
 ;   void
 type~print:
     ;; -- switch --
-    cmp     rbx, type~int
+    cmp     rbx, type#int
     je      .case_int
-    cmp     rbx, type~ptr
+    cmp     rbx, type#ptr
     je      .case_int
-    cmp     rbx, type~string
+    cmp     rbx, type#string
     je      .case_string
-    cmp     rbx, type~array
+    cmp     rbx, type#array
     je      .case_array
-    cmp     rbx, type~char
+    cmp     rbx, type#char
     je      .case_char
 
 
