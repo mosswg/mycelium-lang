@@ -236,7 +236,6 @@ arr~printn:
     lea     rcx, [r10]
 
     mov     rax, [r10]          ; Get length
-    mul     r9
 
     add     rcx, rax            ; Get the end address
 
@@ -254,7 +253,7 @@ arr~printn:
     .loop:
         mov     rax, [r10+8]
         mov     rbx, [r10]
-        call type~print
+        call    type~print
 
         mov     rax, 0xA
         call    out~putc
