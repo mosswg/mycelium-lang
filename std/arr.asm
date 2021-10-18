@@ -8,6 +8,9 @@
 %include "std/type.asm"
 %include "std/mem.asm"
 
+;;; TODO: Add get element type func
+
+
     ;; Array archtecure
     ;; [memory size, user size, array type, amount of metadata, metadata..., data type, data, data type, data, etc...]
 
