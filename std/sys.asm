@@ -1,8 +1,8 @@
   ;; Author: Moss Gallagher
   ;; Data: 13-Oct-21
 
-%ifndef _mxs_std_sys_
-%define _mxs_std_sys_
+%ifndef _Mycelium_std_sys_
+%define _Mycelium_std_sys_
 
   ;; Get platform specific file
 %ifdef _sys_x86_32_

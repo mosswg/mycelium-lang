@@ -1,8 +1,8 @@
     ;; Author:  Moss Gallagher
     ;; Date:    14-Oct-21
 
-%ifndef _mxs_std_mem_
-%define _mxs_std_mem_
+%ifndef _Mycelium_std_mem_
+%define _Mycelium_std_mem_
 
 %include "std/sys.asm"
 %include "std/exception.asm"

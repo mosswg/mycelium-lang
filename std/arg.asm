@@ -1,8 +1,8 @@
     ;; Author:  Moss Gallagher
     ;; Date:    14-Oct-21
 
-%ifndef _mxs_std_arg_
-%define _mxs_std_arg_
+%ifndef _Mycelium_std_arg_
+%define _Mycelium_std_arg_
 
 %include "std/exception.asm"
 
@@ -20,7 +20,7 @@ arg~get:
     .valid_arg:
     mov     rbx, 8
     mul     rbx
-    mov     rbx, r15
+    lea     rbx, [r15]
     add     rbx, rax
     mov     rsi, [rbx]
     pop     rbx

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(examples)
+project(Mycelium_examples)
 
 set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
 set(CMAKE_ASM_NASM_LINK_EXECUTABLE "ld <CMAKE_ASM_NASM_LINK_FLAGS> <LINK_FLAGS> <OBJECTS>  -o <TARGET> <LINK_LIBRARIES>")

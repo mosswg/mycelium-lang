@@ -1,7 +1,7 @@
   ;; Author: Moss Gallagher
   ;; Data: 13-Oct-21
-%ifndef _mxs_std_str_
-%define _mxs_std_str_
+%ifndef _Mycelium_std_str_
+%define _Mycelium_std_str_
 
 %include "std/sys.asm"
 %include "std/out.asm"
@@ -80,10 +80,7 @@ str~println:
   lea   r8, [rax]               ; Get the start of the string
   add   r8, rsi                 ; Move to the end of the string
   mov   dl, 0xA
-  mov   bl, [r8+1]                ; Store the current value at the end of the string
-  mov   [r8], dl                ; Put the new line at the end of the array
-  mov   dl, 0x0
-  mov   [r8+1], dl              ; Put a null terminator at the end of the string
+  mov   [r8], dl                ; Put the new line at the end of the array. This removes the null terminator but doesn't affect any other data
 
   mov   rbx, rsi
   add   rbx, 1                  ; Increase the length of the string since we added a character
@@ -92,7 +89,6 @@ str~println:
 
   mov   dl, 0
   mov   [r8], dl                ; Re-add the null terminator
-  mov   [r8+1], bl              ; Restore the old value at r8
 
   pop   rsi
   pop   r8

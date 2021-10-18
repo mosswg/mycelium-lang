@@ -1,8 +1,8 @@
     ;; Author:  Moss Gallagher
     ;; Date:    14-Oct-21
 
-%ifndef _mxs_std_arr_
-%define _mxs_std_arr_
+%ifndef _Mycelium_std_arr_
+%define _Mycelium_std_arr_
 
 %include "std/exception.asm"
 %include "std/type.asm"

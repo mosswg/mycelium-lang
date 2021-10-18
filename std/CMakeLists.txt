@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(mxs_std)
+project(Mycelium_std)
 
 set(CMAKE_ASM_NASM_LINK_EXECUTABLE "ld <CMAKE_ASM_NASM_LINK_FLAGS> <LINK_FLAGS> <OBJECTS>  -o <TARGET> <LINK_LIBRARIES>")
 
@@ -11,7 +11,7 @@ enable_language(ASM_NASM)
 
 set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
 
-add_library(mxs_std
+add_library(Mycelium_std
         int.asm
         str.asm
         out.asm
