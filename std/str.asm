@@ -80,7 +80,7 @@ str~println:
   lea   r8, [rax]               ; Get the start of the string
   add   r8, rsi                 ; Move to the end of the string
   mov   dl, 0xA
-  mov   [r8], dl                ; Put the new line at the end of the array. This removes the null terminator but doesn't affect any other data
+  mov   [r8], dl                ; Put the new line at the end of the string. This removes the null terminator but doesn't affect any other data
 
   mov   rbx, rsi
   add   rbx, 1                  ; Increase the length of the string since we added a character

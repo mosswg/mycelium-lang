@@ -23,7 +23,7 @@ int~to_string:
   push  r10
   push  r11
 
-  mov   r9, rax         ; Move the out array to a place we don't need for other functions
+  mov   r9, rax         ; Move the out string to a place we don't need for other functions
   mov   r8, rbx
   mov   rax, rbx
   call  int~digits

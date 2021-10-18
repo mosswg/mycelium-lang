@@ -9,7 +9,7 @@
 
 
 
-    ;;  TODO: Change this to an indexable array.
+    ;;  TODO: Change this to an indexable array or list.
     exception~runtime~bad_exception_number:         equ 0
     exception~runtime~bad_exception_number_str:     db "Invalid Exception Number", 0xA, 0
     exception~runtime~bad_exception_number_len:     equ $-exception~runtime~bad_exception_number_str
@@ -17,7 +17,7 @@
     exception~runtime~bad_arg_str:                  db "Invalid Argument Index", 0xA
     exception~runtime~bad_arg_len:                  equ $-exception~runtime~bad_arg_str
     exception~runtime~bad_index:                    equ 2
-    exception~runtime~bad_index_str:                db "Invalid Array Index", 0xA
+    exception~runtime~bad_index_str:                db "Invalid Index", 0xA
     exception~runtime~bad_index_len:                equ $-exception~runtime~bad_index_str
     exception~runtime~bad_type:                     equ 3
     exception~runtime~bad_type_str:                 db "Unknown Type", 0xA
