@@ -2,7 +2,7 @@
   ;; Date: 12-Oct-21
 
 %include "std/sys.asm"
-%include "std/arg.asm"
+%include "std/args.asm"
 %include "std/str.asm"
 
 global _start
@@ -21,15 +21,15 @@ _start:
 main:
   push  arg_name
   mov   rax, 1
-  call  arg~require
+  call  args~require
   pop   rbx
   .proper_number_of_args:
-  call  arg~length
+  call  args~length
   mov   rbx, 2
   mov   rcx, rsi
   .loop:
     mov   rax, rbx
-    call  arg~get
+    call  args~get
     mov   rax, rsi
     call  str~println
     add   rbx, 1

@@ -15,7 +15,7 @@
 ;   rax: the index of the args
 ; Returns
 ;   rsi: pointer to the string
-arg~get:
+args~get:
     push    rbx
 
     cmp     rax, [r15]                          ; Verify that the given index exists
@@ -36,7 +36,7 @@ arg~get:
 ;   stack:  names of args
 ; Returns
 ;   void
-arg~require:
+args~require:
     cmp     rax, [r15]
     jl     .valid_args
 
@@ -82,7 +82,7 @@ arg~require:
 ;   void
 ; Returns
 ;   rsi: Number of args
-arg~length:
+args~length:
     mov     rsi, [r15]
     ret
 
