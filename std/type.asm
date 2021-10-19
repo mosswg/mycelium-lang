@@ -7,16 +7,18 @@
 %include "std/exception.asm"
 %include "std/int.asm"
 %include "std/list.asm"
+%include "std/arr.asm"
 %include "std/str.asm"
 %include "std/out.asm"
 
     type#int:       equ 0       ; Because we're using 64-bit all ints are 64-bit
-    type#ptr:       equ 1       ; Pointers are unsigned ints so
+    type#ptr:       equ 1       ; Pointers are unsigned ints
     type#string:    equ 2       ; Strings are pointers
-    type#list:     equ 3        ; Arrays are pointers
-    type#char:      equ 4
+    type#list:      equ 3       ; Lists are pointers
+    type#arr:       equ 4       ; Arrays are pointers
+    type#char:      equ 5
 
-    type#sizes:     dd 8, 8, 8, 8, 1
+    type#sizes:     dd 8, 8, 8, 8, 8, 1
 
 ; Args
 ;   rax: the type
@@ -62,6 +64,8 @@ type~read_mem:
     je      .case_8byte
     cmp     rbx, type#list
     je      .case_8byte
+    cmp     rbx, type#arr
+    je      .case_8byte
     cmp     rbx, type#char
     je      .case_1byte
 
@@ -96,6 +100,8 @@ type~print:
     je      .case_string
     cmp     rbx, type#list
     je      .case_list
+    cmp     rbx, type#arr
+    je      .case_arr
     cmp     rbx, type#char
     je      .case_char
 
@@ -120,6 +126,9 @@ type~print:
         jmp     .switch_end     ; break
     .case_list:
         call    list~print
+        jmp     .switch_end     ; break
+    .case_arr:
+        call    arr~print
         jmp     .switch_end     ; break
     .case_char:
         call    out~putc
