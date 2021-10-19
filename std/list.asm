@@ -441,6 +441,7 @@ list~increase_size:
 ; Args
 ;   rax: pointer to the list
 ;   rbx: value to push
+;   rcx: type
 ; Returns
 ;   rax: the new pointer if needed
 list~push:
@@ -452,6 +453,7 @@ list~push:
 
     mov     rbx, rsi            ; Put the new size as the index for set
     sub     rbx, 1
+    mov     rdx, rcx
     mov     rcx, r9             ; Put the value as the push value to write the end of the list
     call    list~set             ; Set the value
 
