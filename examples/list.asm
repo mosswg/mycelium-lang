@@ -2,7 +2,7 @@
   ;; Date: 12-Oct-21
 
 %include "std/sys.asm"
-%include "std/arg.asm"
+%include "std/args.asm"
 %include "std/str.asm"
 %include "std/list.asm"
 %include "std/int.asm"
