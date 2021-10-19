@@ -12,7 +12,6 @@
 global _start
 
 section .data
-  usage:              db "Usage: ./arg <size>", 0
   create_success:     db "Created list with size ", 0
   write_success:      db "Wrote Values to list: ", 0
   push_success_pre:   db "Push value ", 0
@@ -21,7 +20,8 @@ section .data
   success_post:       db " with an address of ", 0
   first_size:         equ 8
   new_size:           equ 16
-  push_value:         equ 10
+  push_value:         db "Test str", 0
+
 
 section .text
 
@@ -84,21 +84,27 @@ main:
 
   mov   rax, r9
   mov   rbx, push_value
+  mov   rcx, type#string
   call  list~push
   mov   r9, rax
 
   mov   rax, push_success_pre
   call  str~print
 
+  mov   rax, '"'
+  call  out~putc
+
   mov   rax, push_value
-  call  int~print
+  call  str~print
+
+  mov   rax, '"'
+  call out~putc
 
   mov   rax, push_success_post
   call  str~print
 
   mov   rax, r9
   call  list~println
-
 
   mov   rax, 0xA
   call  out~putc
