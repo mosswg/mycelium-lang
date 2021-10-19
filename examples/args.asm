@@ -21,10 +21,10 @@ _start:
 main:
   push  arg_name
   mov   rax, 1
-  call  arg~require_args
+  call  arg~require
   pop   rbx
   .proper_number_of_args:
-  call  arg~number_args
+  call  arg~length
   mov   rbx, 2
   mov   rcx, rsi
   .loop:

@@ -36,7 +36,7 @@ arg~get:
 ;   stack:  names of args
 ; Returns
 ;   void
-arg~require_args:
+arg~require:
     cmp     rax, [r15]
     jl     .valid_args
 
@@ -82,7 +82,7 @@ arg~require_args:
 ;   void
 ; Returns
 ;   rsi: Number of args
-arg~number_args:
+arg~length:
     mov     rsi, [r15]
     ret
 
