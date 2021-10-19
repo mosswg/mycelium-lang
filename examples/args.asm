@@ -8,35 +8,33 @@
 global _start
 
 section .data
-  err: db "Usage: ./arg <arg>", 0
+  arg_name:   db "<arg>", 0
 
 section .text
 
 _start:
   mov   r15, rsp
   call  main
-  mov   eax, esi                ; exit code
+  mov   rax, rsi                ; exit code
   call  sys~exit                ; call exit
 
 main:
-  call  arg~argc
-  cmp   rsi, 1
-  jne   .proper_number_of_args
-  mov   rax, err
-  call  str~println
+  push  arg_name
   mov   rax, 1
-  call  sys~exit
+  call  arg~require_args
+  pop   rbx
   .proper_number_of_args:
-  mov   rbx, 1
+  call  arg~number_args
+  mov   rbx, 2
   mov   rcx, rsi
   .loop:
-    add   rbx, 1
     mov   rax, rbx
     call  arg~get
     mov   rax, rsi
     call  str~println
+    add   rbx, 1
     .loop_check:
     cmp   rbx, rcx
-    jl   .loop
+    jle   .loop
   mov   rsi, 0
   ret
