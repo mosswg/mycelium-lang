@@ -131,7 +131,20 @@ type~print:
         call    arr~print
         jmp     .switch_end     ; break
     .case_char:
+
+        mov     r9, rax
+
+        mov     rax, 0x27       ; '
         call    out~putc
+
+        mov     rax, r9
+        call    out~putc
+
+        mov     rax, 0x27       ; '
+        call    out~putc
+
+        mov     rax, r9
+
         jmp     .switch_end     ;break
     .switch_end:
     pop     r9
