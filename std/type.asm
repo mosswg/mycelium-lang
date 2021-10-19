@@ -84,6 +84,7 @@ type~read_mem:
 ; Returns
 ;   void
 type~print:
+    push    r9                  ; Perserve temp value
     ;; -- switch --
     cmp     rbx, type#int
     je      .case_int
@@ -98,18 +99,31 @@ type~print:
 
 
     .case_int:
-        call int~print
+        call    int~print
         jmp     .switch_end     ; break
     .case_string:
-        call str~print
+        mov     r9, rax
+
+        mov     rax, 0x22       ; "
+        call    out~putc
+
+        mov     rax, r9
+        call    str~print
+
+        mov     rax, 0x22       ; "
+        call    out~putc
+
+        mov     rax, r9
+
         jmp     .switch_end     ; break
     .case_list:
-    call list~print
+        call    list~print
         jmp     .switch_end     ; break
     .case_char:
-        call out~putc
+        call    out~putc
         jmp     .switch_end     ;break
     .switch_end:
+    pop     r9
     ret
 
 
