@@ -25,4 +25,8 @@ add_executable(list-resize
         list_resize.asm
         )
 
+add_executable(arr
+        arr.asm
+        )
+
 include_directories(examples ..)

@@ -17,6 +17,7 @@ add_library(Mycelium_std
         out.asm
         sys.asm
         args.asm
+        arr.asm
         list.asm
         exception.asm
         type.asm
