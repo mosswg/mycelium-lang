@@ -13,6 +13,8 @@
 ;   rsi: pointer to allocated memory
 mem~allocate:
     push    rcx
+    push    r8
+    push    r9
     mov     rsi, rax            ; len = rax
     mov     rax, sys~id~mmap
     xor     rdi, rdi            ; addr = NULL
@@ -22,6 +24,8 @@ mem~allocate:
     xor     r9, r9              ; offset = 0 (4096*0)
     syscall                 ; make call
     mov     rsi, rax
+    pop     r9
+    pop     r8
     pop     rcx
     ret
 
