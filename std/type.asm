@@ -25,6 +25,7 @@
 type~sizeof:
     push    rax
     push    rbx
+    push    rdx
     cmp     rax, 4
     jg      .invalid_type
     cmp     rax, 0
@@ -40,6 +41,7 @@ type~sizeof:
         add     rsi, rax
         lea     rax, [rsi]
     mov     esi, [rax]
+    pop     rdx
     pop     rbx
     pop     rax
     ret
