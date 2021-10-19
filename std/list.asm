@@ -45,7 +45,6 @@ list#metadata_size:
     mov     bl, [rbx]
     movzx   rsi, bl
 
-
     pop     rbx
     ret
 
@@ -350,44 +349,58 @@ list~set:
 ; Returns
 ;   rax: new pointer if needed
 list~resize:
+    push    r9
     push    rdx
-    push    rcx
-
-    mov     rcx, [rax]
-    mov     rdx, [rax+list#meta#user_size]
-
-    call    list~total_metadata
-    sub     rcx, rsi
-
-    push    rax
     push    rbx
+    push    rax
 
-    mov     rax, rcx
-    mov     rbx, list#global_element_size
+    mov     r9, [rax+list#meta#mem_size]
+    mov     rdx, rbx
+    shl     rdx, 3              ; Multiply by 8, the size of one element
 
-    mul     rbx
-    mov     rcx, rax
-
-    pop     rbx
     pop     rax
-
+    call    list~total_metadata
     add     rdx, rsi
 
-    cmp     rdx, rcx
-    jl      .enough_mem
+    cmp     rdx, r9
+    pop     rbx
+    jl      .good_size
 
+    push    r10
+    mov     r10d, 100
     push    rbx
-    mov     rbx, rcx
-    add     rcx, list#global_allocate_stride
+    push    rcx
+    push    rax
+
+    mov     rax, rbx
+    shl     rax, 3              ; Multiply by 3 to get the byte size
+    mov     rdx, 0
+    div     r10d
+
+    add     rax, 1              ; Add one to result because integer division always rounds down when there is a remainder and it's more of an issue to have too little than too much
+
+    mul     r10d                 ; Get the new size in an multiple of 100
+
+    add     rax, rsi            ; Add the amount of metadata
+
+    mov     rcx, rax
+    pop     rax
+    mov     rbx, [rax+list#meta#mem_size]
+
+    mov     [rax+list#meta#mem_size], rcx
+
     call    mem~reallocate
 
-    .enough_mem:
+    pop     rcx
+    pop     rbx
+    pop     r10
+    .good_size:
+
 
     mov     [rax+list#meta#user_size], rbx
 
-    pop     rcx
     pop     rdx
-    ret
+    pop     r9
     ret
 
 ; Args
