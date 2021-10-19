@@ -25,6 +25,10 @@ add_executable(list-resize
         list_resize.asm
         )
 
+add_executable(list-typed-elements
+        list_typed_elements.asm
+        )
+
 add_executable(arr
         arr.asm
         )
