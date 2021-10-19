@@ -81,14 +81,18 @@ int~print:
   .debug:
   push  rbp
   mov   rbp, rsp
+  push  rbx
   push  rax
+
   mov   rbx, rax
-  mov   rax, rsp
+  lea   rax, [rsp-16]
   call  int~to_string
-  mov   rax, rsp
+  lea   rax, [rsp-16]
   mov   rbx, rsi
   call  out~puts
+
   pop   rax
+  pop   rbx
   pop   rbp
   ret
 
