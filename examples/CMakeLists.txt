@@ -7,8 +7,6 @@ set(CMAKE_ASM_NASM_FLAGS -g)
 
 enable_language(ASM_NASM)
 
-option(BUILD_STD_LIB "Build the std library into an o file" OFF)
-
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 add_executable(print
@@ -21,6 +19,10 @@ add_executable(args
 
 add_executable(list
         list.asm
+        )
+
+add_executable(list-resize
+        list_resize.asm
         )
 
 include_directories(examples ..)
