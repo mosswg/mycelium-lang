@@ -7,6 +7,11 @@
 %include "std/sys.asm"
 %include "std/exception.asm"
 
+
+mmap#shared:            equ 0x1
+mmap#private:           equ 0x2
+mmap#shared_validate:   equ 0x3
+
 ; Args
 ;   rax: amount of memory in bytes
 ; Returns
@@ -15,14 +20,14 @@ mem~allocate:
     push    rcx
     push    r8
     push    r9
-    mov     rsi, rax            ; len = rax
+    mov     rsi, rax                    ; len = rax
     mov     rax, sys~id~mmap
-    xor     rdi, rdi            ; addr = NULL
-    mov     rdx, 7              ; prot = PROT_READ|PROT_WRITE
-    mov     r10, 0x22           ; flags = MAP_PRIVATE|MAP_ANONYMOUS
-    mov     r8, -1              ; fd = -1
-    xor     r9, r9              ; offset = 0 (4096*0)
-    syscall                 ; make call
+    xor     rdi, rdi                    ; addr = NULL
+    mov     rdx, 7                      ; prot = PROT_READ|PROT_WRITE
+    mov     r10, mmap#private | 0x20    ; flags = MAP_PRIVATE|MAP_ANON
+    mov     r8, -1                      ; fd = -1
+    xor     r9, r9                      ; offset = 0 (4096*0)
+    syscall                             ; make call
     mov     rsi, rax
     pop     r9
     pop     r8
