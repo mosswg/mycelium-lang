@@ -9,6 +9,7 @@
 %include "std/list.asm"
 %include "std/arr.asm"
 %include "std/str.asm"
+%include "std/cstr.asm"
 %include "std/out.asm"
 
     type#int:       equ 0       ; Because we're using 64-bit all ints are 64-bit
@@ -16,9 +17,10 @@
     type#string:    equ 2       ; Strings are pointers
     type#list:      equ 3       ; Lists are pointers
     type#arr:       equ 4       ; Arrays are pointers
-    type#char:      equ 5
+    type#cstring:   equ 5       ; cstrings are pointers
+    type#char:      equ 6
 
-    type#sizes:     dd 8, 8, 8, 8, 8, 1
+    type#sizes:     dd 8, 8, 8, 8, 8, 8, 1
 
 ; Args
 ;   rax: the type
@@ -28,7 +30,7 @@ type~sizeof:
     push    rax
     push    rbx
     push    rdx
-    cmp     rax, 5
+    cmp     rax, 6
     jg      .invalid_type
     cmp     rax, 0
     jl      .invalid_type
@@ -40,8 +42,7 @@ type~sizeof:
         lea     rsi, type#sizes
         mov     rbx, 4
         mul     rbx
-        add     rsi, rax
-        lea     rax, [rsi]
+        lea     rax, [rsi+rax]
     mov     esi, [rax]
     pop     rdx
     pop     rbx
@@ -61,6 +62,8 @@ type~read_mem:
     cmp     rbx, type#ptr
     je      .case_8byte
     cmp     rbx, type#string
+    je      .case_8byte
+    cmp     rbx, type#cstring
     je      .case_8byte
     cmp     rbx, type#list
     je      .case_8byte
@@ -98,6 +101,8 @@ type~print:
     je      .case_int
     cmp     rbx, type#string
     je      .case_string
+    cmp     rbx, type#cstring
+    je      .case_cstring
     cmp     rbx, type#list
     je      .case_list
     cmp     rbx, type#arr
@@ -124,6 +129,21 @@ type~print:
         mov     rax, r9
 
         jmp     .switch_end     ; break
+    .case_cstring:
+        mov     r9, rax
+
+        mov     rax, 0x22       ; "
+        call    out~putc
+
+        mov     rax, r9
+        call    cstr~print
+
+        mov     rax, 0x22       ; "
+        call    out~putc
+
+        mov     rax, r9
+
+        jmp     .switch_end     ; break
     .case_list:
         call    list~print
         jmp     .switch_end     ; break
@@ -131,7 +151,6 @@ type~print:
         call    arr~print
         jmp     .switch_end     ; break
     .case_char:
-
         mov     r9, rax
 
         mov     rax, 0x27       ; '
