@@ -146,19 +146,24 @@ file~read_lines:
 
     mov     r14, [rax+file#data_offset]
 
-    mov     rax, 1
+    mov     rax, 0
     mov     rbx, type#string
     call    arr#new             ; Create array of length 1 to push the lines of the file to
 
     mov     r9, rsi
 
+
+    call    str#new         ; New string take void args
+
+    mov     rax, r9
+    mov     rbx, rsi
+
+    call    arr~push
+
     xor     r10, r10            ; Clear r10
     xor     r11, r11            ; Clear r11
 
-
     mov     r11, [r9]
-
-
 
     .loop:
         mov     r13b, [r14+r10]
@@ -169,24 +174,46 @@ file~read_lines:
         xor     r11, r11        ; Clear current line count
 
         add     r12, 1
+        add     r10, 1
+    
+        call    str#new         ; Create new string
 
         mov     rax, r9
+        mov     rbx, rsi
 
-        mov     rbx, 0
+        call    arr~push
+        lea     r9, [rax]
+
+        jmp     .loop
+
+        .current_line:
+
+        lea     rax, [r9]
+        mov     rbx, r12
+        call    arr~get
+        mov     rax, rsi
+        mov     bl, r13b
 
         call    arr~push
 
-        .current_line:
+        mov     rcx, rax
+        mov     rbx, r12
+        lea     rax, [r9]
+
+        call    arr~set
+
+    
         add     r10, 1
     .loop_check:
-        cmp     r10, [r8+file#meta#stats + stats.size]
-        jl      .loop
-
+        cmp     [r8+file#meta#stats + stats.size], r10
+        jge      .loop
 
     mov     rsi, r9
+    pop     r13
     pop     r12
     pop     r11
     pop     r10
+    pop     r14
     pop     r9
     pop     r8
     ret
