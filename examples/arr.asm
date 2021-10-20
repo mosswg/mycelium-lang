@@ -19,8 +19,8 @@ _start:
   call  sys~exit                ; call exit
 
 main:
-    mov     rax, type#int
-    mov     rbx, arr_size
+    mov     rax, arr_size
+    mov     rbx, type#int
     call    arr#new
 
     mov     r9, rsi
