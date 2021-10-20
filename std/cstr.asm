@@ -1,7 +1,7 @@
   ;; Author: Moss Gallagher
   ;; Data: 13-Oct-21
-%ifndef _Mycelium_std_str_
-%define _Mycelium_std_str_
+%ifndef _Mycelium_std_cstr_
+%define _Mycelium_std_cstr_
 
 %include "std/sys.asm"
 %include "std/out.asm"
