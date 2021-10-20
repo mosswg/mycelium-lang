@@ -19,9 +19,9 @@
     ;;  Lists can have multiple different types which store extra metadata for example 2d lists which store width and height.
     ;;  For these reasons array are both faster and more memory efficient but lists are generally easier to work with.
 
-arr#meta#mem_size               equ 0            ; The size of the array in memory. This is different to user size because we're lying to the user
-arr#meta#user_size              equ 8            ; The size of the array according to the user
-arr#meta#type                   equ 16           ; The type of each element in the array. This is where lists and arrays differ.
+arr#meta#mem_size               equ 0*8          ; The size of the array in memory. This is different to user size because we're lying to the user
+arr#meta#user_size              equ 1*8          ; The size of the array according to the user
+arr#meta#type                   equ 2*8          ; The type of each element in the array. This is where lists and arrays differ.
 
 arr#global_stride:              equ 100*8        ; The memory size of an array is always a multiple of this + the type specific metadata size
 arr#meta_size:                  equ 3*8
@@ -61,15 +61,15 @@ arr#populate_metadata:
 
 
 ; Args
-;   rax: the type of the array
-;   rbx: the size of the new array in elements
+;   rax: the size of the new array in elements
+;   rbx: the type of the array
 ; Returns
 ;   rsi: pointer to the array
 arr#new:
     push    rcx
 
-    mov     rcx, rbx
-    mov     rbx, rax
+    mov     rcx, rax
+    mov     rbx, rbx
 
     mov     rax, arr#global_stride          ; Load the stride into rax
 
@@ -115,8 +115,12 @@ arr~print:
 
     lea     rcx, [r10]
 
+    push    rdx
+
     mov     rax, [r10+arr#meta#user_size]          ; Get length
     mul     r9
+
+    pop     rdx
 
     add     rcx, rax            ; Get the end address
 
@@ -195,8 +199,12 @@ arr~printn:
 
     lea     rcx, [r10]
 
+    push    rdx
+
     mov     rax, [r10+arr#meta#user_size]          ; Get length
     mul     r9
+
+    pop     rdx
 
     add     rcx, rax            ; Get the end address
 
@@ -293,7 +301,7 @@ arr~set:
     pop     rax
     add     rax, rsi            ; Get move the index minus 16
 
-    mov     [rax+16], rcx       ; Offset by 16 to account for size and type variables
+    mov     [rax+arr#meta_size], rcx       ; Offset by 16 to account for size and type variables
 
     pop     rax                 ; Perserve the pointer to the start of the array
     ret
@@ -390,8 +398,8 @@ arr~push:
     call    arr~increase_size
 
     mov     rbx, rsi            ; Put the new size as the index for set
-    sub     rbx, 1
     mov     rcx, r9             ; Put the value as the push value to write the end of the array
+    sub     rbx, 1
     call    arr~set            ; Set the value
 
     pop     r10
