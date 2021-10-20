@@ -11,7 +11,7 @@
 ;   rax: the string whose length is being calculated
 ; Returns:
 ;   rsi: the length
-str~length:
+cstr~length:
   push  rbp
   mov   rbp, rsp
   mov   [rbp-12], rax
@@ -44,14 +44,14 @@ str~length:
 ;   rax: the string to be printed
 ; Returns
 ;   void
-str~print:
+cstr~print:
   push  rbp
   mov   rbp, rsp
                         ; Perserve the used regiser value
   push  rbx
   push  rsi
 
-  call  str~length
+  call  cstr~length
   mov   rbx, rsi
   call  out~puts
 
@@ -65,7 +65,7 @@ str~print:
 ;   rax: the string to be printed
 ; Returns
 ;   void
-str~println:
+cstr~println:
   push  rbp
   mov   rbp, rsp
                         ; Perserve the used regiser value
@@ -76,7 +76,7 @@ str~println:
   push  r8
   push  rsi
 
-  call  str~length              ; Get the length with the string on rax
+  call  cstr~length              ; Get the length with the string on rax
 
   lea   r8, [rax]               ; Get the start of the string
   add   r8, rsi                 ; Move to the end of the string
