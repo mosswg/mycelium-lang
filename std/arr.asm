@@ -260,7 +260,7 @@ arr~get:
     mul     rsi                 ; Get the byte index of the element
     mov     rsi, rax
     pop     rax
-    add     rax, rsi            ; Get move the index minus 16
+    add     rax, rsi
 
     mov     rsi, [rax+arr#meta_size]       ; Offset by the size of the metadata to account for size and type variables
 
@@ -306,25 +306,57 @@ arr~set:
 ; Returns
 ;   rax: new pointer if needed
 arr~resize:
-    push    r11
-    push    r12
+    push    r9
+    push    rdx
+    push    rbx
     push    rax
-    mov     rcx, rbx
-    mov     r12, rbx
-    mov     rbx, [rax]
-    mov     rax, [rax+arr#meta#type]        ; Get type
-    call    type~sizeof
-    mov     rax, rcx
-    mul     rsi
-    mov     rcx, rax
-    mov     rax, rbx
-    mul     rsi
-    mov     rbx, rax
+
+    mov     r9, [rax+arr#meta#mem_size]
+    mov     rdx, rbx
+    shl     rdx, 3              ; Multiply by 8, the size of one element
+
     pop     rax
+    add     rdx, arr#meta_size
+
+    cmp     rdx, r9
+    pop     rbx
+    jl      .good_size
+
+    push    r10
+    mov     r10d, 100
+    push    rbx
+    push    rcx
+    push    rax
+
+    mov     rax, rbx
+    shl     rax, 3              ; Multiply by 3 to get the byte size
+    mov     rdx, 0
+    div     r10d
+
+    add     rax, 1              ; Add one to result because integer division always rounds down when there is a remainder and it's more of an issue to have too little than too much
+
+    mul     r10d                 ; Get the new size in an multiple of 100
+
+    add     rax, rsi            ; Add the amount of metadata
+
+    mov     rcx, rax
+    pop     rax
+    mov     rbx, [rax+arr#meta#mem_size]
+
+    mov     [rax+arr#meta#mem_size], rcx
+
     call    mem~reallocate
-    mov     [rax], r12
-    pop     r12
-    pop     r11
+
+    pop     rcx
+    pop     rbx
+    pop     r10
+    .good_size:
+
+
+    mov     [rax+arr#meta#user_size], rbx
+
+    pop     rdx
+    pop     r9
     ret
 
 ; Args
@@ -334,58 +366,22 @@ arr~resize:
 ;   rax: new address pointer if needed
 ;   rsi: the new size
 arr~increase_size:
-    push    r11
-    push    r12
-    push    r13
-    push    r14
-    push    rax
+    push    rbx
 
-    mov     r13, rbx            ; Store the increase amount
-    lea     r12, [rax]          ; Store the address
-    mov     r11, [rax+arr#meta#type]        ; Get the type
+    mov     rsi, [rax+arr#meta#user_size]
+    add     rsi, rbx
 
-    mov     rax, r11
-    call    type~sizeof         ; type.sizeof(rax)
+    mov     rbx, rsi
+    call    arr~resize
 
-    mov     rbx, rsi            ; rbx = size of each element
-    mov     rax, [r12]          ; size
-    mov     r14, rax
-    add     rax, r13            ; rax = current_length + r13
-
-    mov     rsi, rax
-
-    mul     rbx                 ; rax = rax * rbx a.k.a the byte length of the array
-
-    mov     rcx, rax
-
-    mov     rax, r14
-
-    mul     rbx
-
-    mov     rbx, rax
-
-    pop     rax
-    push    rsi
-    call    mem~reallocate
-    mov     rbx, r14
-    add     rbx, r13
-    mov     [rax], rbx
-
-    pop     rsi
-
-    pop     r14
-    pop     r13
-    pop     r12
-    pop     r11
+    pop     rbx
     ret
 
 ; Args
-;   rax: pointer to the array
+;   rax: pointer to the list
 ;   rbx: value to push
 ; Returns
 ;   rax: the new pointer if needed
-;
-; Note: This function is not very performant. It is recommended that if you know how many elements you want to append you use resize then write each element after
 arr~push:
     push    r9
     push    r10
@@ -396,25 +392,25 @@ arr~push:
     mov     rbx, rsi            ; Put the new size as the index for set
     sub     rbx, 1
     mov     rcx, r9             ; Put the value as the push value to write the end of the array
-    call    arr~set             ; Set the value
+    call    arr~set            ; Set the value
 
     pop     r10
     pop     r9
     ret
 
 ; Args
-;   rax: pointer to the array
+;   rax: pointer to the list
 ; Returns
 ;   rsi: value
 arr~pop:
     push    rbx
     push    rcx
-    mov     rbx, [rax+arr#meta#user_size]          ; Load the size of the array into rbx
+    mov     rbx, [rax+arr#meta#user_size] ; Load the size of the list into rbx
 
     sub     rbx, 1
 
-    call    arr~get             ; rax.get(rbx)
-    mov     [rax], rbx
+    call    list~get             ; rax.get(rbx)
+    mov     [rax+arr#meta#user_size], rbx
 
     pop     rcx
     pop     rbx
