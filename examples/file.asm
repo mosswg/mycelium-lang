@@ -9,7 +9,7 @@
 global _start
 
 section .data
-  filename:      db "README.md", 0
+  filename:      db "examples/file.asm", 0
 
 section .text
 
@@ -28,5 +28,8 @@ main:
   mov   rax, rsi
   call  file~read_lines
 
+  mov   rax, rsi
+
+  call  arr~printn
 
   ret
