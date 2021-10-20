@@ -1,5 +1,5 @@
  # Mycelium
- Mycelium is a language build with scripting principles like lists, automatic types, multiple return values, etc. but the language will ultimately be converted to assembly to be compiled and ran natively. Currently the std library of the language is being written with work on the compiler coming later. The plan is to bootstrap the language in assembly to interface with the std library and once it is complete enough it will be converted to self hosting. However, this is subject to change.
+ Mycelium is a language built with scripting principles like lists, automatic types, multiple return values, etc. but the language will ultimately be converted to assembly to be compiled and ran natively. Currently the std library of the language is being written with work on the compiler coming later. The plan is to bootstrap the language in assembly to interface with the std library and once it is complete enough it will be converted to self hosting. However, this is subject to change.
 
  ## std library
  The Mycelium std library is entirely written in assembly for x86_64 linux with no dependencies. Eventually it may be expanded to include other platforms or architectures. <br>
