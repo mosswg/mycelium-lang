@@ -6,6 +6,7 @@
 %include "std/sys.asm"
 %include "std/out.asm"
 
+
 ; Args:
 ;   rax: the string whose length is being calculated
 ; Returns:
