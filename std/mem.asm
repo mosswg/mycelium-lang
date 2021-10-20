@@ -20,6 +20,8 @@ mem~allocate:
     push    rcx
     push    r8
     push    r9
+    push    r10
+
     mov     rsi, rax                    ; len = rax
     mov     rax, sys~id~mmap
     xor     rdi, rdi                    ; addr = NULL
@@ -29,6 +31,8 @@ mem~allocate:
     xor     r9, r9                      ; offset = 0 (4096*0)
     syscall                             ; make call
     mov     rsi, rax
+
+    pop     r10
     pop     r9
     pop     r8
     pop     rcx
