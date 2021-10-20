@@ -28,10 +28,10 @@ type~sizeof:
     push    rax
     push    rbx
     push    rdx
-    cmp     rax, 4
+    cmp     rax, 5
     jg      .invalid_type
     cmp     rax, 0
-    jg      .invalid_type
+    jl      .invalid_type
     jmp     .valid_type
     .invalid_type:
         mov     rax, exception~runtime~bad_type
