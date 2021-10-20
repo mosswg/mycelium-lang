@@ -33,4 +33,8 @@ add_executable(arr
         arr.asm
         )
 
+add_executable(file
+        file.asm
+        )
+
 include_directories(examples ..)
