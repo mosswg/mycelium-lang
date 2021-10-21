@@ -23,7 +23,8 @@ main:
 
   .num_loop:
   mov   rax, str
-  call  str~println
+  call  cstr~println
+
   add   r8, 1
   cmp   r8, loop_num
   jle   .num_loop
