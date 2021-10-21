@@ -41,4 +41,8 @@ add_executable(str-split
         str_split.asm
         )
 
+add_executable(str-parse
+        str_parse.asm
+        )
+
 include_directories(examples ..)
