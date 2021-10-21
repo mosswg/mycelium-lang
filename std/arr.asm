@@ -136,6 +136,7 @@ arr~print:
 
     add     r10, r9            ; Increment the index
 
+    jmp     .loop_check
     .loop:
         mov     rax, arr~print_string
         mov     rbx, 2
@@ -213,6 +214,7 @@ arr~printn:
     lea     r10, [r10+arr#meta_size]       ; Offset by 16 to account for size and type variables
     lea     rcx, [rcx+arr#meta_size]       ; Offset the end address too
 
+    jmp     .loop_check
     .loop:
         mov rax, [r10]
         mov rbx, rdx
