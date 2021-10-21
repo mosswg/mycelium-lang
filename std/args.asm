@@ -5,7 +5,7 @@
 %define _Mycelium_std_arg_
 
 %include "std/exception.asm"
-%include "std/str.asm"
+%include "std/cstr.asm"
 
 
     usage:              db "Usage: ", 0
@@ -43,10 +43,10 @@ args~require:
     mov     r9, rax             ; We don't need to push because if we're here we're going to exit the program and therefore we don't care.
 
     mov     rax, usage
-    call    str~print
+    call    cstr~print
 
     mov     rax, [r15+8]
-    call    str~print
+    call    cstr~print
 
     mov     rbx, 0
     mov     rcx, 8
@@ -62,7 +62,7 @@ args~require:
         add     r10, rax
 
         mov     rax, [r10]
-        call    str~print
+        call    cstr~print
 
         add     rbx, 1
     .arg_loop_check:
