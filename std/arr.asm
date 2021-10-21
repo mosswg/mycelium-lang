@@ -131,6 +131,119 @@ arr#new_ca:
 
 ; Args
 ;   rax: pointer to the array
+;   rbx: check value
+; Returns
+;   zf: If the array contains the value
+arr~contains:
+    push    r9                  ; Counter
+    push    r10                 ; Array
+    push    r11                 ; Length
+    push    r12                 ; Compare Value
+    push    r13                 ; Type
+
+    xor     r9, r9
+    lea     r10, [rax]
+    mov     r11, [r10+arr#meta#user_size]
+    mov     r12, rbx
+    mov     r13, [r10+arr#meta#type]
+
+
+    jmp  .loop_check
+    .loop:
+        mov     rax, r10
+        mov     rbx, r9
+        call    arr~get
+
+        mov     rax, r13
+        mov     rbx, rsi
+        mov     rcx, r12
+
+        call    type~compare
+        je      .return
+
+
+        add     r9, 1
+    .loop_check:
+        cmp     r9, r11
+
+    mov     rax, 1
+    cmp     rax, 0                ; If we get here we want to ensure that the zero flag is set correctly
+
+    .return:
+    pop     r13
+    pop     r12
+    pop     r11
+    pop     r10
+    pop     r9
+    ret
+
+
+
+; Args
+;   rax: pointer to the array
+;   rbx: compare array
+; Returns
+;   zf: If the array contains the value
+arr~compare:
+    push    r8                  ; Temp value
+    push    r9                  ; Counter
+    push    r10                 ; Array
+    push    r11                 ; Length
+    push    r12                 ; Compare array
+    push    r13                 ; Type
+
+    xor     r9, r9
+    lea     r10, [rax]
+    mov     r11, [r10+arr#meta#user_size]
+    mov     r12, rbx
+    mov     r13, [r10+arr#meta#type]
+
+
+    jmp  .loop_check
+    .loop:
+        lea     rax, [r10]
+        mov     rbx, r9
+        call    arr~get
+
+        mov     r8, rsi
+
+        lea     rax, [r12]
+        mov     rbx, r9
+        call    arr~get
+
+        mov     rax, r13
+        mov     rbx, r8
+        mov     rcx, rsi
+
+        call    type~compare
+        jne     .not_equal
+
+        add     r9, 1
+    .loop_check:
+        cmp     r9, r11
+
+
+    jmp     .equal
+    .not_equal:
+        mov     r13, 1
+        cmp     r13, 0                ; If we get here we want to ensure that the zero flag is set correctly
+        jmp     .return
+    .equal:
+        mov     r13, 1
+        cmp     r13, 1                ; If we get here we want to ensure that the zero flag is set correctly
+    .return:
+    pop     r13
+    pop     r12
+    pop     r11
+    pop     r10
+    pop     r9
+    ret
+
+
+
+
+; Args
+;   rax: pointer to the array
 ; Returns
 ;   void
 arr~del:
