@@ -43,6 +43,7 @@
 ;   void
 sys~write:
   push  rdx
+  push  r11
   
   mov   rdx, rsi
   mov   rsi, rdi
@@ -54,6 +55,7 @@ sys~write:
   mov   rdi, rsi
   mov   rsi, rdx
 
+  pop   r11
   pop   rdx
   ret
 

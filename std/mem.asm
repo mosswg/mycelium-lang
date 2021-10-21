@@ -21,6 +21,7 @@ mem~allocate:
     push    r8
     push    r9
     push    r10
+    push    r11
 
     mov     rsi, rax                    ; len = rax
     mov     rax, sys~id~mmap
@@ -32,6 +33,7 @@ mem~allocate:
     syscall                             ; make call
     mov     rsi, rax
 
+    pop     r11
     pop     r10
     pop     r9
     pop     r8
