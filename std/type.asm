@@ -49,6 +49,10 @@ type~sizeof:
     pop     rax
     ret
 
+
+
+
+
 ; Args
 ;   rax: pointer
 ;   rbx: type
@@ -86,6 +90,57 @@ type~read_mem:
     pop     rcx
 
     ret
+
+
+
+; Args
+;   rax: type
+;   rbx: Compare 1
+;   rcx: Compare 2
+; Returns
+;   void
+type~compare:
+    push    r9                  ; Perserve temp value
+    ;; -- switch --
+    cmp     rax, type#int
+    je      .case_int
+    cmp     rax, type#ptr
+    je      .case_int
+    cmp     rax, type#string
+    je      .case_string
+    cmp     rax, type#cstring
+    je      .case_cstring
+    cmp     rax, type#list
+    je      .case_list
+    cmp     rax, type#arr
+    je      .case_arr
+    cmp     rax, type#char
+    je      .case_char
+
+
+    .case_int:
+        cmp     rbx, rcx
+        jmp     .switch_end     ; break
+    .case_string:
+        call    arr~compare
+        jmp     .switch_end     ; break
+    .case_cstring:
+        call    cstr~compare
+        jmp     .switch_end     ; break
+    .case_list:
+        call    list~compare
+        jmp     .switch_end     ; break
+    .case_arr:
+        call    arr~compare
+        jmp     .switch_end     ; break
+    .case_char:
+        cmp     bl, cl
+        jmp     .switch_end     ;break
+    .switch_end:
+    pop     r9
+    ret
+
+
 
 ; Args
 ;   rax: value
