@@ -37,4 +37,8 @@ add_executable(file
         file.asm
         )
 
+add_executable(str-split
+        str_split.asm
+        )
+
 include_directories(examples ..)
