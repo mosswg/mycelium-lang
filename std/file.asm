@@ -9,6 +9,8 @@
 %include "std/exception.asm"
 %include "std/mem.asm"
 %include "std/type.asm"
+%include "std/cstr.asm"
+%include "std/str.asm"
 
 file#mode#read:       equ 0x0
 file#mode#write:      equ 0x1
