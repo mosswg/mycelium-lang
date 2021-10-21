@@ -83,6 +83,52 @@ arr#new:
     pop     rcx
     ret
 
+
+
+; Args
+;   rax: the type of the array
+;   rbx: c array
+;   rcx: length of c array
+; Returns
+;   rsi: pointer to the array
+arr#new_ca:
+    push    rdx
+    push    r10                 ; Array
+    push    rbx
+
+    mov     rbx, rax
+
+    mov     rax, arr#global_stride          ; Load the stride into rax
+
+    add     rax, arr#meta_size              ; Add the metadata size
+    call    mem~allocate                    ; Create an array in memory with the size specified in global stride
+
+    lea     r10, [rsi]
+
+    lea     rax, [rsi]
+    call    arr#populate_metadata
+
+    pop     rbx
+    push    r9                  ; Counter
+
+    jmp     .loop_check
+    .loop:
+        lea     rax, [r10]
+        mov     rbx, r9
+        mov     rcx, [rbx + r9]
+
+
+    .loop_check:
+        cmp     r9, rcx
+        jl      .loop
+
+
+    mov     rsi, r10
+    pop     r9
+    pop     r10
+    pop     rdx
+    ret
+
 ; Args
 ;   rax: pointer to the array
 ; Returns
