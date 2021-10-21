@@ -6,6 +6,7 @@
 %include "std/sys.asm"
 %include "std/out.asm"
 %include "std/arr.asm"
+%include "std/cstr.asm"
 
 
   ;; String extends arr
@@ -22,6 +23,48 @@ str#new:
   call  arr#new
 
   ret
+
+
+; Args
+;   rax: c string
+; Returns
+;   rsi: Pointer to string
+str#new_cs:
+  push  r8                      ; c string
+  push  r9                      ; Temporary Place for String
+  push  r10                     ; Counter
+  push  r11                     ; Current char in loop
+
+  mov   r8, rax
+
+  mov   rax, 0
+  mov   rbx, type#char
+
+  call  arr#new
+  mov   r9, rsi
+
+  xor   r10, r10
+
+
+  ;; Copy values over
+  jmp   .loop_check
+  .loop:
+      mov   rax, r9
+      movzx rbx, r11b
+      call  arr~push
+      add   r10, 1
+  .loop_check:
+      mov   r11b, [r8+r10]
+      cmp   r11b, 0x0
+      jne   .loop
+
+  pop   r11
+  pop   r10
+  pop   r9
+  pop   r8
+  ret
+
+
 
 ; Args
 ;   rax: String
@@ -68,5 +111,89 @@ str~println:
 
   pop   rax
   ret
+
+; Args
+;   rax: string
+;   rbx: char to split on
+; Return
+;   rsi: Array with split strings
+str~split:
+    push    r8                  ; Split counter
+    push    r9                  ; Output array
+    push    r10                 ; Split char
+    push    r11                 ; Original Array Pointer
+    push    r12                 ; Counter
+    push    r13                 ; Pointer to after the metadata
+    push    r14                 ; Size of the array
+
+    mov     r10, rbx
+    lea     r11, [rax]
+    mov     r14, [rax + arr#meta#user_size]
+    lea     r13, [rax + arr#meta_size]
+    xor     r12, r12
+    xor     r8, r8
+
+    mov     rax, 0
+    mov     rbx, type#string
+
+    call    arr#new
+
+    lea     r9, [rsi]
+
+    call    str#new
+
+    lea     rax, [r9]
+    lea     rbx, [rsi]
+    call    arr~push
+
+  jmp   .loop_check
+  .loop:
+      xor     rcx, rcx
+      mov     cl, [r13+r12]    ; Current char
+
+      cmp     rcx, r10
+      jne     .non_split
+      .split:
+        call  str#new
+
+        lea     rax, [r9]
+        lea     rbx, [rsi]
+        call    arr~push
+
+        add   r8, 1
+        add   r12, 1
+        jmp   .loop_check
+      .non_split:
+        lea   rax, [r9]
+        mov   rbx, r8
+        call  arr~get
+
+        lea   rax, [rsi]
+        mov   rbx, rcx
+
+        call arr~push
+
+        mov   rcx, rax
+        mov   rbx, r8
+        lea   rax, [r9]
+
+        call  arr~set
+
+        add   r12, 1
+  .loop_check:
+      cmp     r12, r14
+      jl      .loop
+
+    lea     rsi, [r9]
+
+    pop     r14
+    pop     r13
+    pop     r12
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     r8
+    ret
+
 
 %endif                          ; ifdef guard
