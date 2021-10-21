@@ -220,8 +220,17 @@ file~read_lines:
     pop     r8
     ret
 
+; Args
+;   rax: File
+;   rbx: String
+; Returns
+;   void
+file~write_s:
+    mov     rdi, [rax+file#meta#fd]
 
+    mov     rdx, [rax+arr#meta#user_size]
 
+    mov     rsi, [rax+arr#meta_size]
 
     mov     rax, sys~id~write
     syscall
