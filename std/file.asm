@@ -131,6 +131,14 @@ file#stats:
 
 
 ; Args
+;   rax: File
+; Returns
+;   rsi: Size
+file~size:
+    mov     rsi, [rax+file#meta#stats+stats.size]
+    ret
+
+; Args
 ;   rax: File object
 ; Returns
 ;   rsi: Array of lines
