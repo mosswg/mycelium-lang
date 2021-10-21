@@ -24,6 +24,7 @@ out~puts:
   push  rdx
   push  rsi
   push  rdi
+  push  r11
 
   mov   rdx, rbx
   mov   rsi, rax
@@ -32,6 +33,7 @@ out~puts:
   syscall
 
 
+  pop   r11
   pop   rdi
   pop   rsi
   pop   rdx
@@ -90,15 +92,19 @@ out~putc:
   push  rdi
   push  rsi
   push  rbx
+  push  r10
+  push  r11
 
-  push  rax
+  mov   [rsp-8], rax
   mov   rax, sys~id~write
   mov   rdi, sys~fd~out
-  mov   rsi, rsp        ; Use the stack as a pointer to the character we pushed top it
+  lea   rsi, [rsp-8]        ; Use the stack as a pointer to the character we pushed top it
   mov   rdx, 1
   syscall
 
-  pop   rax
+
+  pop   r11
+  pop   r10
   pop   rbx
   pop   rsi
   pop   rdi
