@@ -114,6 +114,44 @@ str~println:
 
 ; Args
 ;   rax: string
+; Returns
+;   rsi: int form
+str~to_int:
+  push  r8                            ; string
+  push  r9                            ; len
+  push  r10                           ; counter
+  mov   sil, [rax+arr#meta_size]      ; out
+  sub   sil, '0'
+  mov   r10, 1
+
+  mov   r8, rax
+  mov   r9, [r8+arr#meta#user_size]
+
+
+  jmp   .loop_check
+  .loop:
+    mov   rax, rsi
+    mov   rbx, 10
+    mul   rbx
+
+    mov   rsi, rax
+
+    xor   rax, rax
+    mov   al, [r8+arr#meta_size + r10]
+    sub   al, '0'
+    add   rsi, rax
+    add   r10, 1
+  .loop_check:
+    cmp   r10, r9
+    jl    .loop
+
+  pop   r10
+  pop   r9
+  pop   r8
+  ret
+
+; Args
+;   rax: string
 ;   rbx: char to split on
 ; Return
 ;   rsi: Array with split strings
