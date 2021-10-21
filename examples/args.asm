@@ -31,7 +31,7 @@ main:
     mov   rax, rbx
     call  args~get
     mov   rax, rsi
-    call  str~println
+    call  cstr~println
     add   rbx, 1
     .loop_check:
     cmp   rbx, rcx
