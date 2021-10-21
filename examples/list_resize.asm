@@ -35,7 +35,7 @@ main:
   mov   r9, rsi
 
   mov   rax, create_success
-  call  str~print
+  call  cstr~print
 
   mov   rax, r9
   call  list~len
@@ -54,7 +54,7 @@ main:
     call  list~resize
 
     mov   rax, resize_success
-    call  str~print
+    call  cstr~print
 
     mov   rax, r9
     call  list~len
