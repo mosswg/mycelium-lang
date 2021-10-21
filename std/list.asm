@@ -137,6 +137,67 @@ list~addr_after_meta:
     pop     rax
     ret
 
+
+; Args
+;   rax: pointer to the list
+;   rbx: check value
+; Returns
+;   zf: If the array contains the value
+list~compare:
+    push    r8                  ; Temp value
+    push    r9                  ; Counter
+    push    r10                 ; Array
+    push    r11                 ; Length
+    push    r12                 ; Compare Value
+
+    xor     r9, r9
+    lea     r10, [rax]
+    mov     r11, [r10+list#meta#user_size]
+    mov     r12, rbx
+
+
+    jmp  .loop_check
+    .loop:
+        mov     rax, r10
+        mov     rbx, r9
+        call    list~get
+
+        mov     r8, rsi
+
+        mov     rax, r10
+        mov     rbx, r9
+        call    list~type_at
+
+        mov     rax, rsi
+
+        mov     rbx, r8
+        mov     rcx, r12
+
+        call    type~compare
+        jne     .not_equal
+
+        add     r9, 1
+    .loop_check:
+        cmp     r9, r11
+        jl      .loop
+
+    jmp     .equal
+    .not_equal:
+        mov     r12, 1
+        cmp     r12, 0                ; If we get here we want to ensure that the zero flag is set correctly
+        jmp     .return
+    .equal:
+        mov     r12, 1
+        cmp     r12, 1                ; If we get here we want to ensure that the zero flag is set correctly
+    .return:
+    pop     r12
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     r8
+    ret
+
+
 ; Args
 ;   rax: pointer to the list
 ; Returns
