@@ -67,9 +67,9 @@ arr#populate_metadata:
 ;   rsi: pointer to the array
 arr#new:
     push    rcx
+    push    rdx
 
     mov     rcx, rax
-    mov     rbx, rbx
 
     mov     rax, arr#global_stride          ; Load the stride into rax
 
@@ -79,6 +79,7 @@ arr#new:
     lea     rax, [rsi]
     call    arr#populate_metadata
 
+    pop     rdx
     pop     rcx
     ret
 
@@ -180,7 +181,6 @@ arr~println:
     pop     rax
     ret
 
-
 ; Args
 ;   rax: pointer to the array
 ; Returns
@@ -208,8 +208,6 @@ arr~printn:
     pop     rdx
 
     add     rcx, rax            ; Get the end address
-
-
 
     lea     r10, [r10+arr#meta_size]       ; Offset by 16 to account for size and type variables
     lea     rcx, [rcx+arr#meta_size]       ; Offset the end address too
@@ -388,7 +386,7 @@ arr~increase_size:
     ret
 
 ; Args
-;   rax: pointer to the list
+;   rax: pointer to the array
 ;   rbx: value to push
 ; Returns
 ;   rax: the new pointer if needed
@@ -409,7 +407,7 @@ arr~push:
     ret
 
 ; Args
-;   rax: pointer to the list
+;   rax: pointer to the array
 ; Returns
 ;   rsi: value
 arr~pop:
@@ -424,6 +422,80 @@ arr~pop:
 
     pop     rcx
     pop     rbx
+    ret
+
+
+
+; Args
+;   rax: pointer to the array
+;   rbx: Function
+;   rcx: Return type
+;   rdx: arg 1
+;   r8:  arg 2
+; Returns
+;   rsi: Array of outputs
+arr~for_each:
+    push    r9                  ; Array of outputs
+    push    r10                 ; First arg of the called function
+    push    r11                 ; Original Array Pointer
+    push    r12                 ; Counter
+    push    r13                 ; Pointer to after the metadata
+    push    r14                 ; Size of the array
+    push    rbx
+
+
+    lea     r11, [rax]
+    mov     r14, [rax + arr#meta#user_size]
+    lea     r13, [rax + arr#meta_size]
+    xor     r12, r12
+
+    mov     rax, 0
+    mov     rbx, rcx
+
+    call    arr#new
+
+    lea     r9, [rsi]
+
+    ;; Move args for the functions
+    mov     r10, rdx
+    mov     rcx, r8
+
+    xor     rsi, rsi
+
+
+    .loop:
+        mov     rax, r12
+
+        lea     rax, [r11]
+        mov     rbx, r12
+
+        call    arr~get
+
+        mov     rax, rsi
+
+        mov     rbx, r10
+    
+        call    [rsp]
+
+        mov     rbx, rsi
+        lea     rax, [r9]
+
+        call    arr~push
+
+        add     r12, 1
+    .loop_check:
+        cmp     r12, r14
+        jl      .loop
+
+    lea     rsi, [r9]
+
+    pop     rbx
+    pop     r14
+    pop     r13
+    pop     r12
+    pop     r11
+    pop     r10
+    pop     r9
     ret
 
 
