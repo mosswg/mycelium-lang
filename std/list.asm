@@ -313,6 +313,31 @@ list~get:
 ; Args
 ;   rax: pointer to the list
 ;   rbx: index of the element
+; Returns
+;   rsi: element type
+list~type_at:
+    mov     rsi, [rax+list#meta#user_size]          ; Get the length
+    cmp     rsi, rbx            ; Validate index
+    jg      .valid_index
+    mov     rax, exception~runtime~bad_index
+    call    exception~runtime~throw
+
+    .valid_index:
+    push    rax
+
+    call    list~addr_after_meta
+    shr     rbx, 1
+
+    add     rsi, rbx
+    mov     rsi, [rsi]
+
+    pop     rax                 ; Perserve the pointer to the start of the list
+    ret
+
+
+; Args
+;   rax: pointer to the list
+;   rbx: index of the element
 ;   rcx: write value
 ;   rdx: type
 ; Returns
