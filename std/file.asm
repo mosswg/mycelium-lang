@@ -238,9 +238,9 @@ file~read_lines:
 file~write_s:
     mov     rdi, [rax+file#meta#fd]
 
-    mov     rdx, [rax+arr#meta#user_size]
+    mov     rdx, [rbx+arr#meta#user_size]
 
-    mov     rsi, [rax+arr#meta_size]
+    lea     rsi, [rbx+arr#meta_size]
 
     mov     rax, sys~id~write
     syscall
