@@ -35,6 +35,7 @@
 
   sys~id~exit:              equ 0x3C
 
+  sys~id~unlink:            equ 0x57
 ; Args
 ;   rax: file descriptor
 ;   rdi: output buffer
