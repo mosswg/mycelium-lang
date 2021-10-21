@@ -83,6 +83,7 @@ section .text
 ;   rsi: pointer to allocated memory
 file~open:
     push    r8
+    push    r10
     push    rax
 
     mov     rax, file#data_offset + 1*8
@@ -109,6 +110,7 @@ file~open:
 
     mov     rsi, r8
     pop     rax
+    pop     r10
     pop     r8
     ret
 
