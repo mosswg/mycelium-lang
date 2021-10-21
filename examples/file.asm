@@ -25,11 +25,28 @@ main:
   mov   rcx, file#perm#rw
   call  file~open
 
+  mov   r10, rsi
+
   mov   rax, rsi
   call  file~read_lines
 
-  mov   rax, rsi
+  mov   r9, rsi
 
+  mov   rax, r9
+
+; call  arr~printn
+
+  mov   rax, r9
+  mov   rbx, str~split
+  mov   rcx, type#arr
+  mov   rdx, 0x20
+  call  arr~for_each
+
+  mov   rax, rsi
   call  arr~printn
+
+  mov   rax, r10
+  call  file~close
+
 
   ret
