@@ -11,6 +11,8 @@
   - If you need to contact me directly send an email to <moss@mossx.net>
 
 ## Planned Features
+### Note
+All syntax here is entirely theoretically and is planned to change. These examples are stylized with c++ syntax because it's a good comparison but they will not be nearly as similar later in development.
 ### Polymorphism
 A function can be declared multiple times with different arguments and do different things based on which arguments it are used.
 e.g. two print functions that take a string and an int could be decalred as. 
