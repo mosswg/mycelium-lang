@@ -41,6 +41,56 @@ cstr~length:
 
 
 ; Args
+;   rax: string 1
+;   rbx: string 2
+; Returns
+;   zf: If the two strings are equal
+cstr~compare:
+  push  r8                      ; Counter
+  push  r9                      ; String 1
+  push  r10                     ; String 2
+  push  r11                     ; Length
+
+  mov   r9, rax
+  mov   r10, rbx
+  xor   r8, r8
+
+  call  cstr~length
+  mov   r11, rsi
+  mov   rax, r10
+  call  cstr~length
+  cmp   r11, rsi
+  jne   .not_equal
+
+  jmp   .loop_check
+  .loop:
+    mov   rax, [r9+r8]
+    mov   rbx, [r10+r8]
+    cmp   rax, rbx
+    jne   .not_equal
+  .loop_check:
+    cmp   r8, r11
+    jl    .loop
+
+
+  .equal:
+  mov   r11, 1
+  cmp   r11, 1
+  jmp   .return
+  .not_equal:
+  mov   r11, 1
+  cmp   r11, 0
+  .return:
+
+  pop   r11
+  pop   r10
+  pop   r9
+  pop   r8
+  ret
+
+
+
+; Args
 ;   rax: the string to be printed
 ; Returns
 ;   void
