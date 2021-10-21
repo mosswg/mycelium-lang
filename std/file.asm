@@ -224,6 +224,33 @@ file~read_lines:
 
 
 
+    mov     rax, sys~id~write
+    syscall
+    ret
+
+; Args
+;   rax: File path
+; Returns
+;   void
+file#unlink:
+    mov     rdi, rax
+    mov     rax, sys~id~unlink
+
+    syscall
+
+    ret
+
+; Args
+;   rax: File
+; Returns
+;   void
+file~unlink:
+    mov     rdi, [rax+file#meta#path]
+    mov     rax, sys~id~unlink
+
+    syscall
+
+    ret
 
 ; Args
 ;   rax: File object
