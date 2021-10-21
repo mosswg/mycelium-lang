@@ -143,7 +143,7 @@ list~addr_after_meta:
 ;   rbx: check value
 ; Returns
 ;   zf: If the array contains the value
-list~compare:
+list~contains:
     push    r8                  ; Temp value
     push    r9                  ; Counter
     push    r10                 ; Array
@@ -169,7 +169,6 @@ list~compare:
         call    list~type_at
 
         mov     rax, rsi
-
         mov     rbx, r8
         mov     rcx, r12
 
@@ -190,6 +189,74 @@ list~compare:
         mov     r12, 1
         cmp     r12, 1                ; If we get here we want to ensure that the zero flag is set correctly
     .return:
+    pop     r12
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     r8
+    ret
+
+
+
+; Args
+;   rax: pointer to the list
+;   rbx: check value
+; Returns
+;   zf: If the array contains the value
+list~compare:
+    push    r8                  ; Temp value
+    push    r9                  ; Counter
+    push    r10                 ; Array
+    push    r11                 ; Length
+    push    r12                 ; Compare array
+    push    r13                 ; 2nd temp value
+
+    xor     r9, r9
+    lea     r10, [rax]
+    mov     r11, [r10+list#meta#user_size]
+    lea     r12, [rbx]
+
+
+    jmp  .loop_check
+    .loop:
+        lea     rax, [r10]
+        mov     rbx, r9
+        call    list~get
+
+        mov     r8, rsi
+
+        lea     rax, [r12]
+        mov     rbx, r9
+        call    list~get
+
+        mov     r13, rsi
+
+        lea     rax, [r10]
+        mov     rbx, r9
+        call    list~type_at
+
+        mov     rax, rsi
+        mov     rbx, r8
+        mov     rcx, r13
+
+        call    type~compare
+        jne     .not_equal
+
+        add     r9, 1
+    .loop_check:
+        cmp     r9, r11
+        jl      .loop
+
+    jmp     .equal
+    .not_equal:
+        mov     r12, 1
+        cmp     r12, 0                ; If we get here we want to ensure that the zero flag is set correctly
+        jmp     .return
+    .equal:
+        mov     r12, 1
+        cmp     r12, 1                ; If we get here we want to ensure that the zero flag is set correctly
+    .return:
+    pop     r13
     pop     r12
     pop     r11
     pop     r10
