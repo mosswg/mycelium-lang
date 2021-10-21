@@ -11,7 +11,7 @@
 ;   rbx: number
 ; Return
 ;   rsi: number of digits
-int~to_string:
+int~to_cstring:
   push  rbp
   mov   rbp, rsp
 
@@ -86,7 +86,7 @@ int~print:
 
   mov   rbx, rax
   lea   rax, [rsp-16]
-  call  int~to_string
+  call  int~to_cstring
   lea   rax, [rsp-16]
   mov   rbx, rsi
   call  out~puts
@@ -112,7 +112,7 @@ int~println:
 
   mov   rbx, rax
   mov   rax, rsp
-  call  int~to_string
+  call  int~to_cstring
 
   lea   rbx, [rsp]
   add   rbx, rsi
