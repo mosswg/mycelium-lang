@@ -246,9 +246,24 @@ file~stats:
 ; Returns
 ;   void
 file~close:
-    mov     rdi, rax
+    push    rax
+    mov     rdi, [rax+file#meta#fd]
     mov     rax, sys~id~close
     syscall
+
+    mov     rax, [rsp]
+    mov     rdi, [rax+file#data_offset]
+    mov     rsi, [rax+file#meta#stats + stats.size]
+    mov     rax, sys~id~munmap
+    syscall
+
+    mov     rdi, [rsp]
+    mov     rsi, file#data_offset + 1*8
+    mov     rax, sys~id~munmap
+    syscall
+
+
+    pop     rax
     ret
 
 
