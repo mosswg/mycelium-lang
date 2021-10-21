@@ -223,6 +223,24 @@ file~read_lines:
 
 
 
+    mov     rax, sys~id~write
+    syscall
+    ret
+
+; Args
+;   rax: File
+;   rbx: C string
+; Returns
+;   void
+file~write_cs:
+    mov     rdi, [rax+file#meta#fd]
+
+    mov     rax, rbx
+    call    cstr~length
+
+    mov     rdx, rsi
+
+    mov     rsi, rbx
 
     mov     rax, sys~id~write
     syscall
