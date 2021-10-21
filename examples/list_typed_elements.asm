@@ -35,8 +35,8 @@ main:
   mov   r9, rsi                 ; Store the created list in r9
 
 
-  mov   rax, type#int
-  mov   rbx, inner_size         ; Create array with size inner_size and type int
+  mov   rax, inner_size         ; Create array with size inner_size and type int
+  mov   rbx, type#int
 
   call  arr#new
 
@@ -56,7 +56,7 @@ main:
 
   mov   rax, r9                 ; Retrieve the list
   mov   rbx, inner_str          ; Tell the list what we want to push
-  mov   rcx, type#string        ; Tell the list what we want to push is of type string
+  mov   rcx, type#cstring        ; Tell the list what we want to push is of type string
 
   call  list~push               ; Push the string
 
