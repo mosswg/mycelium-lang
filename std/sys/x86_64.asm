@@ -65,7 +65,7 @@ sys~write:
 ; Returns
 ;   void
 sys~exit:
-  mov   rbx, rax
+  mov   rdi, rax
   mov   rax, sys~id~exit
   syscall
   ret
