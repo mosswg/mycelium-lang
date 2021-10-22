@@ -236,6 +236,8 @@ file~read_lines:
 ; Returns
 ;   void
 file~write_s:
+    push    r11
+
     mov     rdi, [rax+file#meta#fd]
 
     mov     rdx, [rbx+arr#meta#user_size]
@@ -244,6 +246,8 @@ file~write_s:
 
     mov     rax, sys~id~write
     syscall
+
+    pop     r11
     ret
 
 ; Args
@@ -252,6 +256,8 @@ file~write_s:
 ; Returns
 ;   void
 file~write_cs:
+    push    r11
+
     mov     rdi, [rax+file#meta#fd]
 
     mov     rax, rbx
@@ -263,6 +269,8 @@ file~write_cs:
 
     mov     rax, sys~id~write
     syscall
+
+    pop     r11
     ret
 
 ; Args
