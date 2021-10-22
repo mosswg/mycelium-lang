@@ -6,6 +6,7 @@
 
 %include "std/exception.asm"
 %include "std/int.asm"
+%include "std/tuple.asm"
 %include "std/list.asm"
 %include "std/arr.asm"
 %include "std/str.asm"
@@ -17,10 +18,11 @@
     type#string:    equ 2       ; Strings are pointers
     type#list:      equ 3       ; Lists are pointers
     type#arr:       equ 4       ; Arrays are pointers
-    type#cstring:   equ 5       ; cstrings are pointers
-    type#char:      equ 6
+    type#tuple:     equ 5       ; Tuples are pointers
+    type#cstring:   equ 6       ; cstrings are pointers
+    type#char:      equ 7
 
-    type#sizes:     dd 8, 8, 8, 8, 8, 8, 1
+    type#sizes:     dd 8, 8, 8, 8, 8, 8, 8, 1
 
 ; Args
 ;   rax: the type
@@ -30,7 +32,7 @@ type~sizeof:
     push    rax
     push    rbx
     push    rdx
-    cmp     rax, 6
+    cmp     rax, 7
     jg      .invalid_type
     cmp     rax, 0
     jl      .invalid_type
@@ -73,6 +75,8 @@ type~read_mem:
     je      .case_8byte
     cmp     rbx, type#arr
     je      .case_8byte
+    cmp     rbx, type#tuple
+    je      .case_8byte
     cmp     rbx, type#char
     je      .case_1byte
 
@@ -114,6 +118,8 @@ type~compare:
     je      .case_list
     cmp     rax, type#arr
     je      .case_arr
+    cmp     rax, type#tuple
+    je      .case_tuple
     cmp     rax, type#char
     je      .case_char
 
@@ -129,6 +135,8 @@ type~compare:
         jmp     .switch_end     ; break
     .case_list:
         call    list~compare
+        jmp     .switch_end     ; break
+    .case_tuple:
         jmp     .switch_end     ; break
     .case_arr:
         call    arr~compare
@@ -160,6 +168,8 @@ type~print:
     je      .case_cstring
     cmp     rbx, type#list
     je      .case_list
+    cmp     rbx, type#tuple
+    je      .case_tuple
     cmp     rbx, type#arr
     je      .case_arr
     cmp     rbx, type#char
@@ -204,6 +214,9 @@ type~print:
         jmp     .switch_end     ; break
     .case_arr:
         call    arr~print
+        jmp     .switch_end     ; break
+    .case_tuple:
+        call    tuple~print
         jmp     .switch_end     ; break
     .case_char:
         mov     r9, rax
