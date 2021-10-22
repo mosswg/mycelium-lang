@@ -115,6 +115,56 @@ str~println:
 ; Args
 ;   rax: string
 ; Returns
+;   zf: is int
+str~is_int:
+  push    r8                    ; counter
+  push    r9                    ; '0'
+  push    r10                   ; '9'
+  push    r11                   ; str
+  push    r12                   ; str size
+
+  xor     r9, r9
+  mov     r9b, '0'
+  xor     r10, r10
+  mov     r10b, '9'
+  lea     r11, [rax]
+  mov     r12, [rax + arr#meta#user_size]
+
+  xor     r8, r8
+
+  .loop:
+    lea   rax, [r11]
+    mov   rbx, r8
+    call  arr~get
+
+    cmp   r9b, sil
+    jl    .non_num
+    cmp   r10b, sil
+    jg    .non_num
+
+  .loop_check:
+    cmp   r8, r12
+    jl    .loop
+
+  jmp   .num
+  .non_num:
+  mov   r8, 1
+  cmp   r8, 0
+  jmp   .return
+
+  .num:
+  mov   r8, 1
+  cmp   r8, 1
+
+  .return:
+  pop     r10
+  pop     r9
+  pop     r8
+  ret
+
+; Args
+;   rax: string
+; Returns
 ;   rsi: int form
 str~to_int:
   push  r8                            ; string
