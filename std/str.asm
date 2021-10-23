@@ -224,7 +224,7 @@ str~starts_with_c:
 ;   rax: string
 ;   rbx: char
 ; Returns
-;   zf: starts with char
+;   zf: ends with char
 str~ends_with_c:
   push  r8
   push  r9
@@ -236,6 +236,21 @@ str~ends_with_c:
 
   pop   r8
   pop   r9
+  ret
+
+
+
+; Args
+;   rax: string
+;   rbx: char
+; Returns
+;   zf: if wrapped
+str~wrapped_with_c:
+  call  str~starts_with_c
+  jne   .return
+  call  str~ends_with_c
+
+  .return:
   ret
 
 ; Args
