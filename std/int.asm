@@ -32,10 +32,12 @@ int~to_cstring:
   cmp   rsi, 1
   jne   .multidigit
   .singledigit:
-    lea rbx, [r9]
-    mov r11b, 48
-    add r11b, al
-    mov [rbx], r11b
+    lea   rbx, [r9]
+    mov   r11b, 48
+    add   r11b, al
+    mov   [rbx], r11b
+    mov   r11b, 0x0
+    mov   [r9+1], r11b
     jmp .return
   .multidigit:
   sub   rsi, 1
