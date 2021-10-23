@@ -34,6 +34,7 @@ tuple#populate_metadata:
 ; Returns
 ;   rsi: pointer to the tuple
 tuple#new:
+    push    rbx
 
     mov     rbx, rax
 
@@ -43,6 +44,7 @@ tuple#new:
     lea     rax, [rsi]
     call    tuple#populate_metadata
 
+    pop     rbx
     ret
 
 
