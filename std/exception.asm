@@ -26,9 +26,11 @@
     exception~runtime~bad_allocation_str:           db "Could Not Allocate Memory", 0xa
     exception~runtime~bad_allocation_len:           equ $-exception~runtime~bad_allocation_str
     exception~runtime~bad_token:                    equ 5
-    exception~runtime~bad_token_str:                db "Unknown Token: "
+    exception~runtime~bad_token_str:                db "Unknown Token: ", 0xa
     exception~runtime~bad_token_len:                equ $-exception~runtime~bad_token_str
-
+    exception~runtime~not_implemented:              equ 6
+    exception~runtime~not_implemented_str:          db "Not Implemented: ", 0xa
+    exception~runtime~not_implemented_len:          equ $-exception~runtime~not_implemented_str
 
 ; Args
 ;   rax: the exception number
@@ -47,6 +49,8 @@ exception~runtime~throw:
     je      .case_bad_alloc
     cmp     rax, exception~runtime~bad_token
     je      .case_bad_token
+    cmp     rax, exception~runtime~not_implemented
+    je      .case_not_implemented
     jmp     .default
 
     .case_bad_arg:
@@ -72,6 +76,13 @@ exception~runtime~throw:
     .case_bad_token:
         mov     rax, exception~runtime~bad_token_str
         mov     rbx, exception~runtime~bad_token_len
+        call    out~put_err
+        mov     rax, rbx
+        call    str~print
+        jmp     .switch_end
+    .case_not_implemented:
+        mov     rax, exception~runtime~not_implemented_str
+        mov     rbx, exception~runtime~not_implemented_len
         call    out~put_err
         mov     rax, rbx
         call    str~print
