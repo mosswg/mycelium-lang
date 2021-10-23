@@ -137,11 +137,12 @@ str~is_int:
     mov   rbx, r8
     call  arr~get
 
-    cmp   r9b, sil
+    cmp   si, r9w
     jl    .non_num
-    cmp   r10b, sil
+    cmp   si, r10w
     jg    .non_num
 
+    add   r8, 1
   .loop_check:
     cmp   r8, r12
     jl    .loop
@@ -157,6 +158,8 @@ str~is_int:
   cmp   r8, 1
 
   .return:
+  pop     r12
+  pop     r11
   pop     r10
   pop     r9
   pop     r8
@@ -198,6 +201,41 @@ str~to_int:
   pop   r10
   pop   r9
   pop   r8
+  ret
+
+
+
+; Args
+;   rax: string
+;   rbx: char
+; Returns
+;   zf: starts with char
+str~starts_with_c:
+  push  r8
+
+  mov   r8b, [rax+arr#meta_size]
+  cmp   r8b, bl
+
+  pop   r8
+  ret
+
+
+; Args
+;   rax: string
+;   rbx: char
+; Returns
+;   zf: starts with char
+str~ends_with_c:
+  push  r8
+  push  r9
+
+  mov   r9, [rax + arr#meta#user_size]
+  mov   r8b, [rax + r9 + arr#meta_size - 1]
+
+  cmp   r8b, bl
+
+  pop   r8
+  pop   r9
   ret
 
 ; Args
