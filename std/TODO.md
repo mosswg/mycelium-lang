@@ -19,6 +19,9 @@ Additionally each element in the array is store as a set of type and data so rep
 ### Exception Array
 * [ ] Currently all exceptions are declared individually and retrieved with a switch statement. This should be changed to an indexable array similar to the one used in std/type
 ### Throws with Arguments
-* [ ] Currently the same error message is printed every time an exception is printed. It would be nice if an error argument could be pass. For example with a bad array index it would be nice to print the bad index and the size of the array. 
+* [x] Currently the same error message is printed every time an exception is printed. It would be nice if an error argument could be pass. For example with a bad array index it would be nice to print the bad index and the size of the array. 
 ### Stacktrace
 * [ ] Currently when an error is thrown there is no way to know where the error occurred. This would help debug and make error messages seem more important.
+
+## std/str
+* [ ] Add starts_with, ends_with, wrapped_with, and trim funcs
