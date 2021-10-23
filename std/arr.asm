@@ -237,6 +237,7 @@ arr~compare:
     pop     r11
     pop     r10
     pop     r9
+    pop     r8
     ret
 
 
@@ -412,8 +413,8 @@ arr~len:
 ;   rsi: element
 arr~get:
     mov     rsi, [rax+arr#meta#user_size]
-    cmp     rsi, rbx
-    jg      .valid_index
+    cmp     rbx, rsi
+    jle     .valid_index
     mov     rax, exception~runtime~bad_index
     call    exception~runtime~throw
 
