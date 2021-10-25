@@ -336,5 +336,127 @@ str~split:
     pop     r8
     ret
 
+; Args
+;   rax: string
+;   rbx: tuple of split chars
+; Return
+;   rsi: Array with split strings
+str~split_t:
+    push    r8                  ; Split counter
+    push    r9                  ; Output array
+    push    r10                 ; Split tuple
+    push    r11                 ; Original Array Pointer
+    push    r12                 ; Counter
+    push    r13                 ; Pointer to after the metadata
+    push    r14                 ; Size of the array
+
+    mov     r10, rbx
+    lea     r11, [rax]
+    mov     r14, [rax + arr#meta#user_size]
+    lea     r13, [rax + arr#meta_size]
+    xor     r12, r12
+    xor     r8, r8
+
+    mov     rax, 0
+    mov     rbx, type#string
+
+    call    arr#new
+
+    lea     r9, [rsi]
+
+    call    str#new
+
+    lea     rax, [r9]
+    lea     rbx, [rsi]
+    call    arr~push
+
+  jmp   .loop_check
+  .loop:
+      xor     rcx, rcx
+      mov     cl, [r13+r12]    ; Current char
+
+      mov     rax, r10
+      movzx   rbx, cl
+      call    tuple~contains    ; Check if the char is in the tuple
+      jne     .non_split
+      .split:
+        push    rcx               ; Store the current char
+
+        lea     rax, [r9]
+        mov     rbx, r8
+        call    arr~get
+
+        mov     rax, [rsi+arr#meta#user_size]
+
+        cmp     rax, 0
+        je      .pseudo_split
+
+        .full_split:
+        call    str#new           ; Create a new string
+
+
+        lea     rax, [rsi]
+        mov     rbx, [rsp]
+        call    arr~push
+
+        lea     rbx, [rax]      ; Get the previously created string
+        lea     rax, [r9]       ; Get the out array
+        call    arr~push        ; Add the string to the out array
+
+        jmp     .common_split
+
+        .pseudo_split:
+        lea     rax, [r9]
+        mov     rbx, r8
+        call    arr~get
+
+        lea     rax, [rsi]
+        mov     rbx, [rsp]
+        call    arr~push
+
+        .common_split:
+
+        call    str#new
+        lea     rax, [r9]
+        lea     rbx, [rsi]
+        call    arr~push
+
+        add   r8, 2             ; Add one to the number of splits
+        add   r12, 1
+        pop   rcx               ; Get back the current char
+        jmp   .loop_check
+      .non_split:
+        lea   rax, [r9]         ; Get the out array
+        mov   rbx, r8           ; Get the current split
+        call  arr~get           ; Get the current split string
+
+
+      .write:
+        lea   rax, [rsi]
+        mov   rbx, rcx
+
+        call arr~push
+
+        mov   rcx, rax
+        mov   rbx, r8
+        lea   rax, [r9]
+
+        call  arr~set
+
+        add   r12, 1
+  .loop_check:
+      cmp     r12, r14
+      jl      .loop
+
+    lea     rsi, [r9]
+
+    pop     r14
+    pop     r13
+    pop     r12
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     r8
+    ret
 
 %endif                          ; ifdef guard
