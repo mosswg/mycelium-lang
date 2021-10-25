@@ -51,17 +51,16 @@ tuple#new:
 
 ; Args
 ;   rax: size
-;   stack: The elements to add in the format [type, data, type, data, ...]
+;   rbx: c array of the elements to add
 ; Returns
 ;   rsi: pointer to the tuple
 tuple#new_ca:
-    lea     rsi, [rsp+8]
     push    r8                  ; Loop counter
     push    r9                  ; Size
     push    r10                 ; Out ptr
     push    r11                 ; Stack
 
-    mov     r11, rsi
+    lea     r11, [rbx]
 
     mov     r9, rax
 
@@ -256,6 +255,51 @@ tuple~set:
 
 
 ; Args
+;   rax: tuple
+;   rbx: value to check
+; Returns
+;   zf: if is in tuple
+tuple~contains:
+    push    r8                  ; counter
+    push    r9                  ; tuple
+    push    r10                 ; tuple size
+    push    r11                 ; value
+
+
+    xor     r8, r8
+    mov     r9, rax
+    mov     r10, [r9 + tuple#meta#size]
+    mov     r11, rbx
+
+
+    jmp     .loop_check
+    .loop:
+        mov     rax, r9
+        mov     rbx, r8
+        call    tuple~get
+
+        mov     rax, rdi        ; move the type
+        mov     rbx, rsi        ; move the value
+        mov     rcx, r11
+        call    type~compare
+        je      .return
+
+        add     r8, 1
+    .loop_check:
+        cmp     r8, r10
+        jl      .loop
+
+    mov     r9, 1
+    cmp     r9, 0               ; Force the correct value on zf
+    .return:
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     r8
+    ret
+
+
+; Args
 ;   rax: pointer to the tuple
 ;   rbx: Function
 ;   rcx: Return type
@@ -264,7 +308,7 @@ tuple~set:
 ; Returns
 ;   rsi: Array of outputs
 tuple~for_each:
-    ;; NOTE: Not Impletemented
+    ;; FIXME: Not Impletemented
     ret
 
     push    r9                  ; Array of outputs
