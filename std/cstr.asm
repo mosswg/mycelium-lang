@@ -4,6 +4,7 @@
 %define _Mycelium_std_cstr_
 
 %include "std/sys.asm"
+%include "std/mem.asm"
 %include "std/out.asm"
 
 
@@ -39,7 +40,18 @@ cstr~length:
   pop   rbp
   ret
 
+; Args
+;   rax: string
+; Returns
+;   void
+cstr~del:
+  push  rax
+  call  cstr~length
 
+  mov   rbx, rsi
+  pop   rax
+  call  mem~deallocate
+  ret
 ; Args
 ;   rax: string 1
 ;   rbx: string 2
