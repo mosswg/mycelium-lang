@@ -97,6 +97,37 @@ str~print:
   pop   rbp
   ret
 
+; Args
+;   rax: string
+;   rbx: compare value
+; Returns
+;   zf: equality
+str~eq:
+  push  rcx
+
+  cmp   rbx, 256
+  jl    .str_eq_char
+
+  .str_eq_char:
+  mov   rcx, [rax + arr#meta#user_size]
+
+  cmp   rcx, 1
+  jne   .return
+
+  mov   rcx, rbx
+  mov   rbx, 1
+  call  arr~get
+
+  cmp   rcx, rsi
+  jmp   .return
+
+  .str_eq_str:
+  call  arr~compare
+
+  .return:
+
+  pop   rcx
+  ret
 
 ; Args
 ;   rax: the string to be printed
