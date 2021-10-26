@@ -176,7 +176,7 @@ type~compare:
         cmp     rbx, rcx
         jmp     .switch_end     ; break
     .case_string:
-        call    arr~compare
+        call    str~eq
         jmp     .switch_end     ; break
     .case_cstring:
         call    cstr~compare
