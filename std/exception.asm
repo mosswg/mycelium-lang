@@ -25,9 +25,6 @@
     exception~runtime~bad_allocation:               equ 4
     exception~runtime~bad_allocation_str:           db "Could Not Allocate Memory", 0xa
     exception~runtime~bad_allocation_len:           equ $-exception~runtime~bad_allocation_str
-    exception~runtime~bad_token:                    equ 5
-    exception~runtime~bad_token_str:                db "Unknown Token: ", 0xa
-    exception~runtime~bad_token_len:                equ $-exception~runtime~bad_token_str
     exception~runtime~not_implemented:              equ 6
     exception~runtime~not_implemented_str:          db "Not Implemented: ", 0xa
     exception~runtime~not_implemented_len:          equ $-exception~runtime~not_implemented_str
@@ -47,8 +44,6 @@ exception~runtime~throw:
     je      .case_bad_type
     cmp     rax, exception~runtime~bad_allocation
     je      .case_bad_alloc
-    cmp     rax, exception~runtime~bad_token
-    je      .case_bad_token
     cmp     rax, exception~runtime~not_implemented
     je      .case_not_implemented
     jmp     .default
@@ -73,13 +68,6 @@ exception~runtime~throw:
         mov     rbx, exception~runtime~bad_allocation_len
         call    out~put_err
         jmp     .switch_end
-    .case_bad_token:
-        mov     rax, exception~runtime~bad_token_str
-        mov     rbx, exception~runtime~bad_token_len
-        call    out~put_err
-        mov     rax, rbx
-        call    str~print
-        jmp     .switch_end
     .case_not_implemented:
         mov     rax, exception~runtime~not_implemented_str
         mov     rbx, exception~runtime~not_implemented_len
@@ -96,6 +84,48 @@ exception~runtime~throw:
     neg     rax
     call    sys~exit
     ret
+
+
+    exception~compiletime~bad_exception_number:         equ 0
+    exception~compiletime~bad_exception_number_str:     db "Invalid Exception Number", 0xa
+    exception~compiletime~bad_exception_number_len:     equ $-exception~compiletime~bad_exception_number_str
+    exception~compiletime~bad_token:                    equ 0x1
+    exception~compiletime~bad_token_str:                db "Unknown Token: ", 0xa
+    exception~compiletime~bad_token_len:                equ $-exception~compiletime~bad_token_str
+
+
+
+
+; Args
+;   rax: the exception number
+; Returns
+;   void
+exception~compiletime~throw:
+    ;; Switch
+    cmp     rax, exception~compiletime~bad_token
+    je      .case_bad_token
+
+
+
+    .case_bad_token:
+        mov     rax, exception~compiletime~bad_token_str
+        mov     rbx, exception~compiletime~bad_token_len
+        call    out~put_err
+        mov     rax, rbx
+        call    str~print
+        jmp     .switch_end
+    .default:
+        mov     rax, exception~compiletime~bad_exception_number_str
+        mov     rbx, exception~compiletime~bad_exception_number_len
+        call    out~put_err
+    .switch_end:
+    pop     rax
+    neg     rax
+    call    sys~exit
+    ret
+
+
+
 
 
 %endif                          ; ifdef guard
