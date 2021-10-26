@@ -99,6 +99,54 @@ type~read_mem:
 
 ; Args
 ;   rax: type
+;   rbx: var
+; Returns
+;   void
+type~del:
+    ;; -- switch --
+    cmp     rax, type#int
+    je      .case_native_type
+    cmp     rax, type#ptr
+    je      .case_native_type
+    cmp     rax, type#string
+    je      .case_string
+    cmp     rax, type#cstring
+    je      .case_cstring
+    cmp     rax, type#list
+    je      .case_list
+    cmp     rax, type#arr
+    je      .case_arr
+    cmp     rax, type#tuple
+    je      .case_tuple
+    cmp     rax, type#char
+    je      .case_native_type
+
+
+    .case_native_type:
+        jmp     .switch_end     ; break
+    .case_string:
+        call    arr~del
+        jmp     .switch_end     ; break
+    .case_cstring:
+        call    cstr~del
+        jmp     .switch_end     ; break
+    .case_list:
+        call    list~del
+        jmp     .switch_end     ; break
+    .case_tuple:
+        call    tuple~del
+        jmp     .switch_end     ; break
+    .case_arr:
+        call    arr~del
+        jmp     .switch_end     ; break
+    .default:
+        mov     rax, exception~runtime~bad_type
+        call    exception~runtime~throw
+    .switch_end:
+    ret
+
+; Args
+;   rax: type
 ;   rbx: Compare 1
 ;   rcx: Compare 2
 ; Returns
