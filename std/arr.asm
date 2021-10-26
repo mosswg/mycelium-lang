@@ -304,9 +304,9 @@ arr~print:
         call    out~puts
 
 
-        mov rax, [r10]
-        mov rbx, rdx
-        call type~print
+        mov     rax, [r10]
+        mov     rbx, rdx
+        call    type~print
 
         add     r10, r9            ; Increment the index
     .loop_check:
@@ -577,7 +577,7 @@ arr~pop:
 
     sub     rbx, 1
 
-    call    list~get             ; rax.get(rbx)
+    call    arr~get             ; rax.get(rbx)
     mov     [rax+arr#meta#user_size], rbx
 
     pop     rcx
