@@ -264,13 +264,13 @@ tuple~contains:
     push    r9                  ; tuple
     push    r10                 ; tuple size
     push    r11                 ; value
-
+    push    rdi
+    push    rsi
 
     xor     r8, r8
     mov     r9, rax
     mov     r10, [r9 + tuple#meta#size]
     mov     r11, rbx
-
 
     jmp     .loop_check
     .loop:
@@ -292,12 +292,66 @@ tuple~contains:
     mov     r9, 1
     cmp     r9, 0               ; Force the correct value on zf
     .return:
+
+    pop     rsi
+    pop     rdi
     pop     r11
     pop     r10
     pop     r9
     pop     r8
     ret
 
+
+; Args
+;   rax: tuple
+;   rbx: value to check
+;   rcx: the type of the check value
+; Returns
+;   zf: if is in tuple
+tuple~contains_t:
+    push    r8                  ; counter
+    push    r9                  ; tuple
+    push    r10                 ; tuple size
+    push    r11                 ; value
+    push    r12                 ; type
+    push    rdi
+    push    rsi
+
+    xor     r8, r8
+    mov     r9, rax
+    mov     r10, [r9 + tuple#meta#size]
+    mov     r11, rbx
+    mov     r12, rcx
+
+    jmp     .loop_check
+    .loop:
+        mov     rax, r9
+        mov     rbx, r8
+        call    tuple~get
+
+        mov     rax, r12        ; move the type
+        mov     rcx, rsi        ; move the value
+        mov     rbx, r11
+        call    type~compare
+        je      .return
+
+        add     r8, 1
+    .loop_check:
+        cmp     r8, r10
+        jl      .loop
+
+    mov     r9, 1
+    cmp     r9, 0               ; Force the correct value on zf
+    .return:
+
+    pop     rsi
+    pop     rdi
+    pop     r12
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     r8
+    ret
 
 ; Args
 ;   rax: pointer to the tuple
