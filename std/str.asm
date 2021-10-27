@@ -115,7 +115,7 @@ str~eq:
   jne   .return
 
   mov   rcx, rbx
-  mov   rbx, 1
+  mov   rbx, 0
   call  arr~get
 
   cmp   rcx, rsi
