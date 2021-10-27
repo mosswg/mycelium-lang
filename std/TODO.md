@@ -25,3 +25,5 @@ Additionally each element in the array is store as a set of type and data so rep
 
 ## std/str
 * [ ] Add starts_with, ends_with, wrapped_with, and trim funcs
+* [ ] Add split_s func for spliting on strings
+* [ ] Add substr func
