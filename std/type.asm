@@ -176,17 +176,25 @@ type~compare:
         cmp     rbx, rcx
         jmp     .switch_end     ; break
     .case_string:
+        mov     rax, rbx
+        mov     rbx, rcx
         call    str~eq
         jmp     .switch_end     ; break
     .case_cstring:
+        mov     rax, rbx
+        mov     rbx, rcx
         call    cstr~compare
         jmp     .switch_end     ; break
     .case_list:
+        mov     rax, rbx
+        mov     rbx, rcx
         call    list~compare
         jmp     .switch_end     ; break
     .case_tuple:
         jmp     .switch_end     ; break
     .case_arr:
+        mov     rax, rbx
+        mov     rbx, rcx
         call    arr~compare
         jmp     .switch_end     ; break
     .case_char:
