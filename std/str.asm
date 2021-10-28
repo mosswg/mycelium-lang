@@ -58,6 +58,8 @@ str#new_cs:
       cmp   r11b, 0x0
       jne   .loop
 
+  lea   rsi, [r9]
+
   pop   r11
   pop   r10
   pop   r9
@@ -154,10 +156,8 @@ str~is_int:
   push    r11                   ; str
   push    r12                   ; str size
 
-  xor     r9, r9
-  mov     r9b, '0'
-  xor     r10, r10
-  mov     r10b, '9'
+  mov     r9, '0'
+  mov     r10, '9'
   lea     r11, [rax]
   mov     r12, [rax + arr#meta#user_size]
 
@@ -167,6 +167,8 @@ str~is_int:
     lea   rax, [r11]
     mov   rbx, r8
     call  arr~get
+
+    and   rsi, 0xFF             ; Mask only the lowest 2 bytes
 
     cmp   si, r9w
     jl    .non_num
@@ -486,5 +488,61 @@ str~split_t:
     pop     r9
     pop     r8
     ret
+
+
+; Args
+;   rax: string
+;   rbx: start index
+;   rcx: end index
+; Returns
+;   rsi: substr
+str~substr:
+  push    r8                    ; loop counter
+  push    r9                    ; original string
+  push    r10                   ; start index
+  push    r11                   ; end index
+  push    r12                   ; increment sign
+  push    r13                   ; return string
+
+  mov     r8, r10
+  lea     r9, [rax]
+  mov     r10, rbx
+  mov     r11, rcx
+
+  call    str#new
+
+  mov     rax, -1
+  cmp     rbx, rcx
+  mov     r12, 1
+  cmovg   r12, rax              ; Put a negative one if the start index is greater than the end
+  je      .return               ; Return an empty string if the start index and end index are equal
+
+  jmp     .loop_check
+  .loop:
+    lea     rax, [r9]
+    mov     rbx, r8
+    call    arr~get
+
+    lea     rax, [r13]
+    mov     rbx, rsi
+    call    arr~push
+
+    add     r8, r12
+  .loop_check:
+    cmp     r8, r11
+    jle     .loop
+
+
+  jmp     .return
+  .return_empty_str:
+  call    str#new
+  .return:
+  pop     r12
+  pop     r11
+  pop     r10
+  pop     r9
+  pop     r8
+  ret
+
 
 %endif                          ; ifdef guard
