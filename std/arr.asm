@@ -553,6 +553,8 @@ arr~increase_size:
 arr~push:
     push    r9
     push    r10
+    push    rcx
+
     mov     r9, rbx             ; Store value to push in temp place
     mov     rbx, 1              ; Increase the size by 1
     call    arr~increase_size
@@ -562,6 +564,7 @@ arr~push:
     sub     rbx, 1
     call    arr~set            ; Set the value
 
+    pop     rcx
     pop     r10
     pop     r9
     ret
