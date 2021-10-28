@@ -8,7 +8,9 @@
 global _start
 
 section .data
-    arg1: db "<number>", 0
+    is_num:     db " is a number", 0
+    not_num:    db " is not a number", 0
+    arg1:       db "<number>", 0
 
 section .text
 
@@ -30,7 +32,20 @@ main:
     mov     rax, rsi
     call    str#new_cs
 
-    mov     r9, rax
+    mov     r9, rsi
+
+    mov     rax, r9
+    call    str~is_int
+    jne     .non_number
+
+    mov     rax, r9
+    call    str~print
+
+    mov     rax, is_num         ; Move false value
+    call    cstr~println
+
+
+    mov     rax, r9
     call    str~to_int
 
     mov     r10, rsi
@@ -44,4 +59,15 @@ main:
 
     call    int~println
 
+    jmp     .return
+    .non_number:
+
+    lea     rax, [r9]
+    call    str~print
+
+    mov     rax, not_num
+    call    cstr~println
+
+    .return:
+    mov     rsi, 0
     ret
