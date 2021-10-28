@@ -202,6 +202,7 @@ str~is_int:
 ;   rax: string
 ; Returns
 ;   rsi: int form
+; TODO: Add support for negative value
 str~to_int:
   push  r8                            ; string
   push  r9                            ; len
@@ -512,11 +513,23 @@ str~substr:
 
   call    str#new
 
+  lea     r13, [rsi]
+
+  mov     rax, [r9+arr#meta#user_size] ; Replace any index with a value of -1 with the length of the string
+  cmp     r10, -1
+  cmove   r10, rax
+  cmp     r11, -1
+  cmove   r11, rax
+
   mov     rax, -1
-  cmp     rbx, rcx
+  cmp     r10, r11
   mov     r12, 1
-  cmovg   r12, rax              ; Put a negative one if the start index is greater than the end
-  je      .return               ; Return an empty string if the start index and end index are equal
+  jl      .forwards
+  mov     r12, rax              ; Put a negative one if the start index is greater than the end
+  mov     r8, r10               ; Put the start index as the end
+  sub     r11, 1
+
+  .forwards:
 
   jmp     .loop_check
   .loop:
@@ -525,19 +538,18 @@ str~substr:
     call    arr~get
 
     lea     rax, [r13]
-    mov     rbx, rsi
+    movzx   rbx, sil
     call    arr~push
 
     add     r8, r12
   .loop_check:
     cmp     r8, r11
-    jle     .loop
+    jne     .loop               ; HACK: We should be checking greater/less but because the loop can go either way we can't
 
 
-  jmp     .return
-  .return_empty_str:
-  call    str#new
-  .return:
+  lea     rsi, [r13]
+
+  pop     r13
   pop     r12
   pop     r11
   pop     r10
