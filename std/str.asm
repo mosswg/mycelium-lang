@@ -210,6 +210,8 @@ str~to_int:
   sub   sil, '0'
   mov   r10, 1
 
+  xor   rsi, rsi
+
   mov   r8, rax
   mov   r9, [r8+arr#meta#user_size]
 
