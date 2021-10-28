@@ -9,6 +9,7 @@ enable_language(ASM_NASM)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
+
 add_executable(print
         print.asm
         )
@@ -43,6 +44,10 @@ add_executable(str-split
 
 add_executable(str-parse
         str_parse.asm
+        )
+
+add_executable(substr
+        substr.asm
         )
 
 include_directories(examples ..)
