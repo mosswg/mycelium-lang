@@ -206,11 +206,10 @@ str~to_int:
   push  r8                            ; string
   push  r9                            ; len
   push  r10                           ; counter
+  xor   rsi, rsi
   mov   sil, [rax+arr#meta_size]      ; out
   sub   sil, '0'
   mov   r10, 1
-
-  xor   rsi, rsi
 
   mov   r8, rax
   mov   r9, [r8+arr#meta#user_size]
