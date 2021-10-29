@@ -31,35 +31,23 @@ section .data
     token#binary#logic#neq#code:        equ 0x1
     token#binary#logic#neq#cstr:        db "!=", 0
 
-    token#binary#logic#shl#code:        equ 0x2
-    token#binary#logic#shl#cstr:        db "<<", 0
-
-    token#binary#logic#shr#code:        equ 0x3
-    token#binary#logic#shr#cstr:        db ">>", 0
-
-    token#binary#logic#less#code:       equ 0x4
+    token#binary#logic#less#code:       equ 0x2
     token#binary#logic#less#cstr:       db "<", 0
 
-    token#binary#logic#less_eq#code:    equ 0x5
+    token#binary#logic#less_eq#code:    equ 0x3
     token#binary#logic#less_eq#cstr:    db "<=", 0
 
-    token#binary#logic#greater#code:    equ 0x6
+    token#binary#logic#greater#code:    equ 0x4
     token#binary#logic#greater#cstr:    db ">", 0
 
-    token#binary#logic#greater_eq#code: equ 0x7
+    token#binary#logic#greater_eq#code: equ 0x5
     token#binary#logic#greater_eq#cstr: db ">=", 0
 
-    token#binary#logic#and#code:        equ 0x8
+    token#binary#logic#and#code:        equ 0x6
     token#binary#logic#and#cstr:        db "&&", 0
 
-    token#binary#logic#or#code:         equ 0x9
+    token#binary#logic#or#code:         equ 0x7
     token#binary#logic#or#cstr:         db "||", 0
-
-    token#binary#bitwise#and#code:      equ 0xa
-    token#binary#bitwise#and#cstr:      db "&", 0
-
-    token#binary#bitwise#or#code:       equ 0xb
-    token#binary#bitwise#or#cstr:       db "|", 0
 
 
     token#unary#inc#code:               equ 0x0
@@ -70,6 +58,49 @@ section .data
 
     token#unary#not#code:               equ 0x2
     token#unary#not#cstr:               db "!", 0
+
+
+    token#bitwise#shl#code:             equ 0x0
+    token#bitwise#shl#cstr:             db "<<", 0
+
+    token#bitwise#shr#code:             equ 0x1
+    token#bitwise#shr#cstr:             db ">>", 0
+
+    token#bitwise#and#code:             equ 0x2
+    token#bitwise#and#cstr:             db "&", 0
+
+    token#bitwise#or#code:              equ 0x3
+    token#bitwise#or#cstr:              db "|", 0
+
+    token#bitwise#not#code:             equ 0x4
+    token#bitwise#not#cstr:             db "~", 0
+
+
+    token#whitespace#space#code:        equ 0x0
+    token#whitespace#space#cstr:        db " ", 0
+
+    token#whitespace#tab#code:          equ 0x1
+    token#whitespace#tab#cstr:          db "	", 0
+
+
+    token#grouping#open#para#code:      equ 0x0
+    token#grouping#open#para#cstr:      db "(", 0
+
+    token#grouping#close#para#code:     equ 0x1
+    token#grouping#close#para#cstr:     db ")", 0
+
+    token#grouping#open#curly#code:     equ 0x2
+    token#grouping#open#curly#cstr:     db "{", 0
+
+    token#grouping#close#curly#code:    equ 0x3
+    token#grouping#close#curly#cstr:    db "}", 0
+
+    token#grouping#open#bracket#code:   equ 0x4
+    token#grouping#open#bracket#cstr:   db "[", 0
+
+    token#grouping#close#bracket#code:  equ 0x5
+    token#grouping#close#bracket#cstr:  db "]", 0
+
 
     token#mov:                          db "mov	", 0
     token#add:                          db "add	", 0
@@ -85,7 +116,11 @@ section .data
     token#type#binary_op:               equ 0x2
     token#type#logic_op:                equ 0x3
     token#type#bitwise_op:              equ 0x4
-    token#type#word:                    equ 0x5
+    token#type#unary_op:                equ 0x5
+    token#type#whitespace:              equ 0x6
+    token#type#grouping:                equ 0x7
+    token#type#word:                    equ 0x8
+    token#type#new_line:                equ 0xa
 
 
 
@@ -139,6 +174,41 @@ section .bss
 
     token#ops#unary:                    resq 1
 
+
+    token#bitwise#shl#str:              resq 1
+
+    token#bitwise#shr#str:              resq 1
+
+    token#bitwise#and#str:              resq 1
+
+    token#bitwise#or#str:               resq 1
+
+    token#bitwise#not#str:              resq 1
+
+    token#ops#bitwise:                  resq 1
+
+
+    token#whitespace#space#str:         resq 1
+
+    token#whitespace#tab#str:           resq 1
+
+    token#ops#whitespace:               resq 1
+
+
+    token#grouping#open#para#str:       resq 1
+
+    token#grouping#close#para#str:      resq 1
+
+    token#grouping#open#curly#str:      resq 1
+
+    token#grouping#close#curly#str:     resq 1
+
+    token#grouping#open#bracket#str:    resq 1
+
+    token#grouping#close#bracket#str:   resq 1
+
+    token#ops#grouping:                 resq 1
+
 section .text
 
 ; Args
@@ -176,60 +246,37 @@ token#binary#math#generate:
 
     mov     [token#ops#binary#math], rsi
 
+    mov     rcx, rsi
+
 
     mov     rax, token#binary#math#plus#cstr
+    mov     rbx, token#binary#math#plus#str
 
-    call    str#new_cs
-
-    mov     [token#binary#math#plus#str], rsi
-
-    mov     rbx, rsi
-    mov     rax, [token#ops#binary#math]
-    call    arr~push
+    call    token#make
 
 
     mov     rax, token#binary#math#minus#cstr
+    mov     rbx, token#binary#math#minus#str
 
-    call    str#new_cs
-
-    mov     [token#binary#math#minus#str], rsi
-
-    mov     rbx, rsi
-    mov     rax, [token#ops#binary#math]
-    call    arr~push
+    call    token#make
 
 
     mov     rax, token#binary#math#mul#cstr
+    mov     rbx, token#binary#math#mul#str
 
-    call    str#new_cs
-
-    mov     [token#binary#math#mul#str], rsi
-
-    mov     rbx, rsi
-    mov     rax, [token#ops#binary#math]
-    call    arr~push
+    call    token#make
 
 
     mov     rax, token#binary#math#div#cstr
+    mov     rbx, token#binary#math#div#str
 
-    call    str#new_cs
-
-    mov     [token#binary#math#div#str], rsi
-
-    mov     rbx, rsi
-    mov     rax, [token#ops#binary#math]
-    call    arr~push
+    call    token#make
 
 
     mov     rax, token#binary#math#mod#cstr
+    mov     rbx, token#binary#math#mod#str
 
-    call    str#new_cs
-
-    mov     [token#binary#math#mod#str], rsi
-
-    mov     rbx, rsi
-    mov     rax, [token#ops#binary#math]
-    call    arr~push
+    call    token#make
 
 
     mov     rax, [token#ops#binary#math]
@@ -258,18 +305,6 @@ token#binary#logic#generate:
 
     mov     rax, token#binary#logic#neq#cstr
     mov     rbx, token#binary#logic#neq#str
-
-    call    token#make
-
-
-    mov     rax, token#binary#logic#shl#cstr
-    mov     rbx, token#binary#logic#shl#str
-
-    call    token#make
-
-
-    mov     rax, token#binary#logic#shr#cstr
-    mov     rbx, token#binary#logic#shr#str
 
     call    token#make
 
@@ -314,6 +349,11 @@ token#binary#logic#generate:
     call    arr~println
     ret
 
+
+; Args
+;   void
+; Returns
+;   void
 token#unary#generate:
     mov     rax, 0
     mov     rbx, type#string
@@ -347,6 +387,142 @@ token#unary#generate:
 
     ret
 
+; Args
+;   void
+; Returns
+;   void
+token#bitwise#generate:
+    mov     rax, 0
+    mov     rbx, type#string
+    call    arr#new
+
+    mov     [token#ops#bitwise], rsi
+    mov     rcx, rsi
+
+
+    mov     rax, token#bitwise#shl#cstr
+    mov     rbx, token#bitwise#shl#str
+
+    call    token#make
+
+
+    mov     rax, token#bitwise#shr#cstr
+    mov     rbx, token#bitwise#shr#str
+
+    call    token#make
+
+
+    mov     rax, token#bitwise#and#cstr
+    mov     rbx, token#bitwise#and#str
+
+    call    token#make
+
+
+    mov     rax, token#bitwise#or#cstr
+    mov     rbx, token#bitwise#or#str
+
+    call    token#make
+
+
+    mov     rax, token#bitwise#not#cstr
+    mov     rbx, token#bitwise#not#str
+
+    call    token#make
+
+
+    mov     rax, [token#ops#bitwise]
+
+    call    arr~println
+
+    ret
+
+; Args
+;   void
+; Returns
+;   void
+token#whitespace#generate:
+    mov     rax, 0
+    mov     rbx, type#string
+    call    arr#new
+
+    mov     [token#ops#whitespace], rsi
+    mov     rcx, rsi
+
+
+    mov     rax, token#whitespace#space#cstr
+    mov     rbx, token#whitespace#space#str
+
+    call    token#make
+
+
+    mov     rax, token#whitespace#tab#cstr
+    mov     rbx, token#whitespace#tab#str
+
+    call    token#make
+
+
+
+    mov     rax, [token#ops#whitespace]
+    call    arr~println
+    ret
+
+
+; Args
+;   void
+; Returns
+;   void
+token#grouping#generate:
+    mov     rax, 0
+    mov     rbx, type#string
+    call    arr#new
+
+    mov     [token#ops#grouping], rsi
+    mov     rcx, rsi
+
+
+    mov     rax, token#grouping#open#para#cstr
+    mov     rbx, token#grouping#open#para#str
+
+    call    token#make
+
+
+    mov     rax, token#grouping#close#para#cstr
+    mov     rbx, token#grouping#close#para#str
+
+    call    token#make
+
+
+    mov     rax, token#grouping#open#curly#cstr
+    mov     rbx, token#grouping#open#curly#str
+
+    call    token#make
+
+
+    mov     rax, token#grouping#close#curly#cstr
+    mov     rbx, token#grouping#close#curly#str
+
+    call    token#make
+
+
+    mov     rax, token#grouping#open#bracket#cstr
+    mov     rbx, token#grouping#open#bracket#str
+
+    call    token#make
+
+
+    mov     rax, token#grouping#close#bracket#cstr
+    mov     rbx, token#grouping#close#bracket#str
+
+    call    token#make
+
+
+    mov     rax, [token#ops#grouping]
+    call    arr~println
+    ret
+
+    ret
+
+
 
 ; Args
 ;   void
@@ -358,6 +534,12 @@ token#generate:
     call    token#binary#logic#generate
 
     call    token#unary#generate
+
+    call    token#bitwise#generate
+
+    call    token#whitespace#generate
+
+    call    token#grouping#generate
 
     ret
 
