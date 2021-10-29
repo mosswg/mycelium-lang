@@ -130,6 +130,129 @@ arr#new_ca:
     ret
 
 ; Args
+;   rax: arr 1
+;   rbx: arr 2
+; Returns
+;   rsi: out arr
+arr#concat:
+    push        r8              ; loop counter
+    push        r9              ; size
+    push        r11             ; second array
+    push        r12             ; out array
+
+    mov         r11, rbx
+
+    mov         r9, [rbx + arr#meta#user_size]
+
+    call        arr~copy        ; Copy the first array
+
+    mov         r12, rsi
+
+    jmp         .loop_check
+    .loop:
+        mov     rax, r11
+        mov     rbx, r8
+        call    arr~get
+
+        mov     rax, r12
+        mov     rbx, rsi
+        call    arr~push
+    
+        add     r8, 1
+    .loop_check:
+        cmp     r8, r9
+        jl      .loop
+
+    mov         rsi, r12
+
+    pop         r12
+    pop         r11
+    pop         r9
+    pop         r8
+    ret
+
+; Args
+;   rax: arr 1 (also out array)
+;   rbx: arr 2
+; Returns
+;   void
+arr~concat:
+    push        r8              ; loop counter
+    push        r9              ; size
+    push        r11             ; second array
+    push        r12             ; out array
+
+    mov         r11, rbx
+    mov         r12, rax
+
+    mov         r9, [rbx + arr#meta#user_size]
+
+    jmp         .loop_check
+    .loop:
+        mov     rax, r11
+        mov     rbx, r8
+        call    arr~get
+
+        mov     rax, r12
+        mov     rbx, rsi
+        call    arr~push
+
+        add     r8, 1
+    .loop_check:
+        cmp     r8, r9
+        jl      .loop
+
+    mov         rsi, r12
+
+    pop         r12
+    pop         r11
+    pop         r9
+    pop         r8
+    ret
+
+
+; Args
+;   rax: arr
+; Returns
+;   rsi: copied arr
+arr~copy:
+    push        r8              ; loop counter
+    push        r10             ; starting array
+    push        r11             ; out array
+    push        r12             ; size
+
+    mov         r10, rax
+    mov         r12, [rax + arr#meta#user_size]
+
+    mov         rbx, [rax + arr#meta#type]
+    mov         rax, 0
+
+    call        arr#new
+    mov         r11, rsi
+
+    .loop:
+        mov     rax, r10
+        mov     rbx, r8
+        call    arr~get
+
+        mov     rax, r11
+        mov     rbx, rsi
+        call    arr~push
+
+        add     r8, 1
+    .loop_check:
+        cmp     r8, r12
+        jl      .loop
+
+    mov         rsi, r11
+
+    pop         r12
+    pop         r11
+    pop         r10
+    pop         r8
+    ret
+
+; Args
 ;   rax: pointer to the array
 ;   rbx: check value
 ; Returns
@@ -165,6 +288,7 @@ arr~contains:
         add     r9, 1
     .loop_check:
         cmp     r9, r11
+        jl      .loop
 
     mov     rax, 1
     cmp     rax, 0                ; If we get here we want to ensure that the zero flag is set correctly
