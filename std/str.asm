@@ -424,6 +424,150 @@ str~split_t:
         mov     rax, [rsi+arr#meta#user_size] ; Get the size of the previous string
 
         cmp     rax, 0          ; If the string length is 0 (two split characters in a row)
+        jne     .full_split    ; We want to do a pseudo split
+
+        lea     rax, [r9]
+        call    arr~pop
+        mov     rdi, rsi
+        sub     r8, 1
+        jmp     .pseudo_split
+
+        .full_split:
+        call    str#new           ; Create a new string
+
+        lea     rdi, [rsi]
+
+        .pseudo_split:
+        lea     rax, [rsi]      ; Get the new string
+        mov     rbx, [rsp]      ; Move rcx (on the stack) into rbx
+        call    arr~push
+
+        lea     rbx, [rdi]      ; Get the previously created string
+        lea     rax, [r9]       ; Get the out array
+        call    arr~push        ; Add the string to the out array
+
+        add     r8, 1
+
+        call    str#new
+        lea     rax, [r9]
+        lea     rbx, [rsi]
+        call    arr~push
+
+        add   r8, 1             ; Add one to the number of splits
+        add   r12, 1
+        pop   rcx               ; Get back the current char
+        jmp   .loop_check
+      .non_split:
+        lea   rax, [r9]         ; Get the out array
+        mov   rbx, r8           ; Get the current split
+        call  arr~get           ; Get the current split string
+
+
+      .write:
+        lea   rax, [rsi]
+        mov   rbx, rcx
+
+        call arr~push
+
+        mov   rcx, rax
+        mov   rbx, r8
+        lea   rax, [r9]
+
+        call  arr~set
+
+        add   r12, 1
+  .loop_check:
+      cmp     r12, r14
+      jl      .loop
+
+    lea     rsi, [r9]
+
+    pop     r14
+    pop     r13
+    pop     r12
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     r8
+    ret
+
+; Args
+;   rax: string
+;   rbx: tuple of split strs
+; Return
+;   rsi: Array with split strings
+str~split_t_s:
+    push    r8                  ; Split counter
+    push    r9                  ; Output array
+    push    r10                 ; Split tuple
+    push    r11                 ; Original String Pointer
+    push    r12                 ; Counter
+    push    r14                 ; Size of the array
+
+    mov     r10, rbx
+    lea     r11, [rax]
+    mov     r14, [rax + arr#meta#user_size]
+    xor     r12, r12
+    xor     r8, r8
+
+    mov     rax, 0
+    mov     rbx, type#string
+
+    call    arr#new
+
+    lea     r9, [rsi]
+
+    call    str#new
+
+    lea     rax, [r9]
+    lea     rbx, [rsi]
+    call    arr~push
+
+  jmp   .loop_check
+  .loop:
+      xor     rcx, rcx
+      lea     rcx, [r12+2]    ; Current index + 2
+      mov     rbx, r12        ; Current index
+      lea     rax, [r11]
+
+      call    str~substr
+
+      push    rsi
+
+      mov     rax, r10
+      mov     rbx, rsi
+      call    tuple~contains    ; Check if the string is in the tuple
+
+      pop     rax
+      call    arr~del
+
+      je      .split
+
+      mov     rax, [r11]
+      mov     rbx, r12
+      mov     rcx, r12
+
+      call    str~substr
+
+      push    rsi
+
+      mov     rax, r10
+      mov     rbx, rsi
+      call    tuple~contains
+
+      pop     rax
+      call    arr~del
+      jne     .non_split
+      .split:
+        push    rcx               ; Store the current char
+
+        lea     rax, [r9]       ; Get the out array
+        mov     rbx, r8         ; Get the current index
+        call    arr~get         ; Get the string at that index
+
+        mov     rax, [rsi+arr#meta#user_size] ; Get the size of the previous string
+
+        cmp     rax, 0          ; If the string length is 0 (two split characters in a row)
         jne      .full_split    ; We want to do a pseudo split
 
         lea     rax, [r9]
