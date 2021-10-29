@@ -11,11 +11,10 @@
 
 section .bss
     split_array:        resq 1
+    empty_str:          resq 1
 
 section .data
-    space_str:          db " ", 0
-    tab_str:            db "	", 0
-
+    empty_cstr:          db 0
 section .text
 
 ; Args
@@ -44,37 +43,46 @@ lexer#lex_lines:
 
     lea     r14, [rsi]
 
+    mov     rax, empty_cstr
+    call    str#new_cs
+
+    mov     [empty_str], rsi
+
+
     mov     rax, [token#ops#binary#math]
     mov     rbx, [token#ops#binary#logic]
 
-    call    arr#concat
+    call    arr#concat          ; Create the split array with the values of binary math and binary logic combined
+
 
     mov     [split_array], rsi
 
     mov     rax, rsi
     mov     rbx, [token#ops#unary]
 
-    call    arr~concat
-
-    mov     rax, space_str
-    call    str#new_cs
-
-    mov     rax, [split_array]
-    mov     rbx, rsi
-
-    call    arr~push
-
-    mov     rax, tab_str
-    call    str#new_cs
-
-    mov     rax, [split_array]
-    mov     rbx, rsi
-
-    call    arr~push
+    call    arr~concat          ; Add the unary strings to the split array
 
 
     mov     rax, [split_array]
-    call    arr~println
+    mov     rbx, [token#ops#bitwise]
+
+    call    arr~concat          ; Add the bitwise strings to the split array
+
+
+    mov     rax, [split_array]
+    mov     rbx, [token#ops#whitespace]
+
+    call    arr~concat          ; Add the whitespace strings into the split array
+
+
+    mov     rax, [split_array]
+    mov     rbx, [token#ops#grouping]
+
+    call    arr~concat          ; Add the grouping strings to the split array
+
+
+    mov     rax, [split_array]
+    call    arr~println         ; Print the array of split strings
 
 
     mov     rax, r10
@@ -86,7 +94,9 @@ lexer#lex_lines:
     lea     r10, [rsi]
 
     mov     rax, r10
-    call    arr~printn
+    call    arr~printn          ; Print the arrays of split lines
+
+    xor     r8, r8              ; Clear the line loop counter
 
     jmp     .line_loop_check
     .line_loop:
@@ -97,6 +107,7 @@ lexer#lex_lines:
         lea     r12, [rsi]
 
         mov     r13, [r12 + arr#meta#user_size]
+        xor     r9, r9          ; Clear the word counter for every line
         jmp     .word_loop_check
         .word_loop:
             xor     rsi, rsi
@@ -105,12 +116,19 @@ lexer#lex_lines:
             mov     rbx, r9
             call    arr~get
 
+            mov     rax, [rsi + arr#meta#user_size] ; get the size of the string
+            cmp     rax, 0                          ; check if the string is size zero
+            je      .word_loop_check
+
             mov     [rbp-8], rsi
+
+
+            push    rsi
+            push    type#string
 
             ;; Switch
             mov     rbx, [rbp-8]
             mov     rcx, type#string
-
             mov     rax, [token#ops#binary#logic]
             call    arr~contains
             je      .case_binary
@@ -125,7 +143,26 @@ lexer#lex_lines:
             mov     rcx, type#string
             mov     rax, [token#ops#unary]
             call    arr~contains
+            je      .case_unary
+
+            mov     rbx, [rbp-8]
+            mov     rcx, type#string
+            mov     rax, [token#ops#bitwise]
+            call    arr~contains
             je      .case_bitwise
+
+            mov     rbx, [rbp-8]
+            mov     rcx, type#string
+            mov     rax, [token#ops#whitespace]
+            call    arr~contains
+            je      .case_whitespace
+
+            mov     rbx, [rbp-8]
+            mov     rcx, type#string
+            mov     rax, [token#ops#grouping]
+            call    arr~contains
+            je      .case_grouping
+
 
             mov     rax, [rbp-8]
             call    str~is_int
@@ -143,13 +180,33 @@ lexer#lex_lines:
                 push    type#int
                 jmp     .switch_end
 
+            .case_unary:
+                push    token#type#unary_op
+                push    type#int
+                jmp     .switch_end
+
             .case_bitwise:
                 push    token#type#bitwise_op
                 push    type#int
                 jmp     .switch_end
 
+            .case_whitespace:
+                push    token#type#whitespace
+                push    type#int
+                jmp     .switch_end
+
+            .case_grouping:
+                push    token#type#grouping
+                push    type#int
+                jmp     .switch_end
+
             .case_number:
                 push    token#type#number
+                push    type#int
+                jmp     .switch_end
+
+            .case_line_end:
+                push    token#type#new_line
                 push    type#int
                 jmp     .switch_end
 
@@ -168,11 +225,28 @@ lexer#lex_lines:
                 mov     rbx, rsi
                 call    arr~push
 
-
+        .word_loop_end:
             add     r9, 1
         .word_loop_check:
             cmp     r9, r13
             jl      .word_loop
+
+    mov     rax, [empty_str]
+    push    rax
+    push    type#string
+
+    push    token#type#new_line
+    push    type#int
+
+    mov     rax, 2
+    lea     rbx, [rsp]
+    call    tuple#new_ca
+
+    add     rsp, 4 * 8
+
+    lea     rax, [r14]
+    mov     rbx, rsi
+    call    arr~push
 
     add     r8, 1
     .line_loop_check:
