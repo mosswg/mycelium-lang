@@ -376,7 +376,7 @@ str~split:
 ;   rbx: tuple of split chars
 ; Return
 ;   rsi: Array with split strings
-str~split_t:
+str~split_t_c:
     push    r8                  ; Split counter
     push    r9                  ; Output array
     push    r10                 ; Split tuple
