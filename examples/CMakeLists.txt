@@ -50,4 +50,8 @@ add_executable(substr
         substr.asm
         )
 
+add_executable(arr-cat
+        arr_cat.asm
+        )
+
 include_directories(examples ..)
