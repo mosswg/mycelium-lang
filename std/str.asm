@@ -798,6 +798,8 @@ str~substr:
   lea     r9, [rax]
   mov     r10, rbx
   mov     r11, rcx
+  mov     r8, r10
+  lea     r9, [rax]
 
   call    str#new
 
