@@ -794,8 +794,6 @@ str~substr:
   push    r12                   ; increment sign
   push    r13                   ; return string
 
-  mov     r8, r10
-  lea     r9, [rax]
   mov     r10, rbx
   mov     r11, rcx
   mov     r8, r10
