@@ -8,3 +8,7 @@
 
 # Ignore build directory
 build/
+
+# Ignore built files
+*.myc.asm
+*.o

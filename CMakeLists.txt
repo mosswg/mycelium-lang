@@ -12,8 +12,16 @@ option(BUILD_EXAMPLES "Build the example files into executables" OFF)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
+add_executable(mycelium
+        token.asm
+        lexer.asm
+        mycelium.asm
+        )
+include_directories(mycelium .)
+
 if (BUILD_STD_LIB)
         add_subdirectory(std)
+        add_dependencies(mycelium mycelium_std)
 endif()
 
 if (BUILD_EXAMPLES)
