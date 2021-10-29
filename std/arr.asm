@@ -142,9 +142,10 @@ arr#concat:
 
     mov         r11, rbx
 
+    xor         r8, r8          ; clear r8
     mov         r9, [rbx + arr#meta#user_size]
 
-    call        arr~copy        ; Copy the first array
+    call        arr~copy        ; copy the first array
 
     mov         r12, rsi
 
@@ -185,6 +186,7 @@ arr~concat:
     mov         r11, rbx
     mov         r12, rax
 
+    xor         r8, r8          ; clear r8
     mov         r9, [rbx + arr#meta#user_size]
 
     jmp         .loop_check
@@ -223,6 +225,8 @@ arr~copy:
 
     mov         r10, rax
     mov         r12, [rax + arr#meta#user_size]
+
+    xor         r8, r8          ; clear r8
 
     mov         rbx, [rax + arr#meta#type]
     mov         rax, 0
@@ -322,6 +326,10 @@ arr~compare:
     mov     r12, rbx
     mov     r13, [r10+arr#meta#type]
 
+    mov     rax, r11
+    mov     rbx, [r12 + arr#meta#user_size]
+    cmp     rax, rbx
+    jne     .return             ; If the sizes are different don't even check the values
 
     jmp  .loop_check
     .loop:
@@ -345,7 +353,7 @@ arr~compare:
         add     r9, 1
     .loop_check:
         cmp     r9, r11
-
+        jl      .loop
 
     jmp     .equal
     .not_equal:
