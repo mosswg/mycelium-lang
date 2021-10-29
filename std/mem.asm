@@ -46,10 +46,14 @@ mem~allocate:
 ; Returns
 ;   void
 mem~deallocate:
+    push    r11
+
     mov     rdi, rax
     mov     rsi, rbx
     mov     rax, sys~id~munmap
     syscall
+
+    pop     r11
     ret
 
 
