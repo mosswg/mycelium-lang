@@ -3,7 +3,7 @@
 
  ## std library
  The Mycelium std library is entirely written in assembly for x86_64 linux with no dependencies. Eventually it may be expanded to include other platforms or architectures. <br>
- Currently the std library is the only part of the project. Once the std library is extensive enough work on the actual language will begin. <br>
+ Work on the language has begun. The std library is still being developed but more focus is currently on the compiler. <br>
 
  ## How to Contribute
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)<br>
@@ -27,19 +27,43 @@ void print(int num) {
     ...
 }
 ```
-Then when they're called the compiler will decide which to use when called. (might add functionallity for return based polymorhism)
+Then when they're called the compiler will decide which to use when called.
+<br>
+A function can also be decalred with different return types. Note that the contents of the function should be changed as little as possible to avoid confusion.
+e.g. two functions that divide an integer where one returns just the quotent and the other returns the quotent and the remainder.
+
+``` c++
+int div(int a, int b) {
+	...
+	return result;
+}
+```
+and
+
+``` c++
+int, int div(int a, int b) {
+	...
+	return result, remainder;
+}
+```
 
 ### Native Assembly Functions
 A function can be declared then defined in an attached assembly file
-e.g. a function `foo` can be declared as.
+e.g. a function `foo` can be defined as.
 
+``` c++
+int asm foo(int a) {
+	...
+	ret
+}
+```
+Or could be decalred as.
 ``` c++
 int asm foo(int a);
 ```
-and defined as.
-
+and defined in a separate file as
 ``` asm
-foo:
+i_foo_i:
     ...
     ret
 ```
@@ -56,22 +80,20 @@ int add(int a, int b) {
 ```
 It will compile into
 ``` asm
-add:
+i_add_ii:
     add     rax, rbx
     mov     rsi, rax
     ret
 ```
 However if defined like this
 ``` c++
-inline add(int a, int b) {
+inline int add(int a, int b) {
     return a + b;
 }
 ```
 And called like 
 ``` c++
-int a = 1;
-int b = 1;
-add(a, b);
+add(1, 1);
 ```
 The whole thing would compile into
 ``` asm
@@ -81,18 +103,17 @@ add     rax, rbx
 ```
 
 ### Special Replace 
-a function can be define as normal then a special case can be added in assembly to do something when a certain value is passed
+a function can be define as normal then a special case can be added to do something when a certain value is passed
 e.g. a function to get the digits in a number can be defined as
 ``` c++
-void digits(int num) {
+int digits(int num) {
     ...
 }
 ```
 Then a special case can be defined when zero is passed as
 ``` c++
 PLACEHOLDER digits(0) {
-    mov     rsi, 1
-    ret
+	return 1;
 }
 ```
 Meta_Note: PLACEHOLDER should eventually be replaced with the proper keyword once it is decided.
