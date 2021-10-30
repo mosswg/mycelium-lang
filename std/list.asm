@@ -8,9 +8,6 @@
 %include "std/type.asm"
 %include "std/mem.asm"
 
-;;; TODO: Add get element type func
-
-
     ;; List archtecure
     ;; [memory size, user size, list type, amount of metadata, metadata..., type, data, type, data, etc...]
 
@@ -418,6 +415,7 @@ list~len:
 ;   rbx: index of the element
 ; Returns
 ;   rsi: element
+;   rdi: element type
 list~get:
     mov     rsi, [rax+list#meta#user_size]          ; Get the length
     cmp     rsi, rbx            ; Validate index
@@ -432,6 +430,7 @@ list~get:
     shr     rbx, 1
 
     add     rsi, rbx
+    mov     rdi, [rsi]
     mov     rsi, [rsi+list#global_element_size]
 
     pop     rax                 ; Perserve the pointer to the start of the list
