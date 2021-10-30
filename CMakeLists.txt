@@ -15,6 +15,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 add_executable(mycelium
         token.asm
         lexer.asm
+        op.asm
         mycelium.asm
         )
 include_directories(mycelium .)
