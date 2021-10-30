@@ -209,6 +209,10 @@ section .bss
 
     token#ops#grouping:                 resq 1
 
+
+section .data
+    token#ops:                          dq 0, token#ops#binary#math, token#ops#binary#logic, token#ops#bitwise, token#ops#unary, token#ops#whitespace, token#ops#grouping, 0, 0, 0
+
 section .text
 
 ; Args
@@ -545,6 +549,7 @@ token#generate:
 
 ; Args
 ;   rax: token str
+;   rbx: token type
 ; Returns
 ;   rsi: token code
 token#get_code:
@@ -556,12 +561,14 @@ token#get_code:
     xor     r8, r8
 
     mov     r9, rax
-    mov     r11, [token#ops#binary#math]
 
-    mov     rax, r9
-    call    str~is_int
-    jz      .number              ; ignore nums they're parsed in other places
+    mov     rax, rbx
+    call    token#get_array_from_type
 
+    mov     r11, rsi
+
+    cmp     rsi, -1
+    je      .no_code
 
     .loop:
         lea     rax, [r11]
@@ -575,7 +582,7 @@ token#get_code:
 
         mov     rax, rsi
         mov     rbx, r9
-        call    arr~compare
+        call    str~eq
         je      .found
     .loop_check:
         cmp     r8, r10
@@ -589,7 +596,7 @@ token#get_code:
     .found:
         mov     rsi, r8
     jmp     .return
-    .number:
+    .no_code:
         mov     rsi, -1
     .return:
     pop     r11
@@ -598,6 +605,21 @@ token#get_code:
     pop     r8
     ret
 
+
+; Args
+;   rax: type
+; Return
+;   rsi: array
+token#get_array_from_type:
+    mov     rsi, -1
+    cmp     rax, token#type#whitespace
+    jg      .return
+
+    shl     rax, 3             ; Multiply by 8 (pointer size)
+    mov     rbx, [token#ops]
+    mov     rsi, [rbx + rax]
+    .return:
+    ret
 
 ; Args
 ;   rax: token str
