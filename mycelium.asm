@@ -12,7 +12,7 @@ global _start
 
 section .data
     filename:       db "examples/add.myc", 0
-    outfile:        db "add.myc.asm", 0
+    outfile:        db "func.myc.asm", 0
 
 
     mycelium#file_section_data:        db '%include "std/sys.asm"', 0xa, 0xa, "global _start", 0xa, 0xa, "section .data", 0xa, 0
@@ -104,16 +104,16 @@ mycelium#end_file:
 
 
 ; Args
-;   rax: file
-;   rbx: array of ops
+;   rax: array of tokens
 ; Returns
-;   void
-broken#write_ops:
+;   rsi: array of ops
+mycelium#parse:
     push    r8                  ; counter
     push    r9                  ; current tuple
     push    r10                 ; file
-    push    r11                 ; array of ops
-    push    r12                 ; number of ops
+    push    r11                 ; array of tokens
+    push    r12                 ; number of tokens
+    push    r13                 ; array of ops
 
     lea     r10, [rax]
     lea     r11, [rbx]
@@ -121,79 +121,31 @@ broken#write_ops:
     mov     r12, [r11 + arr#meta#user_size]
     xor     r8, r8
 
+    mov     rax, 0
+    mov     rbx, type#tuple
+    call    arr#new
+
+    mov     r13, rsi
+
     jmp     .loop_check
     .loop:
-        lea     rax, [r11]
+        mov     rax, r11
         mov     rbx, r8
         call    arr~get
 
-        lea     r9, [rsi]
-        mov     rax, rsi
-        mov     rbx, 0
-        call    tuple~get
-
-        cmp     rsi, token#binary#math#plus#code
-        je      .case_plus
-        cmp     rsi, token#binary#math#minus#code
-        je      .case_minus
-        jmp     .default
-
-        .case_plus:
-            lea     rax, [r9]
-            mov     rbx, 1
-            call    tuple~get
-
-            je      .plus_const_int
+        mov     r9, rsi
 
 
-            .plus_const_int:
-                lea     rax, [r10]
-                mov     rbx, token#mov
-                call    file~write_cs
-
-                lea     rax, [r10]
-                mov     rbx, token#rax
-                call    file~write_cs
-
-                lea     rax, [r10]
-                mov     rbx, token#comma
-                call    file~write_cs
-
-                lea     rax, [r9]
-                mov     rbx, 2
-                call    tuple~get
-
-                lea     rax, [rsp-32]
-                mov     rbx, rsi
-                call    int~to_cstring
-
-                lea     rbx, [rsp-32]
-                lea     rax, [r10]
-                call    file~write_cs
 
 
-                lea     rax, [rsp-32]
-                mov     bl, 0xa
-                mov     [rax], bl
-                mov     bl, 0
-                mov     [rax+1], bl
-                call    file~write_cs
-
-            jmp     .switch_end
-        .case_minus:
-            mov     rax, exception~runtime~not_implemented
-            call    exception~runtime~throw
-            jmp     .switch_end
-        .default:
-            mov     rax, exception~compiletime~bad_token
-            call    exception~runtime~throw
-        .switch_end:
         add     r8, r12
     .loop_check:
         cmp     r8, r12
         jl      .loop
 
+    mov     rsi, r13
 
+    pop     r13
     pop     r12
     pop     r11
     pop     r10
