@@ -120,6 +120,7 @@ section .data
     token#type#whitespace:              equ 0x6
     token#type#grouping:                equ 0x7
     token#type#word:                    equ 0x8
+    token#type#func:                    equ 0x9
     token#type#new_line:                equ 0xa
 
 
