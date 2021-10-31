@@ -118,7 +118,7 @@ lexer#lex_lines:
 
             mov     rax, [rsi + arr#meta#user_size] ; get the size of the string
             cmp     rax, 0                          ; check if the string is size zero
-            je      .word_loop_check
+            je      .word_loop_end
 
             mov     [rbp-8], rsi
 
@@ -211,9 +211,34 @@ lexer#lex_lines:
                 jmp     .switch_end
 
             .default:
-                push    token#type#word
+                mov     rax, [r12 + arr#meta#user_size]
+                sub     rax, 1
+                cmp     r9, rax
+                jge     .regular_word
+
+                lea     rax, [r12]
+                mov     rbx, r9
+                add     rbx, 1
+                call    arr~get         ; get the next string
+
+                mov     rax, [rsi + arr#meta#user_size] ; check the size
+                cmp     rax, 1
+                jne     .regular_word   ; if the size is greater than 1 it's a normal word.
+
+                mov     rax, rsi
+                mov     rbx, 0
+                call    arr~get         ; get the first (and only) character of the next string
+
+                cmp     sil, '('        ; check if it's an open para
+                jne     .regular_word   ; if it is we have a function and otherwise we have a regular word
+
+                push    token#type#func
                 push    type#int
 
+                jmp     .switch_end
+                .regular_word:
+                push    token#type#word
+                push    type#int
             .switch_end:
                 mov     rax, 2
                 lea     rbx, [rsp]
