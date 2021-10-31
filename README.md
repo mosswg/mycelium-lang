@@ -12,7 +12,7 @@
 
 ## Planned Features
 ### Note
-All syntax here is entirely theoretically and is planned to change. These examples are stylized with c++ syntax because it's a good comparison but they will not be nearly as similar later in development.
+All syntax here is entirely theoretically and is planned to change. These examples are stylized with syntax similar to c++ because it's a good comparison but they will not be nearly as similar later in development.
 ### Polymorphism
 A function can be declared multiple times with different arguments and do different things based on which arguments it are used.
 e.g. two print functions that take a string and an int could be decalred as. 
@@ -63,7 +63,7 @@ int asm foo(int a);
 ```
 and defined in a separate file as
 ``` asm
-i_foo_i:
+int_foo(int):
     ...
     ret
 ```
@@ -80,7 +80,7 @@ int add(int a, int b) {
 ```
 It will compile into
 ``` asm
-i_add_ii:
+int_add(int_int):
     add     rax, rbx
     mov     rsi, rax
     ret
@@ -103,6 +103,7 @@ add     rax, rbx
 ```
 
 ### Special Replace 
+#### This might not be implemented
 a function can be define as normal then a special case can be added to do something when a certain value is passed
 e.g. a function to get the digits in a number can be defined as
 ``` c++
@@ -116,7 +117,7 @@ PLACEHOLDER digits(0) {
 	return 1;
 }
 ```
-Meta_Note: PLACEHOLDER should eventually be replaced with the proper keyword once it is decided.
+Note: PLACEHOLDER should eventually be replaced with the proper keyword once it is decided.
 
 
 
