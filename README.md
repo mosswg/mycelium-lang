@@ -10,30 +10,169 @@
   - Please submit any issues you have [here](https://github.com/mossx-dev/Mycelium/issues/new/choose)
   - If you need to contact me directly send an email to <moss@mossx.net>
 
+## Syntax
+Note: This is a work in progress and is completely subject to change.
+### Variables
+Variables are decalred with a [type](Types) which define how they function. 
+e.g.
+
+``` c++
+string my_string;
+int my_int = 5;
+```
+
+There are two special types in the std library which can be used as an alternative.
+They are `any` and `auto`. `any` will allow a variable to hold any type. `any` requires a type to be provided when first declared and when the type is changed. `auto` is the same as any but will decide it's type based on assignment and does not require explicit type declaration. Both `any` and `auto` require an extra byte to store the current type.
+
+e.g. of `any`
+``` c++
+// TODO: Figure out how this syntax will work
+```
+
+e.g. of `auto`
+``` c++
+auto var1 = "Hello";
+
+var1 = 5;
+```
+
+
+### Functions
+Functions are decalred with the `fn` keyword. 
+Then return types and amount are defined. 
+This can be omitted if the function does not return anything. 
+Next the function name is defined. Then the arguments.
+
+e.g. a function that takes two `int`s and returns two `int`s
+``` c++
+fn<int, int> my_func(int a, int b) {
+	...
+}
+```
+Functions can also use the `any` and `auto` types
+e.g.
+
+``` c++
+fn<any> my_other_func(auto a) {
+	...
+}
+```
+A function that returns nothing and takes no arguments could be defined as.
+
+``` c++
+fn my_third_func() {
+	...
+}
+```
+Or defined as.
+
+``` c++
+fn<> my_other_third_func() {
+	...
+}
+```
+#### Arguments
+A function can also use custom argument syntax
+e.g. a function that uses semi-colons instead of commas
+
+``` c++
+fn my_semi_colon_func(int a; int b) {
+	...
+}
+```
+or a function could take arguments in the form of a string
+
+``` c++
+// TODO: Change this syntax
+fn my_weird_func("My arguments are" auto a "and" auto b) {
+	...
+}
+```
+#### Conditionals
+A function can use the special keyword `cn` and then is a conditional which takes a function and any other arguments. 
+It should return a boolean to indicate that the condition was true. This can be used to define custom if statements
+e.g. a conditional that takes a string and executes the code if the string is empty
+``` c++
+cn if_empty_string(fn func, string str) {
+	if (str.is_empty) {
+		func.run();
+		return true;
+	}
+	return false;
+}
+
+
+if_empty_string("") {
+	println("String is empty");
+}
+else {
+	println("String is not empty");
+}
+```
+#### Loops
+Using the conditional function type and the cond argument type a loop can be made.
+Note: infinite recursion will not result in a stack overflow but will cause errors after 18 quintillion times (when the recursion counter goes negative). 
+
+e.g. A loop that runs n number of times
+```c++
+cn loop_n_times(fn func, int counter) {
+	if (n != 0) {
+		func.run();
+		loop_n_times(func, counter - 1);
+	}
+	return false;
+}
+
+
+loop_n_times(5) {
+	println("loop");
+}
+```
+
+
+### Classes
+
+
+### Types
+
+
+
+
 ## Planned Features
 ### Note
-All syntax here is entirely theoretically and is planned to change. These examples are stylized with syntax similar to c++ because it's a good comparison but they will not be nearly as similar later in development.
+All syntax here is in development and is most likely going to change.
 ### Polymorphism
 A function can be declared multiple times with different arguments and do different things based on which arguments it are used.
 e.g. two print functions that take a string and an int could be decalred as. 
 ``` c++
-void print(string str) {
+fn print(string str) {
     ...
 }
 ```
 and
 ``` c++
-void print(int num) {
+fn print(int num) {
     ...
 }
 ```
+They would compile to
+
+``` asm
+print(string):
+```
+and 
+
+``` asm
+print(int):
+```
+
 Then when they're called the compiler will decide which to use when called.
 <br>
 A function can also be decalred with different return types. Note that the contents of the function should be changed as little as possible to avoid confusion.
 e.g. two functions that divide an integer where one returns just the quotent and the other returns the quotent and the remainder.
 
 ``` c++
-int div(int a, int b) {
+fn<int> div(int a, int b) {
 	...
 	return result;
 }
@@ -41,10 +180,56 @@ int div(int a, int b) {
 and
 
 ``` c++
-int, int div(int a, int b) {
+fn<int, int> div(int a, int b) {
 	...
 	return result, remainder;
 }
+```
+They would compile to
+
+```asm
+int_div(int_int):
+	...
+	ret
+```
+and 
+
+``` asm
+int_int_div(int_int):
+	...
+	ret
+```
+
+
+### Operator Overloading
+A class can be defined as.
+
+``` c++
+class pair {
+	...
+}
+```
+Then the `+` operator could be defined with
+
+``` c++
+op<this + pair b> {
+	...
+}
+```
+This would compile into
+
+``` asm
+pair.op_043:
+	...
+```
+
+Then the `+` operator can be use a you would with anything else e.g.
+
+``` c++
+pair first_pair;
+pair second_pair;
+
+first_pair + second_pair;
 ```
 
 ### Native Assembly Functions
