@@ -102,6 +102,16 @@ section .data
     token#grouping#close#bracket#cstr:  db "]", 0
 
 
+    token#keyword#func#code:            equ 0x0
+    token#keyword#func#cstr:            db "fn", 0
+
+    token#keyword#oper#code:            equ 0x1
+    token#keyword#oper#cstr:            db "op", 0
+
+    token#keyword#cond#code:            equ 0x2
+    token#keyword#cond#cstr:            db "cn", 0
+
+
     token#mov:                          db "mov	", 0
     token#add:                          db "add	", 0
     token#sub:                          db "sub	", 0
@@ -121,7 +131,10 @@ section .data
     token#type#grouping:                equ 0x7
     token#type#word:                    equ 0x8
     token#type#func:                    equ 0x9
-    token#type#new_line:                equ 0xa
+    token#type#keyword:                 equ 0xa
+
+    token#type#new_line:                equ 0xff
+
 
 
 
@@ -209,6 +222,15 @@ section .bss
     token#grouping#close#bracket#str:   resq 1
 
     token#ops#grouping:                 resq 1
+
+
+    token#keyword#func#str:             resq 1
+
+    token#keyword#oper#str:             resq 1
+
+    token#keyword#cond#str:             resq 1
+
+    token#ops#keyword:                  resq 1
 
 
 section .data
@@ -390,6 +412,40 @@ token#unary#generate:
     call    arr~println
     ret
 
+
+; Args
+;   void
+; Returns
+;   void
+token#keyword#generate:
+    mov     rax, 0
+    mov     rbx, type#string
+    call    arr#new
+
+    mov     [token#ops#keyword], rsi
+    mov     rcx, rsi
+
+
+    mov     rax, token#keyword#func#cstr
+    mov     rbx, token#keyword#func#str
+
+    call    token#make
+
+
+    mov     rax, token#keyword#oper#cstr
+    mov     rbx, token#keyword#oper#str
+
+    call    token#make
+
+
+    mov     rax, token#keyword#cond#cstr
+    mov     rbx, token#keyword#cond#str
+
+    call    token#make
+
+
+    mov     rax, [token#ops#keyword]
+    call    arr~println
     ret
 
 ; Args
@@ -545,6 +601,8 @@ token#generate:
     call    token#whitespace#generate
 
     call    token#grouping#generate
+
+    call    token#keyword#generate
 
     ret
 
