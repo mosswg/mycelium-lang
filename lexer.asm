@@ -80,6 +80,11 @@ lexer#lex_lines:
 
     call    arr~concat          ; Add the grouping strings to the split array
 
+    mov     rax, [split_array]
+    mov     rbx, [token#ops#keyword]
+
+    call    arr~concat
+
 
     mov     rax, [split_array]
     call    arr~println         ; Print the array of split strings
@@ -163,6 +168,12 @@ lexer#lex_lines:
             call    arr~contains
             je      .case_grouping
 
+            mov     rbx, [rbp-8]
+            mov     rcx, type#string
+            mov     rax, [token#ops#keyword]
+            call    arr~contains
+            je      .case_keyword
+
 
             mov     rax, [rbp-8]
             call    str~is_int
@@ -197,6 +208,11 @@ lexer#lex_lines:
 
             .case_grouping:
                 push    token#type#grouping
+                push    type#int
+                jmp     .switch_end
+
+            .case_keyword:
+                push    token#type#keyword
                 push    type#int
                 jmp     .switch_end
 
