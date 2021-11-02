@@ -777,8 +777,32 @@ str~split_a_s:
     pop     rbp
     ret
 
+; Args
+;   rax: string
+;   rbx: twine
+; Returns
+;   rax: new array pointer (if needed)
+str~push(twine):
+  push    r9                    ; string
+  push    r10                   ; twine
 
+  mov     r9, rax
+  mov     r10, rbx
 
+  mov     rax, r10
+
+  call    cstr~length
+
+  mov     rcx, rsi
+  mov     rdx, type#char
+  mov     rax, r9
+  mov     rbx, r10
+
+  call    arr~push_ca
+
+  pop     r10
+  pop     r9
+  ret
 
 ; Args
 ;   rax: string
