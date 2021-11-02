@@ -22,6 +22,17 @@
     type#cstring:   equ 6       ; cstrings are pointers
     type#char:      equ 7
 
+
+    type#int#name:      db "int", 0
+    type#ptr#name:      db "ptr", 0
+    type#string#name:   db "string", 0
+    type#list#name:     db "list", 0
+    type#arr#name:      db "arr", 0
+    type#tuple#name:    db "tuple", 0
+    type#cstring#name:  db "twine", 0
+    type#char#name:     db "char", 0
+
+    type#names:     dq type#int#name, type#ptr#name, type#string#name, type#list#name, type#arr#name, type#tuple#name, type#cstring#name, type#char#name
     type#sizes:     dd 8, 8, 8, 8, 8, 8, 8, 1
 
 ; Args
@@ -30,8 +41,6 @@
 ;   rsi: the size
 type~sizeof:
     push    rax
-    push    rbx
-    push    rdx
     cmp     rax, 7
     jg      .invalid_type
     cmp     rax, 0
@@ -42,16 +51,35 @@ type~sizeof:
         call    exception~runtime~throw
     .valid_type:
         lea     rsi, type#sizes
-        mov     rbx, 4
-        mul     rbx
+        shl     rax, 2
         lea     rax, [rsi+rax]
     mov     esi, [rax]
-    pop     rdx
-    pop     rbx
     pop     rax
     ret
 
 
+
+; Args
+;   rax: the type
+; Returns
+;   rsi: name
+type~get_name:
+    push    rax
+    cmp     rax, 7
+    jg      .invalid_type
+    cmp     rax, 0
+    jl      .invalid_type
+    jmp     .valid_type
+    .invalid_type:
+        mov     rax, exception~runtime~bad_type
+        call    exception~runtime~throw
+    .valid_type:
+        lea     rsi, type#names
+        shl     rax, 3
+        lea     rax, [rsi+rax]
+    mov     rsi, [rax]
+    pop     rax
+    ret
 
 
 
