@@ -702,6 +702,57 @@ arr~push:
     ret
 
 ; Args
+;   rax: pointer to array
+;   rbx: c array to push
+;   rcx: size of c array
+;   rdx: type of the c array
+; Returns
+;   rax: the new pointer if needed
+arr~push_ca:
+    push    r8                  ; counter
+    push    r9                  ; array
+    push    r10                 ; c array size
+    push    r11                 ; c array
+    push    r12                 ; c array type size
+
+    xor     r8, r8
+    mov     r9, rax
+    mov     r10, rcx
+    mov     r11, rbx
+
+    mov     rax, rdx
+    call    type~sizeof
+
+    mov     r12, rsi
+
+
+    jmp     .loop_check
+    .loop:
+        mov     rax, r8
+        mul     r12
+
+        mov     rbx, [r11 + rax]
+        mov     rax, r9
+
+        call    arr~push
+
+        mov     r9, rsi
+
+        add     r8, 1
+    .loop_check:
+        cmp     r8, r10
+        jl      .loop
+
+    mov     rax, r9
+
+    pop     r12
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     r8
+    ret
+
+; Args
 ;   rax: pointer to the array
 ; Returns
 ;   rsi: value
