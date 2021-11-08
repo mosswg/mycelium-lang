@@ -133,7 +133,7 @@ section .data
     token#type#func:                    equ 0x9
     token#type#keyword:                 equ 0xa
 
-    token#type#new_line:                equ 0xff
+    token#type#new_line:                equ 0x0
 
 
 
@@ -234,7 +234,8 @@ section .bss
 
 
 section .data
-    token#ops:                          dq 0, token#ops#binary#math, token#ops#binary#logic, token#ops#bitwise, token#ops#unary, token#ops#whitespace, token#ops#grouping, 0, 0, 0
+    token#ops:                          dq 0, token#ops#binary#math, token#ops#binary#logic, token#ops#bitwise, token#ops#unary, token#ops#whitespace, token#ops#grouping, 0, 0, token#ops#keyword
+    token#num_types:                    equ token#type#keyword+1
 
 section .text
 
@@ -605,6 +606,44 @@ token#generate:
     call    token#keyword#generate
 
     ret
+
+; Args
+;   void
+; Returns
+;   void
+token#del:
+    push    r8                  ; counter
+    push    r9                  ; ops array
+    push    r10                 ; array size
+
+    lea     r9, [token#ops]
+    mov     r10, token#num_types
+    xor     r8, r8
+
+    jmp     .loop_check
+    .loop:
+        mov     rax, r9
+        mov     rbx, r8
+        shl     rbx, 3           ; rbx * 8
+
+        mov     rax, [rax + rbx]
+
+        cmp     rax, 0
+        je      .no_del
+        call    arr~del
+
+        .no_del:
+        add     r8, 1
+    .loop_check:
+        cmp     r8, r10
+        jl      .loop
+
+
+    pop     r10
+    pop     r9
+    pop     r8
+    ret
+
 
 ; Args
 ;   rax: token str
