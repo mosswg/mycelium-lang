@@ -132,21 +132,24 @@ type~read_mem:
 ;   void
 type~del:
     ;; -- switch --
-    cmp     rax, type#int
+    push    rax
+    mov     rax, rbx
+    pop     rbx
+    cmp     rbx, type#int
     je      .case_native_type
-    cmp     rax, type#ptr
+    cmp     rbx, type#ptr
     je      .case_native_type
-    cmp     rax, type#string
+    cmp     rbx, type#string
     je      .case_string
-    cmp     rax, type#cstring
+    cmp     rbx, type#cstring
     je      .case_cstring
-    cmp     rax, type#list
+    cmp     rbx, type#list
     je      .case_list
-    cmp     rax, type#arr
+    cmp     rbx, type#arr
     je      .case_arr
-    cmp     rax, type#tuple
+    cmp     rbx, type#tuple
     je      .case_tuple
-    cmp     rax, type#char
+    cmp     rbx, type#char
     je      .case_native_type
 
 
