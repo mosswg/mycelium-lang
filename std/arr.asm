@@ -380,8 +380,40 @@ arr~compare:
 ; Returns
 ;   void
 arr~del:
-    mov     rbx, [rax]
+    .start:
+    push    r8                  ; counter
+    push    r9                  ; array
+    push    r10                 ; size
+    push    r11                 ; type
+
+    xor     r8, r8
+    mov     r9, rax
+    mov     r10, [r9 + arr#meta#user_size]
+    mov     r11, [r9 + arr#meta#type]
+
+    jmp     .loop_check
+    .loop:
+        mov     rax, r9
+        mov     rbx, r8
+        call    arr~get
+
+        mov     rax, r11
+        mov     rbx, rsi
+        call    type~del
+
+        add     r8, 1
+    .loop_check:
+        cmp     r8, r10
+        jl      .loop
+
+    mov     rax, r9
+    mov     rbx, [r9 + arr#meta#mem_size]
     call    mem~deallocate
+
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     r8
     ret
 
 
