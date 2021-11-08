@@ -99,7 +99,7 @@ lexer#lex_lines:
     lea     r10, [rsi]
 
     mov     rax, r10
-    call    arr~printn          ; Print the arrays of split lines
+    ;; call    arr~printn          ; Print the arrays of split lines
 
     xor     r8, r8              ; Clear the line loop counter
 
@@ -293,6 +293,13 @@ lexer#lex_lines:
     .line_loop_check:
         cmp     r8, r11
         jl      .line_loop
+
+    .after_loop:
+
+
+    mov     rax, [split_array]
+    call    arr~del
+
 
     lea     rsi, [r14]
 
