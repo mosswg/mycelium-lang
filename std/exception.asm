@@ -106,6 +106,9 @@ exception~runtime~throw:
     exception~compiletime~bad_op_arg_str:               db " Operator Expected Value Argument but Found ", 0
     exception~compiletime~bad_op_arg_len:               equ $-exception~compiletime~bad_op_arg_str
 
+    exception~compiletime~not_implemented:              equ 0x3
+    exception~compiletime~not_implemented_str:          db "Not Implemented: ", 0xa
+    exception~compiletime~not_implemented_len:          equ $-exception~compiletime~not_implemented_str
 
 
 
@@ -128,6 +131,8 @@ exception~compiletime~throw:
     je      .case_bad_token
     cmp     r9, exception~compiletime~bad_op_arg
     je      .case_bad_op_arg
+    cmp     r9, exception~compiletime~not_implemented
+    je      .case_not_implemented
     jmp     .default
 
     .case_bad_token:
@@ -144,6 +149,13 @@ exception~compiletime~throw:
         mov     rbx, exception~compiletime~bad_op_arg_len
         call    out~put_err
         mov     rax, r11
+        call    cstr~print
+        jmp     .switch_end
+    .case_not_implemented:
+        mov     rax, exception~compiletime~not_implemented_str
+        mov     rbx, exception~compiletime~not_implemented_len
+        call    out~put_err
+        mov     rax, r10
         call    cstr~print
         jmp     .switch_end
     .default:
