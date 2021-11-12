@@ -672,8 +672,8 @@ str~split_a_s:
     lea     rbx, [rsi]
     call    arr~push
 
-  jmp   .loop_check
-  .loop:
+    jmp   .loop_check
+    .loop:
       xor     rcx, rcx
       lea     rcx, [r12+2]    ; Current index + 2
       mov     rbx, r12        ; Current index
@@ -782,7 +782,7 @@ str~split_a_s:
 ;   rbx: twine
 ; Returns
 ;   rax: new array pointer (if needed)
-str~push(twine):
+str.pushAtwine:
   push    r9                    ; string
   push    r10                   ; twine
 
