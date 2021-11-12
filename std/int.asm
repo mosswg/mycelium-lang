@@ -75,6 +75,52 @@ int~to_cstring:
   pop   rbp
   ret
 
+
+
+; Args
+;   rax: number
+; Return
+;   rsi: int as string
+;   rdi: number of digits
+int~to_string_hex:
+  push  rbp
+  mov   rbp, rsp
+  ;;    rbp - 8                   Out string
+
+  mov   r9, rax         ; Move the out string to a place we don't need for other functions
+  mov   r8, rbx
+  mov   rax, rbx
+  call  int~digits
+  push  rsi                     ; store the digits on the stack
+
+  mov rcx, 1
+  mov r10, 10
+
+
+  jmp .loop_check
+  .loop:
+    xor rdx, rdx
+    div r10
+
+    lea rbx, [r9]
+    add rbx, rsi
+    mov r11b, 48
+    add r11b, dl
+    mov [rbx], r11b
+
+    sub rsi, 1
+  .loop_check:
+    cmp rsi, 0
+  jge .loop
+
+  .return:
+  mov rax, r9
+  mov rbx, r8
+  pop   rbp
+  ret
+
+
+
 ; Args
 ;   rax: the number to be printed
 ; Returns
