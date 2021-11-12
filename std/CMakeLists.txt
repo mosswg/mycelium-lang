@@ -12,13 +12,14 @@ enable_language(ASM_NASM)
 set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
 
 add_library(mycelium_std
+        sys.asm
+        str.asm
+        out.asm
         arr.asm
         type.asm
         int.asm
+        tuple.asm
         list.asm
-        str.asm
-        sys.asm
-        out.asm
         exception.asm
         mem.asm
         cstr.asm
