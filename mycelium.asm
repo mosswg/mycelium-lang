@@ -11,12 +11,12 @@
 global _start
 
 section .data
-    filename:       db "examples/add.myc", 0
-    outfile:        db "func.myc.asm", 0
+    filename:       db "examples/oper.myc", 0
+    outfile:        db "oper.myc.asm", 0
 
 
     mycelium#file_section_data:        db '%include "std/sys.asm"', 0xa, 0xa, "global _start", 0xa, 0xa, "section .data", 0xa, 0
-    mycelium#file_section_text:        db "section .text", 0xa, 0xa, "_start:", 0xa, "	mov   r15, rsp", 0xa, "	call  main", 0xa, "	mov   eax, esi			; exit code", 0xa, "call  sys~exit			; call exit", 0xa, "main:", 0xa, 0
+    mycelium#file_section_text:        db "section .text", 0xa, 0xa, "_start:", 0xa, "	mov   r15, rsp", 0xa, "	call  main", 0xa, "	mov   eax, esi			; exit code", 0xa, "	call  sys~exit			; call exit", 0xa, 0xa, "main:", 0xa, 0
     mycelium#file_end                  db "mov	rsi, 0", 0xa, "ret", 0xa, 0
 
 section .text
@@ -53,8 +53,8 @@ main:
     mov     rax, rsi
     call    lexer#lex_lines
 
-	mov		rax, rsi
-	call	arr~printn
+	mov	rax, rsi
+    ;; call	arr~printn
 
     mov     rax, r11
     mov     rbx, rsi
@@ -64,6 +64,13 @@ main:
 
     mov     rax, r10
     call    file~close
+
+    .tokendel:
+
+    call    token#del
+
+    .loop:
+    jmp     .loop
 
 
 	mov		rsi, 0
