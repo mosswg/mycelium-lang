@@ -7,102 +7,207 @@
 %include "token.asm"
 
 section .data
-    ;; Ops are a tuple with the values [op code, before op arg, after op arg 1, after op arg 2, ..., after op arg n]
-
-
-    op#add:             equ 0x0
-    op#sub:             equ 0x1
-    op#mul:             equ 0x2
-    op#div:             equ 0x3
-    op#mod:             equ 0x4
-
-    op#has_pre_arg:     dq 1,               1,              1,              1,          1
-    op#arg_sizes:       dq 2,               2,              2,              2,          2
-    op#create_ops:      dq op#create_add,   0,              0,              0,          0
-
-
+    ;; Ops are a tuple with the values [op function, arg, arg, arg, ...]
 
 section .text
 
 ; Args
-;   rax: op code
+;   rax: function name
 ; Returns
 ;   rsi: op
 op#new:
-    push    r8              ; op code
+    push    r9                  ; op
+    push    r10                 ; function
 
-    shl     rax, 3          ; Multiply be 8
+    mov     r10, rax
 
-    mov     rax, [op#arg_sizes + rax]
+    mov     rax, list#type#basic
+    mov     rbx, 1
 
-    add     rax, 1
+    call    list#new
 
-    call    tuple#new
+    mov     r9, rsi
 
+
+    mov     rax, r9
+    mov     rbx, type#string
+    mov     rcx, r10
+
+    mov     rsi, r9
+
+    pop     r10
+    pop     r9
+    ret
+
+op.operator_pre:       db "O_", 0
+; Args
+;   rax: array of tokens
+; Returns
+;   rsi: function name
+op.get_function_name_from_operator:
+    push    rbp
+    push    r8                  ; loop counter
+    push    r10                 ; function name
+    push    r11                 ; number of tokens
+    push    r12                 ; array of tokens
+    mov     rbp, rsp
+    ;;      rbp - 8               temp value
+
+    mov     r11, [rax + arr#meta#user_size]
+    mov     r12, rax
+
+    call    str#new
+    mov     r10, rsi
+
+    xor     r8, r8
+    jmp     .loop_check
+    .loop:
+        mov     rax, r12
+        mov     rbx, r8
+
+        call    arr~get
+
+        mov     rax, rsi
+
+        call    token.get_data_type
+
+        mov     [rbp - 8], rsi
+
+        mov     rax, rsi
+
+        call    type~get_name
+    
+        add     r8, 1
+    .loop_check:
+        cmp     r8, r11
+        jl      .loop
+
+
+    pop     r12
+    pop     r11
+    pop     r10
     pop     r8
+    pop     rbp
     ret
 
 
+op.function_args:       db "A_", 0
+op.function_returns:    db "R_", 0
+op.sepatarator:         db "_", 0
+
+; Args
+;   rax: token
+; Returns
+;   rsi: string repersentation of the function
+op#get_function:
+    push    r9                  ; token
+    push    rdx                 ; tmp value
+
+    mov     r9, rax
+
+    mov     rbx, 0
+    call    tuple~get           ; eq. rsi = token.type
+
+
+	;; -- Switch --
+    cmp     rsi, token#type#func
+    je      .case_func
+    cmp     rsi, token#type#binary_op
+    je      .case_binary_op
+    jmp     .default
+
+    .case_func:
+        call    str#new
+        mov     rdx, rsi
+
+        mov     rax, r9
+        mov     rbx, 1
+        call    tuple~get       ; eq. rsi = token.function
+
+        mov     rax, rdi
+        mov     rbx, rsi
+        call    arr~concat
+
+        mov     rsi, rax
+        jmp     .switch_end
+
+    .case_binary_op:
+        mov     rax, r9
+        mov     rbx, 1
+        call    tuple~get       ; eq. rsi = token.operator
+
+        mov     rax, rsi
+        call    op.get_function_name_from_operator ; eq. rsi = function_from_operator(token.operator)
+
+        jmp     .switch_end
+
+    .default:
+        mov     rsi, -1
+    .switch_end:
+
+    pop     rdx
+    pop     r9
+    ret                         ; eq. return rsi
 
 ; Args
 ;   rax: op
 ;   rbx: list of operands
-;   rcx: second operand
 ; Returns
 ;   rsi: op
 op#set_args:
     push    r8                  ; loop counter
     push    r9                  ; operand args
     push    r10                 ; number of operands (length of the operand array)
+    push    r11                 ; op
 
-    mov     r9, rax
+    mov     r9, rbx
+    mov     r11, rax
 
     xor     r8, r8
     mov     r10, [r9 + arr#meta#user_size]
 
+    jmp     .loop_check
+    .loop:
+        mov     rax, r9
+        mov     rbx, r8
 
+        call    arr~get
+
+
+        mov     rax, r11
+        mov     rbx, r8
+        mov     rcx, rsi
+
+        call    tuple~set
+
+        add     r8, 1
+    .loop_check:
+        cmp     r8, r10
+        jl      .loop
+
+
+    pop     r11
     pop     r10
     pop     r9
     pop     r8
     ret
 
 
-;; token -> op
-;; (token.category * 256) + token.index
-;; e.g. '-' is 0x1 and '<' is 0x102
-;; This should be fine because we shouldn't ever have a category with more than 256 items
-
 ; Args
 ;   rax: token
 ; Returns
 ;   rsi: op code
-op#get_code_from_token:
+op#new_from_token:
     push    r8                  ; token cat
     push    r9                  ; token index in category
     push    r10                 ; token
 
     mov     r10, rax
 
-    mov     rbx, 0
-
-    call    tuple~get           ; eq. token[0]
-
-
-    mov     r8, rsi
-
-    mov     rax, r10
-    mov     rbx, 1
-
-    call    tuple~get           ; eq. token[1]
-
-
-    mov     rax, rsi
-    mov     rbx, r8
-
-    call    token#get_code
+    call    op#get_function
 
     cmp     rsi, -1
-    je      .return             ; Return a -1 if is operand
+    je      .return             ; Return a -1 if is operand not an operator
 
 
     mov     r9, rsi
@@ -148,7 +253,7 @@ op#create_array_from_tokens:
 
         mov     rax, rsi
 
-        call    op#get_code_from_token
+        call    op#new_from_token
 
         cmp     rsi, -1
         je      .loop_end
@@ -183,20 +288,14 @@ op#create_array_from_tokens:
 
 
 ; Args
-;   rax: op code
-;   rbx: index in token array
-;   rcx: token array
+;   rax: index in token array
+;   rbx: token array
 ; Returns
 ;   rsi: op
 op#create_op:
     push    r8                  ; Create op func
     push    r9                  ; op code
     push    r10                 ; out op
-
-    mov     r9, rax
-
-    shl     rax, 3              ; Multiply rax by 8 (size of ptr)
-    mov     r8, [op#create_ops + rax]
 
     mov     rax, r9
     call    op#new
@@ -228,7 +327,6 @@ op#get_args:
     push    rbp
     push    r8                  ; loop counter
     push    r9                  ; op code
-    push    r10                 ; number of args
     push    r11                 ; arg positions
     push    r12                 ; token array
     push    r13                 ; token index
@@ -247,8 +345,6 @@ op#get_args:
 
     mov     rax, r9
     shl     rax, 3              ; mul by 8
-
-    mov     r10, [op#arg_sizes + rax]
 
     jmp     .loop_check
     .loop:
@@ -290,7 +386,6 @@ op#get_args:
     pop     r13
     pop     r12
     pop     r11
-    pop     r10
     pop     r9
     pop     rbp
     ret
