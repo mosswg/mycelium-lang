@@ -644,6 +644,50 @@ token#del:
     pop     r8
     ret
 
+; Args
+;   rax: token
+; Returns
+;   rsi: type
+token.get_data_type:
+    push    r8                  ; token type
+    push    r9                  ; token
+
+    mov     r9, rax
+
+    mov     rbx, 0
+    call    arr~get             ; rsi = token[0] a.k.a rsi = token.type (token type not data type)
+
+    mov     r8, rsi
+
+    ;; -- Switch --
+    cmp     r8, token#type#number
+    je      .case_number
+
+    cmp     r8, token#type#word
+    je      .case_word
+
+    jmp     .default
+
+
+    .case_string:
+        mov     rsi, type#string
+        jmp     .switch_end
+
+    .case_number:
+        mov     rsi, type#int
+        jmp     .switch_end
+
+    .case_word:
+        mov     rax, exception~compiletime~not_implemented
+        call    exception~compiletime~throw
+
+    .default:
+        mov     rsi, -1
+
+    .switch_end:
+
+    ret
+
 
 ; Args
 ;   rax: token str
