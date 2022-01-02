@@ -11,8 +11,8 @@
 global _start
 
 section .data
-    filename:       db "examples/oper.myc", 0
-    outfile:        db "oper.myc.asm", 0
+    filename:       db "examples/add.myc", 0
+    outfile:        db "add.myc.asm", 0
 
 
     mycelium#file_section_data:        db '%include "std/sys.asm"', 0xa, 0xa, "global _start", 0xa, 0xa, "section .data", 0xa, 0
@@ -53,8 +53,13 @@ main:
     mov     rax, rsi
     call    lexer#lex_lines
 
-	mov	rax, rsi
-    ;; call	arr~printn
+    call    op.static_init
+
+    mov     rax, rsi
+    call    op.get_function_name_from_operator
+
+    mov     rax, rsi
+    call    str~println
 
     mov     rax, r11
     mov     rbx, rsi

@@ -7,9 +7,42 @@
 %include "token.asm"
 
 section .data
-    ;; Ops are a tuple with the values [op function, arg, arg, arg, ...]
+
+
+
+
+
+
+section .bss
+
+    op.ops: resq 1
+
 
 section .text
+
+; Args
+;   void
+; Returns
+;   void
+op.static_init:
+    push    r9
+
+    mov     rax, 1
+    mov     rbx, type#tuple
+
+    call    arr#new
+
+    mov     op.ops, rsi
+
+    mov     r9, rsi
+
+
+
+    pop     r9
+
+    ret
+
+
 
 ; Args
 ;   rax: function name
@@ -39,6 +72,18 @@ op#new:
     pop     r9
     ret
 
+
+; Args
+;   rax: string
+; Returns
+;   rsi: op
+op.create:
+
+
+    ret
+
+
+
 op.operator_pre:       db "O_", 0
 ; Args
 ;   rax: array of tokens
@@ -50,8 +95,11 @@ op.get_function_name_from_operator:
     push    r10                 ; function name
     push    r11                 ; number of tokens
     push    r12                 ; array of tokens
+    push    r13                 ; char loop counter
+    push    r14                 ; char loop string
     mov     rbp, rsp
     ;;      rbp - 8               temp value
+    ;;      rbp - 16              temp string
 
     mov     r11, [rax + arr#meta#user_size]
     mov     r12, rax
@@ -67,21 +115,91 @@ op.get_function_name_from_operator:
 
         call    arr~get
 
+        push    rsi
         mov     rax, rsi
 
         call    token.get_data_type
 
-        mov     [rbp - 8], rsi
+        cmp     rsi, -1
+        je      .loop_end
 
-        mov     rax, rsi
+        cmp     rsi, type#op
+        jne     .non_op
 
-        call    type~get_name
-    
+        call    str#new
+
+        push    rsi
+
+        pop     rax
+        mov     rbx, 1
+
+        call    tuple~get
+
+        mov     r14, rsi
+
+        xor     r13, r13
+
+        jmp     .char_loop_check
+        .char_loop:
+            mov     rax, r14
+            mov     rbx, r13
+
+            call    arr~get
+
+            mov     rax, rsi
+
+            call    int~to_string_rhex
+
+            push    rsi      ; store the string in a temporary place to later be deleted
+
+            mov     rax, [rbp + 8]
+            mov     rbx, rsi
+
+            call    arr~concat          ; add the string hex value of the operator to the temp string
+
+            pop     rax
+
+            call    arr~del             ; delete the hex string
+
+            add     r13, 1
+        .char_loop_check:
+            cmp     r13, [r14 + arr#meta#user_size]
+
+        mov     rax, r10
+        pop     rbx
+        pop     rbx
+
+        call    arr~concat
+
+        jmp     .loop_end
+
+        .non_op:
+            mov     rax, rsi
+
+            call    type~get_name
+
+            mov     rax, rsi
+
+            call    str#new_cs
+
+            mov     [rbp - 8], rsi
+
+            mov     rbx, rsi
+            mov     rax, r10
+
+            call    arr~concat
+
+            mov     rax, [rbp - 8]
+
+            call    arr~del
+
+        .loop_end:
         add     r8, 1
     .loop_check:
         cmp     r8, r11
         jl      .loop
 
+    mov     rsi, r10
 
     pop     r12
     pop     r11
