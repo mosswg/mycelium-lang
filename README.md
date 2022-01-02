@@ -11,13 +11,13 @@ Mycelium is now going to be an interpreted language until it is useable enough t
 ## Milestones
 - [x] tokenizer
 - [x] parser
-- [ ] type checker
 - [ ] interpreter
   - [ ] std functions (e.g. print)
   - [ ] user defined functions
   - [ ] std operations (e.g. adding ints)
   - [ ] user defined classes
   - [ ] user defined operations
+- [ ] type checker
 - [ ] compiler
   - [ ] std functions (e.g. print)
   - [ ] user defined functions
