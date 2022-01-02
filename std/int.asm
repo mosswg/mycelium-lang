@@ -77,46 +77,46 @@ int~to_cstring:
 
 
 
+int.to_hex_arr:   db "0123456789abcdedf"
 ; Args
 ;   rax: number
 ; Return
-;   rsi: int as string
-;   rdi: number of digits
-int~to_string_hex:
+;   rsi: int as string in reversed hex
+;   rdi: number of hex digits
+int~to_string_rhex:
+  push  r8                      ; number
+  push  r9                      ; string
   push  rbp
   mov   rbp, rsp
   ;;    rbp - 8                   Out string
 
-  mov   r9, rax         ; Move the out string to a place we don't need for other functions
-  mov   r8, rbx
-  mov   rax, rbx
-  call  int~digits
-  push  rsi                     ; store the digits on the stack
+  call  str#new
 
-  mov rcx, 1
-  mov r10, 10
+  mov   r9, rsi
 
-
-  jmp .loop_check
+  jmp   .loop_check
   .loop:
-    xor rdx, rdx
-    div r10
+    mov   rax, r8
+    mov   rbx, 16
 
-    lea rbx, [r9]
-    add rbx, rsi
-    mov r11b, 48
-    add r11b, dl
-    mov [rbx], r11b
+    div   rbx
 
-    sub rsi, 1
+    mov   r8, rax
+
+    mov   rbx, [int.to_hex_arr + rdx]
+    mov   rax, r9
+
+    call  arr~push
+
   .loop_check:
-    cmp rsi, 0
-  jge .loop
+    cmp   r8, 1
+    jge   .loop
 
-  .return:
-  mov rax, r9
-  mov rbx, r8
+  mov rsi, r8
+
   pop   rbp
+  pop   r9
+  pop   r8
   ret
 
 
