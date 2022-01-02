@@ -20,7 +20,7 @@ section .text
 ; Args
 ;   rax: array of lines
 ; Returns
-;   rsi: array of ops
+;   rsi: array of tokens
 lexer#lex_lines:
     push    rbp
     mov     rbp, rsp
@@ -86,8 +86,10 @@ lexer#lex_lines:
     call    arr~concat
 
 
+    %ifdef _mycelium_debug_
     mov     rax, [split_array]
     call    arr~println         ; Print the array of split strings
+    %endif
 
 
     mov     rax, r10
