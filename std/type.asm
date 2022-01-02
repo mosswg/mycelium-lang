@@ -20,7 +20,8 @@
     type#arr:       equ 4       ; Arrays are pointers
     type#tuple:     equ 5       ; Tuples are pointers
     type#cstring:   equ 6       ; cstrings are pointers
-    type#char:      equ 7
+    type#op:        equ 7       ; operators are stored as strings
+    type#char:      equ 8
 
 
     type#int#name:      db "int", 0
@@ -30,10 +31,11 @@
     type#arr#name:      db "arr", 0
     type#tuple#name:    db "tuple", 0
     type#cstring#name:  db "twine", 0
+    type#op#name:       db "operator", 0
     type#char#name:     db "char", 0
 
-    type#names:     dq type#int#name, type#ptr#name, type#string#name, type#list#name, type#arr#name, type#tuple#name, type#cstring#name, type#char#name
-    type#sizes:     dd 8, 8, 8, 8, 8, 8, 8, 1
+    type#names:     dq type#int#name, type#ptr#name, type#string#name, type#list#name, type#arr#name, type#tuple#name, type#cstring#name, type#op#name, type#char#name
+    type#sizes:     dd 8, 8, 8, 8, 8, 8, 8, 8, 1
 
 ; Args
 ;   rax: the type
@@ -41,7 +43,7 @@
 ;   rsi: the size
 type~sizeof:
     push    rax
-    cmp     rax, 7
+    cmp     rax, type#char
     jg      .invalid_type
     cmp     rax, 0
     jl      .invalid_type
@@ -65,7 +67,7 @@ type~sizeof:
 ;   rsi: name
 type~get_name:
     push    rax
-    cmp     rax, 7
+    cmp     rax, type#char
     jg      .invalid_type
     cmp     rax, 0
     jl      .invalid_type
@@ -105,6 +107,8 @@ type~read_mem:
     je      .case_8byte
     cmp     rbx, type#tuple
     je      .case_8byte
+    cmp     rbx, type#op
+    je      .case_8byte
     cmp     rbx, type#char
     je      .case_1byte
 
@@ -133,22 +137,33 @@ type~read_mem:
 type~del:
     ;; -- switch --
     push    rax
-    mov     rax, rbx
+    mov     rax, rbx            ; Swap rax and rbx
     pop     rbx
+
     cmp     rbx, type#int
     je      .case_native_type
+
     cmp     rbx, type#ptr
     je      .case_native_type
+
     cmp     rbx, type#string
     je      .case_string
+
     cmp     rbx, type#cstring
     je      .case_cstring
+
     cmp     rbx, type#list
     je      .case_list
+
     cmp     rbx, type#arr
     je      .case_arr
+
     cmp     rbx, type#tuple
     je      .case_tuple
+
+    cmp     rbx, type#op
+    je      .case_string
+
     cmp     rbx, type#char
     je      .case_native_type
 
@@ -187,18 +202,28 @@ type~compare:
     ;; -- switch --
     cmp     rax, type#int
     je      .case_int
+
     cmp     rax, type#ptr
     je      .case_int
+
     cmp     rax, type#string
     je      .case_string
+
     cmp     rax, type#cstring
     je      .case_cstring
+
     cmp     rax, type#list
     je      .case_list
+
     cmp     rax, type#arr
     je      .case_arr
+
     cmp     rax, type#tuple
     je      .case_tuple
+
+    cmp     rax, type#op
+    je      .case_string
+
     cmp     rax, type#char
     je      .case_char
 
@@ -247,18 +272,28 @@ type~print:
     ;; -- switch --
     cmp     rbx, type#int
     je      .case_int
+
     cmp     rbx, type#ptr
     je      .case_int
+
     cmp     rbx, type#string
     je      .case_string
+
     cmp     rbx, type#cstring
     je      .case_cstring
+
     cmp     rbx, type#list
     je      .case_list
+
     cmp     rbx, type#tuple
     je      .case_tuple
+
     cmp     rbx, type#arr
     je      .case_arr
+
+    cmp     rbx, type#op
+    je      .case_string
+
     cmp     rbx, type#char
     je      .case_char
 
