@@ -5,10 +5,27 @@
  The Mycelium std library is entirely written in assembly for x86_64 linux with no dependencies. Eventually it may be expanded to include other platforms or architectures. <br>
  Work on the language has begun. The std library is still being developed but more focus is currently on the compiler. <br>
 
- ## How to Contribute
-  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)<br>
-  - Please submit any issues you have [here](https://github.com/mossx-dev/Mycelium/issues/new/choose)
-  - If you need to contact me directly send an email to <moss@mossx.net>
+## Important Update
+Mycelium is now going to be an interpreted language until it is useable enough to write a self-compiler. This should speed up development considerably.
+
+## Milestones
+- [x] tokenizer
+- [x] parser
+- [ ] type checker
+- [ ] interpreter
+  - [ ] std functions (e.g. print)
+  - [ ] user defined functions
+  - [ ] std operations (e.g. adding ints)
+  - [ ] user defined classes
+  - [ ] user defined operations
+- [ ] compiler
+  - [ ] std functions (e.g. print)
+  - [ ] user defined functions
+  - [ ] std operations (e.g. adding ints)
+  - [ ] user defined classes
+  - [ ] user defined operations
+- [ ] self-compilation
+
 
 ## Syntax
 Note: This is a work in progress and is completely subject to change.
@@ -134,8 +151,6 @@ loop_n_times(5) {
 
 
 ### Types
-
-
 
 
 ## Planned Features
@@ -303,6 +318,13 @@ PLACEHOLDER digits(0) {
 }
 ```
 Note: PLACEHOLDER should eventually be replaced with the proper keyword once it is decided.
+
+
+
+## How to Contribute
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)<br>
+- Please submit any issues you have [here](https://github.com/mossx-dev/Mycelium/issues/new/choose)
+- If you need to contact me directly send an email to <moss@mossx.net>
 
 
 
