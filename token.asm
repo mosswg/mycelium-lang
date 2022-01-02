@@ -1,6 +1,9 @@
   ;; Author: Moss Gallagher
   ;; Date: 21-Oct-21
 
+%ifndef     _mycelium_token_
+%define     _mycelium_token_
+
 %include "std/sys.asm"
 %include "std/str.asm"
 %include "std/tuple.asm"
@@ -115,6 +118,7 @@ section .data
     token#mov:                          db "mov	", 0
     token#add:                          db "add	", 0
     token#sub:                          db "sub	", 0
+    token#call:                         db "call	", 0
     token#rax:                          db "rax", 0
     token#rbx:                          db "rbx", 0
     token#rcx:                          db "rcx", 0
@@ -307,8 +311,11 @@ token#binary#math#generate:
     call    token#make
 
 
+    %ifdef _mycelium_debug_
     mov     rax, [token#ops#binary#math]
     call    arr~println
+    %endif
+
     ret
 
 ; Args
@@ -373,8 +380,11 @@ token#binary#logic#generate:
     call    token#make
 
 
+    %ifdef _mycelium_debug_
     mov     rax, [token#ops#binary#logic]
     call    arr~println
+    %endif
+
     ret
 
 
@@ -409,8 +419,11 @@ token#unary#generate:
     call    token#make
 
 
+    %ifdef _mycelium_debug_
     mov     rax, [token#ops#unary]
     call    arr~println
+    %endif
+
     ret
 
 
@@ -444,9 +457,11 @@ token#keyword#generate:
 
     call    token#make
 
-
+    %ifdef _mycelium_debug_
     mov     rax, [token#ops#keyword]
     call    arr~println
+    %endif
+
     ret
 
 ; Args
@@ -492,9 +507,10 @@ token#bitwise#generate:
     call    token#make
 
 
+    %ifdef _mycelium_debug_
     mov     rax, [token#ops#bitwise]
-
     call    arr~println
+    %endif
 
     ret
 
@@ -523,9 +539,11 @@ token#whitespace#generate:
     call    token#make
 
 
-
+    %ifdef _mycelium_debug_
     mov     rax, [token#ops#whitespace]
     call    arr~println
+    %endif
+
     ret
 
 
@@ -578,8 +596,11 @@ token#grouping#generate:
     call    token#make
 
 
+    %ifdef _mycelium_debug_
     mov     rax, [token#ops#grouping]
     call    arr~println
+    %endif
+
     ret
 
     ret
@@ -655,7 +676,7 @@ token.get_data_type:
     mov     r9, rax
 
     mov     rbx, 0
-    call    arr~get             ; rsi = token[0] a.k.a rsi = token.type (token type not data type)
+    call    tuple~get             ; rsi = token[0] a.k.a rsi = token.type (token type not data type)
 
     mov     r8, rsi
 
@@ -665,6 +686,18 @@ token.get_data_type:
 
     cmp     r8, token#type#word
     je      .case_word
+
+    cmp     r8, token#type#binary_op
+    je      .case_op
+
+    cmp     r8, token#type#logic_op
+    je      .case_op
+
+    cmp     r8, token#type#bitwise_op
+    je      .case_op
+
+    cmp     r8, token#type#unary_op
+    je      .case_op
 
     jmp     .default
 
@@ -681,10 +714,17 @@ token.get_data_type:
         mov     rax, exception~compiletime~not_implemented
         call    exception~compiletime~throw
 
+    .case_op:
+        mov     rsi, type#op
+        jmp     .switch_end
+
     .default:
         mov     rsi, -1
 
     .switch_end:
+
+    pop     r9
+    pop     r8
 
     ret
 
@@ -824,3 +864,5 @@ token#get_var:
     pop     r9
     pop     r8
     ret
+
+%endif
