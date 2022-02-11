@@ -9,8 +9,8 @@
 Mycelium is going to be completely rewritten in C++. The reason for this change is the same reason there have been barely any updates to the project in months. I have been very busy and every time I try to code in assembly I can't get anything meaningful done. So hopefully now I can get back to working on this project again. As for the std library I figure someone might find it useful so I created a [repo for it](https://github.com/mossx-dev/Mycore) but it will not be actively maintained.
 
 ## Milestones
-- [x] tokenizer
-- [x] parser
+- [ ] tokenizer
+- [ ] parser
 - [ ] interpreter
   - [ ] std functions (e.g. print)
   - [ ] user defined functions
