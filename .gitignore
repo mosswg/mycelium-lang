@@ -9,6 +9,9 @@
 # Ignore build directory
 build/
 
+# Ignore project directory
+.idea
+
 # Ignore built files
 *.myc.asm
 *.o
