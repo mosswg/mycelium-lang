@@ -6,7 +6,7 @@
  Work on the language has begun. The std library is still being developed but more focus is currently on the compiler. <br>
 
 ## Important Update
-Mycelium is now going to be an interpreted language until it is useable enough to write a self-compiler. This should speed up development considerably.
+Mycelium is going to be completely rewritten in C++. The reason for this change is the same reason there have been barely any updates to the project in months. I have been very busy and every time I try to code in assembly I can't get anything meaningful done. So hopefully now I can get back to working on this project again. As for the std library I figure someone might find it useful so I created a [repo for it](https://github.com/mossx-dev/Mycore) but it will not be actively maintained.
 
 ## Milestones
 - [x] tokenizer
