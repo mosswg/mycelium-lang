@@ -10,6 +10,22 @@
 
 namespace mycelium {
 
+	enum token_type {
+		word,
+		num,
+		op,
+		whitespace,
+		keyword
+	};
+
+	class token {
+		private:
+			token_type type;
+			std::string string;
+		public:
+			token(token_type type, std::string str) : type(type), string(std::move(str)) {}
+	};
+
 	class type {
 		public:
 			const int pointer = 0;
@@ -21,10 +37,11 @@ namespace mycelium {
 			const int oper = 6;
 			const int array = 7;
 			const int cstring = 8;
+			const int tkn = 9;
 
-			std::string names[9] = {"pointer", "integer", "char", "string", "list", "tuple", "oper", "array", "cstring"};
+			const std::string names[10] = {"pointer", "integer", "char", "string", "list", "tuple", "operator", "array", "cstring", "token"};
 
-			int size[9] = {8, 8, 1, 8, 8, 8, 8, 8, 8};
+			const int size[10] = {8, 8, 1, 8, 8, 8, 8, 8, 8, 8};
 	};
 
 
