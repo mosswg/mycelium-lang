@@ -1,9 +1,10 @@
 //
 // Created by moss on 2/11/22.
 //
-#include "base.h"
+
 #include <fstream>
-#include <vector>
+#include "base.h"
+#include "tokenizer.h"
 
 int main(int argc, char** argv) {
 
@@ -27,7 +28,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-
+	mycelium::tokenizer tokenizer(program);
 
 	return 0;
 }
