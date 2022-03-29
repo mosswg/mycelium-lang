@@ -1,12 +1,12 @@
  # Mycelium
- Mycelium is a language built with scripting principles like lists, automatic types, multiple return values, etc. but the language will ultimately be converted to assembly to be compiled and ran natively. Currently the std library of the language is being written with work on the compiler coming later. The plan is to bootstrap the language in assembly to interface with the std library and once it is complete enough it will be converted to self hosting. However, this is subject to change.
+ Mycelium will be a language built with scripting principles like lists, automatic types, multiple return values, etc. but the language will ultimately be converted to assembly to be compiled and run natively. Mycelium will be a compiled dynamic language.
 
  ## std library
- The Mycelium std library is entirely written in assembly for x86_64 linux with no dependencies. Eventually it may be expanded to include other platforms or architectures. <br>
- Work on the language has begun. The std library is still being developed but more focus is currently on the compiler. <br>
+ The Mycelium std library has now been removed and will be rewritten in Mycelium on the language is useable. <br>
+ The old version of std library has been moved to [Mycore](https://github.com/mossx-dev/Mycore)
 
 ## Important Update
-Mycelium is going to be completely rewritten in C++. The reason for this change is the same reason there have been barely any updates to the project in months. I have been very busy and every time I try to code in assembly I can't get anything meaningful done. So hopefully now I can get back to working on this project again. As for the std library I figure someone might find it useful so I created a [repo for it](https://github.com/mossx-dev/Mycore) but it will not be actively maintained.
+Mycelium is going to be completely rewritten in C++. The reason for this change is the same reason there have been barely any updates to the project in months. I have been very busy and every time I try to code in assembly I can't get anything meaningful done. So hopefully now I can get back to working on this project again.
 
 ## Milestones
 - [ ] tokenizer
@@ -43,7 +43,8 @@ They are `any` and `auto`. `any` will allow a variable to hold any type. `any` r
 
 e.g. of `any`
 ``` c++
-// TODO: Figure out how this syntax will work
+any<string> var1 = "Hello";
+var1<int> = 5;
 ```
 
 e.g. of `auto`
@@ -101,7 +102,7 @@ or a function could take arguments in the form of a string
 
 ``` c++
 // TODO: Change this syntax
-fn my_weird_func("My arguments are" auto a "and" auto b) {
+fn my_weird_func(My arguments are {auto a} and {auto b}) {
 	...
 }
 ```
@@ -111,7 +112,7 @@ It should return a boolean to indicate that the condition was true. This can be 
 e.g. a conditional that takes a string and executes the code if the string is empty
 ``` c++
 cn if_empty_string(fn func, string str) {
-	if (str.is_empty) {
+	if (str.is_empty()) {
 		func.run();
 		return true;
 	}
@@ -173,12 +174,12 @@ fn print(int num) {
 They would compile to
 
 ``` asm
-print(string):
+print_ret_void_arg_string:
 ```
 and 
 
 ``` asm
-print(int):
+print_ret_void_arg_int:
 ```
 
 Then when they're called the compiler will decide which to use when called.
@@ -203,14 +204,14 @@ fn<int, int> div(int a, int b) {
 They would compile to
 
 ```asm
-int_div(int_int):
+div_ret_int_arg_int_int:
 	...
 	ret
 ```
 and 
 
 ``` asm
-int_int_div(int_int):
+div_ret_int_int_arg_int_int:
 	...
 	ret
 ```
@@ -234,7 +235,7 @@ op<this + pair b> {
 This would compile into
 
 ``` asm
-pair.op_043:
+class_pair_op_043:
 	...
 ```
 
@@ -263,7 +264,7 @@ int asm foo(int a);
 ```
 and defined in a separate file as
 ``` asm
-int_foo(int):
+foo_ret_int_arg_int:
     ...
     ret
 ```
@@ -280,7 +281,7 @@ int add(int a, int b) {
 ```
 It will compile into
 ``` asm
-int_add(int_int):
+add_ret_int_arg_int_int:
     add     rax, rbx
     mov     rsi, rax
     ret
@@ -291,7 +292,7 @@ inline int add(int a, int b) {
     return a + b;
 }
 ```
-And called like 
+And called like this
 ``` c++
 add(1, 1);
 ```
@@ -313,11 +314,10 @@ int digits(int num) {
 ```
 Then a special case can be defined when zero is passed as
 ``` c++
-PLACEHOLDER digits(0) {
+sc int digits(int = 0) {
 	return 1;
 }
 ```
-Note: PLACEHOLDER should eventually be replaced with the proper keyword once it is decided.
 
 
 
