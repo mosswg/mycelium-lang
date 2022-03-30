@@ -5,6 +5,7 @@
 
 #include <string>
 #include <iostream>
+#include <utility>
 #include <vector>
 
 namespace mycelium {
@@ -60,6 +61,35 @@ namespace mycelium {
 	template <typename T>
 	bool vector_contains(const std::vector<T>& vec, T con);
 
-	std::vector<std::string> string_split(const std::string& str, const std::vector<char>& spl);
+	std::vector<std::string> string_split(const std::string& str, const std::vector<std::string>& spl);
 
+	template <typename T>
+	std::ostream& operator<<(std::ostream& os, const std::vector<T>& dt) {
+		if (dt.empty()) {
+			os << "{}";
+			return os;
+		}
+
+		int i = 0;
+
+		os << "{ ";
+
+		for (; i < dt.size() - 1; i++) {
+			if (std::is_same<T, std::string>::value) {
+				os << "\"" << dt[i] << "\"" << ", ";
+			}
+			else {
+				os << dt[i] << ", ";
+			}
+		}
+
+		if (std::is_same<T, std::string>::value) {
+			os << "\"" << dt[i] << "\"" << " }";
+		}
+		else {
+			os << dt[i] << " }";
+		}
+
+		return os;
+	}
 }
