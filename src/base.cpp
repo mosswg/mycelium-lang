@@ -32,11 +32,12 @@ std::vector<std::string> mycelium::string_split(const std::string& str, const st
 
 	size_t pos;
 	size_t prev_pos = 0;
+	size_t min_pos;
+	std::string split;
 
 	while (prev_pos < str.length()) {
 
-		size_t min_pos = -1;
-		std::string split;
+		min_pos = -1;
 
 		for (auto &comp: spl) {
 			if ((pos = str.find(comp, prev_pos)) != std::string::npos) {
@@ -58,6 +59,9 @@ std::vector<std::string> mycelium::string_split(const std::string& str, const st
 		out.push_back(split);
 
 		prev_pos = min_pos + split.length();
+	}
+	if (min_pos >= str.length()) {
+		out.push_back(str.substr(prev_pos, min_pos - prev_pos));
 	}
 
 	return out;
