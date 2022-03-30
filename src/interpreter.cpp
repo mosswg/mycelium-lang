@@ -6,6 +6,7 @@
 #include "base.h"
 #include "tokenizer.h"
 
+
 int main(int argc, char** argv) {
 
 	if (argc == 1) {
@@ -28,7 +29,11 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	mycelium::initialize_static_values();
+
 	mycelium::tokenizer tokenizer(program);
+
+	tokenizer.tokenize();
 
 	return 0;
 }
