@@ -27,20 +27,23 @@ namespace mycelium {
 
 	class type {
 		public:
-			const int pointer = 0;
-			const int integer = 1;
-			const int character = 2;
-			const int string = 3;
-			const int list = 4;
-			const int tuple = 5;
-			const int oper = 6;
-			const int array = 7;
-			const int cstring = 8;
-			const int tkn = 9;
+			const int code;
+			const std::string name;
+			const int size;
 
-			const std::string names[10] = {"pointer", "integer", "char", "string", "list", "tuple", "operator", "array", "cstring", "token"};
+			type(int code, std::string name, int size) : code(code), name(std::move(name)), size(size) {}
 
-			const int size[10] = {8, 8, 1, 8, 8, 8, 8, 8, 8, 8};
+
+			static const type pointer;
+			static const type integer;
+			static const type character;
+			static const type string;
+			static const type list;
+			static const type tuple;
+			static const type oper;
+			static const type array;
+			static const type cstring;
+			static const type token;
 	};
 
 
