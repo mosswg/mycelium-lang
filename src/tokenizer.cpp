@@ -18,9 +18,4 @@ void mycelium::tokenizer::tokenize() {
 		}
 		tokens.emplace_back(token_type::newline, "");
 	}
-
-	for (auto& token : tokens) {
-		std::cout << "(" << token::type_names[token.type] << ", \"" << token.string << "\")\n";
-	}
-
 }
