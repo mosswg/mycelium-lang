@@ -9,7 +9,7 @@
 Mycelium is going to be completely rewritten in C++. The reason for this change is the same reason there have been barely any updates to the project in months. I have been very busy and every time I try to code in assembly I can't get anything meaningful done. So hopefully now I can get back to working on this project again.
 
 ## Milestones
-- [ ] tokenizer
+- [x] tokenizer
 - [ ] parser
 - [ ] interpreter
   - [ ] std functions (e.g. print)
