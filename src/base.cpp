@@ -23,11 +23,18 @@ std::vector<std::vector<std::string>> mycelium::token::string_lists = {};
 std::vector<std::string> mycelium::token::strings = {};
 std::vector<std::string> mycelium::token::type_names = {};
 
+
+void mycelium::throw_error(const std::string& error, int code) {
+	std::cerr << "ERROR: " << error << std::endl;
+	exit(code);
+}
+
+
 void mycelium::initialize_static_values() {
 	token::whitespace_strings.insert(token::whitespace_strings.end(), {" ", "	"});
-	token::grouping_strings.insert(token::grouping_strings.end(), {"(", ")", "{", "}", "[", "]"});
+	token::grouping_strings.insert(token::grouping_strings.end(), {"(", ")", "{", "}", "[", "]", "<", ">"});
 	token::keyword_strings.insert(token::keyword_strings.end(), {"fn", "op", "cn"});
-	token::oper_strings.insert(token::oper_strings.end(), {"+", "-", "*", "/", "%", "=", "==", "!=", "<", "<=", ">", ">=",
+	token::oper_strings.insert(token::oper_strings.end(), {"+", "-", "*", "/", "%", "=", "==", "!=", "<=", ">=",
 														   "&&", "||", "++", "--", "!", "<<", ">>", "&", "|", "~"});
 	token::string_lists.insert(token::string_lists.end(), {token::oper_strings, token::whitespace_strings,
 														   token::grouping_strings, token::keyword_strings});
@@ -126,12 +133,11 @@ std::vector<std::string> mycelium::string_split(const std::string& str, const st
 }
 
 mycelium::token_type mycelium::token::find_type(const std::string &string) {
-	auto type = 0;
-	for (auto& token_string_list : string_lists) {
+	for (int type = 0; type < string_lists.size(); type++) {
+		auto& token_string_list = string_lists[type];
 		if (mycelium::vector_contains(token_string_list, string)) {
 			return (token_type)type;
 		}
-		type++;
 	}
 
 	bool is_num = true;
