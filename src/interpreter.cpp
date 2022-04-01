@@ -5,14 +5,13 @@
 #include <fstream>
 #include "base.h"
 #include "tokenizer.h"
+#include "parser.h"
 
 
 int main(int argc, char** argv) {
 
 	if (argc == 1) {
-		std::cout << "ERROR: " << "No File Given";
-
-		exit(1);
+		mycelium::throw_error("No File Given", 1);
 	}
 
 	std::ifstream in_file(argv[1]);
@@ -34,6 +33,10 @@ int main(int argc, char** argv) {
 	mycelium::tokenizer tokenizer(program);
 
 	tokenizer.tokenize();
+
+	mycelium::parser parser(tokenizer);
+
+	parser.parse();
 
 	return 0;
 }

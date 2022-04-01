@@ -11,11 +11,10 @@
 namespace mycelium {
 
 	class tokenizer {
-		private:
+		public:
 			std::vector<mycelium::token> tokens;
 			std::vector<std::string> lines;
 
-		public:
 			explicit tokenizer(std::vector<std::string> lines) : lines(std::move(lines)) {}
 
 			void tokenize();

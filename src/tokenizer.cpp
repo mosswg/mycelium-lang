@@ -14,7 +14,10 @@ void mycelium::tokenizer::tokenize() {
 
 	for (auto& line : split_lines) {
 		for (auto& token_string : line) {
-			tokens.emplace_back(token::find_type(token_string), token_string);
+			token_type type = token::find_type(token_string);
+			if (type != whitespace) {
+				tokens.emplace_back(type, token_string);
+			}
 		}
 		tokens.emplace_back(token_type::newline, "");
 	}
