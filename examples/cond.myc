@@ -1,0 +1,5 @@
+cn if(fn func, bool run) {
+    if (run) {
+        func();
+    }
+}

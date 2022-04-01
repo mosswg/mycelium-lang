@@ -1,1 +1,5 @@
-print(1)
+fn<int> print(int a) {
+    output << a;
+}
+
+print(1);

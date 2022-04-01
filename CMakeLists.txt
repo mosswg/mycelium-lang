@@ -6,6 +6,7 @@ if( BUILD_INTERPRETER )
                 src/base.cpp
                 src/interpreter.cpp
                 src/tokenizer.cpp
+                src/parser.cpp
                 )
 endif()
 
