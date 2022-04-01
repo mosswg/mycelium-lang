@@ -9,6 +9,9 @@
 #include <vector>
 
 namespace mycelium {
+	void throw_error(const std::string& error, int code);
+
+
 	void initialize_static_values();
 
 	enum token_type {
