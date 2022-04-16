@@ -21,6 +21,7 @@ namespace mycelium {
 		keyword,
 		ttype,
 		newline,
+		separator,
 		word,
 		num,
 		invalid
@@ -40,6 +41,7 @@ namespace mycelium {
 		static std::vector<std::string> type_strings;
 		static std::vector<std::string> oper_strings;
 		static std::vector<std::string> line_end;
+		static std::vector<std::string> seperator_strings;
 		static std::vector<std::vector<std::string>> string_lists;
 		static std::vector<std::string> strings;
 		static std::vector<std::string> type_names;
@@ -67,7 +69,6 @@ namespace mycelium {
 		static std::vector<std::string> strings;
 
 		type(int code, std::string name, int size) : code(code), name(std::move(name)), size(size) {}
-
 
 		static const type pointer;
 		static const type integer;
@@ -187,5 +188,5 @@ namespace mycelium {
 	std::vector<std::string> string_split(const std::string &str, const std::vector<std::string> &spl);
 
 	template <typename T>
-	std::ostream& operator<<(std::ostream& os, const std::vector<T>& dt);
+	std::ostream& operator<<(std::ostream&, const std::vector<T>&);
 }
