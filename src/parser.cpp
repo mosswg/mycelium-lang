@@ -30,10 +30,24 @@ void mycelium::parser::parse() {
 		print_the_thing(func.ret);
 		std::cout << " : ";
 		print_the_thing(func.args);
-		std::cout << std::endl;
+		std::cout << "\n\n\n" << std::endl;
 	}
 
+	std::cout << "ops" << std::endl;
+
+	for (auto& func : operators) {
+		std::cout << func.name.string << " : ";
+		print_the_thing(func.ret);
+		std::cout << " : ";
+		print_the_thing(func.context.pattern);
+		std::cout << "\n\n\n" << std::endl;
+	}
+
+	std::cout << token::oper_strings << std::endl;
+
 	std::cout << "bye" << std::endl;
+
+	// TODO: Verify that no functions have been declared more than once
 
 	return;
 
@@ -126,9 +140,6 @@ mycelium::function mycelium::parser::parse_function(int& index) {
 	} else {
 		throw_error("keyword definitions should be followed by '(' or '{'", 3);
 	}
-
-
-
 }
 
 mycelium::function mycelium::parser::parse_operator(int& index) {
@@ -173,7 +184,6 @@ void mycelium::parser::find_function_declarations() {
 				for (; tokenizer.tokens[i + next_token_index].type == newline; next_token_index++);
 
 				if (tokenizer.tokens[i + next_token_index].string == "<") {
-					int search_depth = 0;
 					int search_index = i + next_token_index + 1;
 					for (auto& token : find_in_grouping(search_index, "<", ">")) {
 						std::cout << "ret: " << token.string << std::endl;
@@ -237,7 +247,51 @@ void mycelium::parser::find_function_declarations() {
 				i += next_token_index;
 			}
 			else if (current_token.string == "op") {
+				std::string name;
+				std::vector<mycelium::token> ret = {};
+				std::vector<mycelium::token> context = {};
 
+				int next_token_index = 1;
+
+				for (; tokenizer.tokens[i + next_token_index].type == newline; next_token_index++);
+
+				if (tokenizer.tokens[i + next_token_index].string == "<") {
+					int search_index = i + next_token_index + 1;
+					for (auto& token : find_in_grouping(search_index, "<", ">")) {
+						std::cout << "ret: " << token.string << std::endl;
+						ret.push_back(token);
+					}
+					tmp.clear();
+					next_token_index = (search_index - i) + 1;
+				}
+				else {
+					mycelium::throw_error("operator definitions must contain a context", 41001);
+				}
+
+				for (; tokenizer.tokens[i + next_token_index].type == newline; next_token_index++);
+
+				if (tokenizer.tokens[i + next_token_index].string == "<") {
+					int search_index = i + next_token_index + 1;
+					for (auto& token : find_in_grouping(search_index, "<", ">")) {
+						std::cout << "context: " << token.string << std::endl;
+						context.push_back(token);
+					}
+					tmp.clear();
+					next_token_index = (search_index - i) + 1;
+				}
+				else {
+					std::cout << "moving from ret to context" << std::endl;
+					for (auto& token : ret) {
+						context.push_back(token);
+					}
+					ret.clear();
+				}
+
+				name = oper::generate_name_from_context(context);
+
+				operators.emplace_back(current_token, context, name, ret);
+
+				std::cout << "\n";
 			}
 			else if (current_token.string == "cn") {
 

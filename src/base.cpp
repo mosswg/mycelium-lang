@@ -41,7 +41,7 @@ void mycelium::initialize_static_values() {
 
 	token::whitespace_strings.insert(token::whitespace_strings.end(), {" ", "	"});
 	token::grouping_strings.insert(token::grouping_strings.end(), {"(", ")", "{", "}", "[", "]", "<", ">"});
-	token::keyword_strings.insert(token::keyword_strings.end(), {"fn", "op", "cn"});
+	token::keyword_strings.insert(token::keyword_strings.end(), {"fn", "op", "cn", "this"});
 	token::type_strings.insert(token::type_strings.end(), type::strings.begin(), type::strings.end());
 	token::line_end.insert(token::line_end.end(), {";\n", ";"});
 	token::line_end.insert(token::line_end.end(), {","});
