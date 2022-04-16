@@ -18,107 +18,105 @@ void mycelium::parser::parse() {
 	for (auto& token : tokenizer.tokens) {
 		std::cout << "(" << token::type_names[token.type] << ", \"" << token.string << "\")\n";
 	}
-	for (int i = 0; i < tokenizer.tokens.size()-1; i++) {
-		mycelium::token current_token = tokenizer.tokens[i];
-		std::cout << "Current token: " << current_token.string << std::endl;
-		mycelium::token next_token = tokenizer.tokens[i+1];
-		if (state == idle) {
-			switch (current_token.type) {
-				case op:
-					break;
-				case whitespace:
-					break;
-				case grouping:
-					break;
-				case keyword:
-					if (current_token.string == "fn") {
-						if (!(next_token.string == "{" || next_token.string == "(" ||next_token.string == "<" )) {
-							throw_error("op keyword must be followed by '<', '(', or '{'", 3);
-						}
+	for (int i = 0; i < tokenizer.tokens.size()-1; i++) {}
+}
 
-						if (next_token.string == "<") {
-							int depth = 0;
+mycelium::parsed_token mycelium::parser::parse_token(int& index) {
 
-							while ((++i < tokenizer.tokens.size())) {
-								std::cout << "token: \"" << tokenizer.tokens[i].string << "\" depth: " << depth << std::endl;
-
-								if (tokenizer.tokens[i].string == "<") {
-									depth++;
-								}
-								else if (tokenizer.tokens[i].string == ">") {
-									depth--;
-									if (depth == 0) {
-										break;
-									}
-								}
-
-								temp.push_back(tokenizer.tokens[i]);
-
-
-								std::cout << temp.size() << std::endl;
-
-								for (auto& token : temp) {
-									std::cout << "(" << token.string << ")" << ", ";
-								}
-								std::cout << std::endl;
-							}
-
-							temp.push_back(tokenizer.tokens[i]);
-
-							parsed_token token(current_token, temp);
-
-							while (tokenizer.tokens[++i].type != word);
-
-							token.context.push_back( {tokenizer.tokens[i]} );
-
-							std::cout << "Token: " << token.token.string << "\tContext: ";
-							for (int j = 0; j < token.context.size(); j++) {
-								for (auto &ctx_token: token.context[j]) {
-									std::cout << "\"" << ctx_token.string << "\" ";
-								}
-								if (j != token.context.size() - 1) {
-									std::cout << "\tNext: ";
-								}
-							}
-
-							i = parse_keyword_token(token, i + 1);
-						}
-						else {
-							i = parse_keyword_token(mycelium::parsed_token(current_token), i + 1);
-						}
-
-
+	mycelium::token current_token = tokenizer.tokens[index];
+	std::cout << "Current token: " << current_token.string << std::endl;
+	mycelium::token next_token = tokenizer.tokens[index+1];
+	if (state == idle) {
+		switch (current_token.type) {
+			case op:
+				break;
+			case keyword:
+				if (current_token.string == "fn") {
+					return parse_function(index);
+				}
+				else if (current_token.string == "op") {
+					if (next_token.string != "<") {
+						throw_error("op keyword must be followed by \'<\'", 3);
 					}
-					else if (current_token.string == "op") {
-						if (next_token.string != "<") {
-							throw_error("op keyword must be followed by \'<\'", 3);
-						}
-						i = parse_keyword_token(mycelium::parsed_token(current_token), i + 1);
-					}
-					else if (current_token.string == "cn") {
-						while (tokenizer.tokens[++i].type == whitespace);
+					return parse_operator(index);
+				}
+				else if (current_token.string == "cn") {
+					return parse_cond(index);
+				}
+				break;
+			case word:
+				break;
+			case num:
+				break;
+			case ttype:
 
-						if (tokenizer.tokens[i].type != word) {
-							throw_error("cn keyword must be followed by a word", 3);
-						}
-
-						i = parse_keyword_token(mycelium::parsed_token(current_token, { tokenizer.tokens[i] } ), i + 1);
-					}
-					break;
-				case word:
-					break;
-				case num:
-					break;
-				case invalid:
-					throw_error("invalid token: " + current_token.string, 2);
-					break;
-				case newline:
-					break;
-			}
-		}
-		else if (state == searching) {
+				break;
+			case invalid:
+				throw_error("invalid token: " + current_token.string, 2);
+				break;
+			default:
+				break;
 		}
 	}
+}
+
+std::vector<mycelium::parsed_token> mycelium::parser::parse_func_body(int& index) {
+	temp.clear();
+
+	auto search_depth = new int[token::grouping_strings.size() % 2];
+
+	const int curly_brace_index = vector_find(token::grouping_strings,  (std::string)"{") / 2;
+
+	for (int i = index; i < tokenizer.tokens.size() - 1; i++) {
+		mycelium::token current_token = tokenizer.tokens[i];
+		mycelium::token next_token = tokenizer.tokens[i + 1];
+		if (vector_contains(token::grouping_strings, searching_for)) {
+			if (current_token.type == grouping) {
+				int group = vector_find(token::grouping_strings, current_token.string);
+				search_depth[group / 2] += group % 2 == 0 ? 1 : -1;
+		}
+	}
+
+		temp.push_back(parse_token(i));
+
+		std::cout << search_depth << std::endl;
+
+		if (search_depth[curly_brace_index] == 0 && next_token.string == "}") {
+			return temp;
+		}
+	}
+}
+
+mycelium::function mycelium::parser::parse_function(int& index) {
+	temp = {};
+	int idx = index;
+	int search_depth = 0;
+	if (tokenizer.tokens[idx + 1].type == newline) {
+		while (tokenizer.tokens[idx++].type == newline);
+	}
+	else {
+		idx++;
+	}
+
+	temp.push_back(parse_token(idx));
+
+	if (tokenizer.tokens[idx].string == "{") {
+		search_depth++;
+		searching_for = "}";
+	} else {
+		throw_error("keyword definitions should be followed by '(' or '{'", 3);
+	}
+
+
+
+}
+
+mycelium::function mycelium::parser::parse_operator(int& index) {
+
+}
+
+mycelium::function mycelium::parser::parse_cond(int& index) {
+
 }
 
 int mycelium::parser::parse_keyword_token(const mycelium::parsed_token& ptoken, int index) {
@@ -127,8 +125,6 @@ int mycelium::parser::parse_keyword_token(const mycelium::parsed_token& ptoken, 
 	searching_for = token::grouping_strings[group_string_index];
 
 	temp.clear();
-
-	parsed_tokens.push_back(ptoken);
 
 	int search_depth = 0;
 
