@@ -160,8 +160,6 @@ std::vector<mycelium::token> mycelium::parser::find_in_grouping(int& index, cons
 void mycelium::parser::find_function_declarations() {
 	std::vector<mycelium::token> tmp = {};
 
-	std::cout << "1\n";
-
 	for (int i = 0; i < tokenizer.tokens.size(); i++) {
 		mycelium::token current_token = tokenizer.tokens[i];
 		if (current_token.type == keyword) {
@@ -172,10 +170,11 @@ void mycelium::parser::find_function_declarations() {
 
 				int next_token_index = 1;
 
+				for (; tokenizer.tokens[i + next_token_index].type == newline; next_token_index++);
+
 				if (tokenizer.tokens[i + next_token_index].string == "<") {
 					int search_depth = 0;
 					int search_index = i + next_token_index + 1;
-					std::cout << tokenizer.tokens[search_index].string << std::endl;
 					for (auto& token : find_in_grouping(search_index, "<", ">")) {
 						std::cout << "ret: " << token.string << std::endl;
 						ret.push_back(token);
@@ -187,6 +186,7 @@ void mycelium::parser::find_function_declarations() {
 					std::cout << ":(" << std::endl;
 				}
 
+				for (; tokenizer.tokens[i + next_token_index].type == newline; next_token_index++);
 
 				if (tokenizer.tokens[i + next_token_index].type == word) {
 					std::cout << "name: " << tokenizer.tokens[i + next_token_index].string << std::endl;
@@ -198,7 +198,7 @@ void mycelium::parser::find_function_declarations() {
 					mycelium::throw_error("functions must have a name", 40001);
 				}
 
-				std::cout << tokenizer.tokens[i + next_token_index].string << std::endl;
+				for (; tokenizer.tokens[i + next_token_index].type == newline; next_token_index++);
 
 				if (tokenizer.tokens[i + next_token_index].string == "(") {
 					int search_index = i + next_token_index + 1;
@@ -209,6 +209,8 @@ void mycelium::parser::find_function_declarations() {
 					tmp.clear();
 					next_token_index = (search_index - i) + 1;
 				}
+
+				for (; tokenizer.tokens[i + next_token_index].type == newline; next_token_index++);
 
 				if (tokenizer.tokens[i + next_token_index].string == "{") {
 					int search_depth = 0;
@@ -230,7 +232,9 @@ void mycelium::parser::find_function_declarations() {
 
 				functions.emplace_back(current_token, name, ret, args);
 
-				i = next_token_index;
+				std::cout << std::endl;
+
+				i += next_token_index;
 			}
 			else if (current_token.string == "op") {
 
