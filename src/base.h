@@ -95,7 +95,10 @@ namespace mycelium {
 	};
 
 	class pattern_match {
+	public:
 		std::vector<token> pattern;
+
+		explicit pattern_match(std::vector<token> tokens) : pattern(std::move(tokens)) {}
 
 		bool is_match(const std::vector<token>& test) {
 			if (test.size() != pattern.size()) {
@@ -159,7 +162,7 @@ namespace mycelium {
 
 	class oper : public function_base {
 	public:
-		std::vector<mycelium::token> context;
+		pattern_match context;
 
 		oper(mycelium::token token, std::vector<mycelium::token> context, std::string name, std::vector<mycelium::token> ret) : function_base(std::move(token), mycelium::token(word, std::move(name)), std::move(ret)), context(std::move(context)) {}
 	};
