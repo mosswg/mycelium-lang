@@ -168,3 +168,62 @@ mycelium::token_type mycelium::token::find_type(const std::string &string) {
 		return word;
 	}
 }
+
+std::string mycelium::oper::generate_name_from_context(std::vector<mycelium::token> &context) {
+	std::string out;
+
+	bool op_found = false;
+
+	std::cout << context.size() << std::endl;
+
+	for (int i = 0; i < context.size(); i++) {
+		std::cout << "i: " << i << "\ttoken: " << context[i].string << std::endl;
+		if (context[i].type == ttype) {
+			out.append(context[i].string);
+			i++;
+		}
+		else if (context[i].string == "this") {
+			out.append(context[i].string);
+		}
+		else {
+			if (op_found) {
+				throw_error("operator definitions can only contain one operator", 42001);
+			}
+
+			std::cout << "oper: " << context[i].string << std::endl;
+
+			context[i].type = op;
+
+			out.append(encode_operator(context[i].string));
+			if (!vector_contains(token::oper_strings, context[i].string)) {
+				// Add operator to operator string list, so later we can easily just look for operators
+				token::oper_strings.push_back(context[i].string);
+			}
+			op_found = true;
+		}
+
+		if (i < context.size()-1) {
+			out.append("_");
+		}
+	}
+
+	if (!op_found) {
+		throw_error("no operator found in op definition", 41002);
+	}
+
+	return out;
+}
+
+std::string mycelium::oper::encode_operator(const std::string &oper) {
+	std::string out;
+
+	std::cout << oper << std::endl;
+
+	for (char c : oper) {
+		out.append(int_to_hex_string(c));
+	}
+
+	std::cout << out << std::endl;
+
+	return out;
+}

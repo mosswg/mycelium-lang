@@ -165,6 +165,10 @@ namespace mycelium {
 		pattern_match context;
 
 		oper(mycelium::token token, std::vector<mycelium::token> context, std::string name, std::vector<mycelium::token> ret) : function_base(std::move(token), mycelium::token(word, std::move(name)), std::move(ret)), context(std::move(context)) {}
+
+		static std::string encode_operator (const std::string& oper);
+
+		static std::string generate_name_from_context(std::vector<mycelium::token>& context);
 	};
 
 	class cond : public function_base {
@@ -183,6 +187,16 @@ namespace mycelium {
 		mycelium::type type;
 		int value = 0;
 	};
+
+	// from: https://stackoverflow.com/questions/5100718/integer-to-hex-string-in-c
+	template <typename I> std::string int_to_hex_string(I w, size_t hex_len = sizeof(I)<<1) {
+		static const char* digits = "0123456789ABCDEF";
+		std::string rc(hex_len,'0');
+		for (size_t i=0, j=(hex_len-1)*4 ; i<hex_len; ++i,j-=4)
+			rc[i] = digits[(w>>j) & 0x0f];
+		return rc;
+	}
+
 
 
 
