@@ -16,10 +16,14 @@ Mycelium is going to be completely rewritten in C++. The reason for this change 
   - [ ] math evaluation
   - [ ] condition calls
   - [ ] condition definitions
+  - [ ] condition declaration
   - [ ] operator calls
   - [ ] operator definitions
+  - [ ] operator declaration
   - [ ] function calls
   - [ ] function definitions
+  - [ ] operator declaration
+  - [ ] class definitions
 - [ ] interpreter
   - [ ] std functions (e.g. print)
   - [ ] user defined functions
