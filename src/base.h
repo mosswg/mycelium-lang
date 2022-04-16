@@ -90,6 +90,96 @@ namespace mycelium {
 		}
 	};
 
+	class pattern_match {
+		std::vector<token> pattern;
+
+		bool is_match(const std::vector<token>& test) {
+			if (test.size() != pattern.size()) {
+				return false;
+			}
+
+			for (int i = 0; i < test.size(); ++i) {
+				if (test[i].type != pattern[i].type) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		bool is_match_at_index(const std::vector<token>& test, int index) {
+
+			for (int i = 0; i < pattern.size(); ++i) {
+				if (test[i + index].type != pattern[i].type) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		int find_match(const std::vector<token>& tokens) {
+			for (int i = 0; i < tokens.size(); i++) {
+				if (is_match_at_index(tokens, i)) {
+					return i;
+				}
+			}
+			return -1;
+		}
+	};
+
+	class parsed_token {
+	public:
+
+		mycelium::token token;
+
+
+		explicit parsed_token(mycelium::token token) : token(std::move(token)) {}
+	};
+
+	class function_base : public parsed_token {
+	public:
+
+		mycelium::token name;
+		std::vector<mycelium::token> ret;
+
+		std::vector<mycelium::token> body;
+
+		function_base(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret, std::vector<mycelium::token> body) : parsed_token(std::move(token)), name(std::move(name)), body(std::move(body)), ret(std::move(ret)) {}
+	};
+
+	class function : public function_base {
+	public:
+		std::vector<mycelium::token> args;
+
+		function(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret, std::vector<mycelium::token> args, std::vector<mycelium::token> body) : function_base(std::move(token), std::move(name), std::move(ret), std::move(body)), args(std::move(args)) {}
+	};
+
+	class oper : public function_base {
+	public:
+		std::vector<mycelium::token> context;
+
+		oper(mycelium::token token, std::vector<mycelium::token> context, std::string name, std::vector<mycelium::token> ret, std::vector<mycelium::token> body) : function_base(std::move(token), mycelium::token(word, std::move(name)), std::move(ret), std::move(body)), context(std::move(context)) {}
+	};
+
+	class cond : public function_base {
+	public:
+		std::vector<mycelium::token> args;
+
+		cond(mycelium::token token, mycelium::token name, std::vector<mycelium::token> args, std::vector<mycelium::token> body) : function_base(std::move(token), std::move(name), {{}}, std::move(body)), args(std::move(args)) {}
+	};
+
+
+	class variable : public parsed_token {
+	public:
+		static std::vector<mycelium::variable> variables;
+
+		mycelium::token name;
+		mycelium::type type;
+		int value = 0;
+	};
+
+
+
+
 
 	std::vector<std::string> string_split(const std::string &str, const std::vector<std::string> &spl);
 
