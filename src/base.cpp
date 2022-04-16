@@ -15,9 +15,13 @@ const mycelium::type array(7, "array", 8);
 const mycelium::type cstring(8, "cstring", 8);
 const mycelium::type token(9, "token", 8);
 
+std::vector<std::string> mycelium::type::strings = {};
+
 std::vector<std::string> mycelium::token::whitespace_strings = {};
 std::vector<std::string> mycelium::token::grouping_strings = {};
 std::vector<std::string> mycelium::token::keyword_strings = {};
+std::vector<std::string> mycelium::token::type_strings = {};
+std::vector<std::string> mycelium::token::line_end = {};
 std::vector<std::string> mycelium::token::oper_strings = {};
 std::vector<std::vector<std::string>> mycelium::token::string_lists = {};
 std::vector<std::string> mycelium::token::strings = {};
@@ -31,17 +35,22 @@ void mycelium::throw_error(const std::string& error, int code) {
 
 
 void mycelium::initialize_static_values() {
+	type::strings.insert(type::strings.end(), {"int", "ptr", "string", "list", "array", "tuple", "twine", "operator", "char"});
+
 	token::whitespace_strings.insert(token::whitespace_strings.end(), {" ", "	"});
 	token::grouping_strings.insert(token::grouping_strings.end(), {"(", ")", "{", "}", "[", "]", "<", ">"});
 	token::keyword_strings.insert(token::keyword_strings.end(), {"fn", "op", "cn"});
+	token::type_strings.insert(token::type_strings.end(), type::strings.begin(), type::strings.end());
+	token::line_end.insert(token::line_end.end(), {";\n", ";"});
 	token::oper_strings.insert(token::oper_strings.end(), {"+", "-", "*", "/", "%", "=", "==", "!=", "<=", ">=",
 														   "&&", "||", "++", "--", "!", "<<", ">>", "&", "|", "~"});
 	token::string_lists.insert(token::string_lists.end(), {token::oper_strings, token::whitespace_strings,
-														   token::grouping_strings, token::keyword_strings});
+														   token::grouping_strings, token::keyword_strings, token::type_strings, token::line_end});
 
-	mycelium::token::type_names.insert(mycelium::token::type_names.end(), {"operator", "whitespace", "grouping", "keyword", "word", "num",
+	token::type_names.insert(mycelium::token::type_names.end(), {"operator", "whitespace", "grouping", "keyword", "type", "endline", "word", "num",
 													 "invalid", "newline"});
 
+	std::cout << token::string_lists << std::endl;
 
 	for (const auto& token_string_list : token::string_lists) {
 		for (const auto& token_string : token_string_list) {

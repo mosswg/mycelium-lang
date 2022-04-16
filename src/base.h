@@ -19,10 +19,11 @@ namespace mycelium {
 		whitespace,
 		grouping,
 		keyword,
+		ttype,
+		newline,
 		word,
 		num,
-		invalid,
-		newline
+		invalid
 	};
 
 	template<typename T>
@@ -36,7 +37,9 @@ namespace mycelium {
 		static std::vector<std::string> whitespace_strings;
 		static std::vector<std::string> grouping_strings;
 		static std::vector<std::string> keyword_strings;
+		static std::vector<std::string> type_strings;
 		static std::vector<std::string> oper_strings;
+		static std::vector<std::string> line_end;
 		static std::vector<std::vector<std::string>> string_lists;
 		static std::vector<std::string> strings;
 		static std::vector<std::string> type_names;
@@ -58,7 +61,10 @@ namespace mycelium {
 		const std::string name;
 		const int size;
 
-		type(int code, std::string name, int size) : code(code), name(name), size(size) {}
+
+		static std::vector<std::string> strings;
+
+		type(int code, std::string name, int size) : code(code), name(std::move(name)), size(size) {}
 
 
 		static const type pointer;
