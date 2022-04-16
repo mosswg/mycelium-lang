@@ -1,3 +1,3 @@
-op<int a + int b> {
+op<int><int a + int b> {
     a + b
 }

@@ -237,18 +237,20 @@ class pair {
 Then the `+` operator could be defined with
 
 ``` c++
-op<this + pair b> {
+op<pair ret><this + pair b> {
 	...
 }
 ```
 This would compile into
+
+// TODO: Update the syntax of this
 
 ``` asm
 class_pair_op_043:
 	...
 ```
 
-Then the `+` operator can be use a you would with anything else e.g.
+Then the `+` operator can be used like you would with anything else e.g.
 
 ``` c++
 pair first_pair;
