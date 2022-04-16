@@ -264,14 +264,14 @@ A function can be declared then defined in an attached assembly file
 e.g. a function `foo` can be defined as.
 
 ``` c++
-int asm foo(int a) {
+asm<int> foo(int a) {
 	...
 	ret
 }
 ```
 Or could be decalred as.
 ``` c++
-int asm foo(int a);
+asm<int> foo(int a);
 ```
 and defined in a separate file as
 ``` asm
@@ -283,10 +283,10 @@ Where the value in rax is the argument passed and rsi is the return value
 
 
 ### Inline Functions
-A function can be decalred with the keyword inline and after being turn into assembly code it will directly be placed wherever it is called
+A function can be declared with the keyword inline and after being turned into assembly code it will directly be placed wherever it is called
 e.g. a function `add` can be defined as.
 ``` c++
-int add(int a, int b) {
+fn<int> add(int a, int b) {
     return a + b;
 }
 ```
@@ -297,9 +297,9 @@ add_ret_int_arg_int_int:
     mov     rsi, rax
     ret
 ```
-However if defined like this
+However, if defined like this
 ``` c++
-inline int add(int a, int b) {
+inline fn<int> add(int a, int b) {
     return a + b;
 }
 ```
@@ -316,7 +316,7 @@ add     rax, rbx
 
 ### Special Replace 
 #### This might not be implemented
-a function can be define as normal then a special case can be added to do something when a certain value is passed
+a function can be defined as normal then a special case can be added to do something when a certain value is passed
 e.g. a function to get the digits in a number can be defined as
 ``` c++
 int digits(int num) {
