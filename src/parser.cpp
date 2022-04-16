@@ -14,7 +14,29 @@ int mycelium::vector_find(const std::vector<T>& vec, const T& search) {
 	return -1;
 }
 
+void print_the_thing(const std::vector<mycelium::token>& tks) {
+	for (auto& token : tks) {
+		std::cout << mycelium::token::type_names[token.type] << " | " << token.string << " , ";
+	}
+}
+
 void mycelium::parser::parse() {
+	find_function_declarations();
+
+	std::cout << "funcs" << std::endl;
+
+	for (auto& func : functions) {
+		std::cout << func.name.string << " : ";
+		print_the_thing(func.ret);
+		std::cout << " : ";
+		print_the_thing(func.args);
+		std::cout << std::endl;
+	}
+
+	std::cout << "bye" << std::endl;
+
+	return;
+
 	for (auto& token : tokenizer.tokens) {
 		std::cout << "(" << token::type_names[token.type] << ", \"" << token.string << "\")\n";
 	}
@@ -26,37 +48,35 @@ mycelium::parsed_token mycelium::parser::parse_token(int& index) {
 	mycelium::token current_token = tokenizer.tokens[index];
 	std::cout << "Current token: " << current_token.string << std::endl;
 	mycelium::token next_token = tokenizer.tokens[index+1];
-	if (state == idle) {
-		switch (current_token.type) {
-			case op:
-				break;
-			case keyword:
-				if (current_token.string == "fn") {
-					return parse_function(index);
+	switch (current_token.type) {
+		case op:
+			break;
+		case keyword:
+			if (current_token.string == "fn") {
+				return parse_function(index);
+			}
+			else if (current_token.string == "op") {
+				if (next_token.string != "<") {
+					throw_error("op keyword must be followed by \'<\'", 41001);
 				}
-				else if (current_token.string == "op") {
-					if (next_token.string != "<") {
-						throw_error("op keyword must be followed by \'<\'", 3);
-					}
-					return parse_operator(index);
-				}
-				else if (current_token.string == "cn") {
-					return parse_cond(index);
-				}
-				break;
-			case word:
-				break;
-			case num:
-				break;
-			case ttype:
+				return parse_operator(index);
+			}
+			else if (current_token.string == "cn") {
+				return parse_cond(index);
+			}
+			break;
+		case word:
+			break;
+		case num:
+			break;
+		case ttype:
 
-				break;
-			case invalid:
-				throw_error("invalid token: " + current_token.string, 2);
-				break;
-			default:
-				break;
-		}
+			break;
+		case invalid:
+			throw_error("invalid token: " + current_token.string, 2);
+			break;
+		default:
+			break;
 	}
 }
 
@@ -119,6 +139,110 @@ mycelium::function mycelium::parser::parse_cond(int& index) {
 
 }
 
+std::vector<mycelium::token> mycelium::parser::find_in_grouping(int& index, const std::string& open, const std::string& close) {
+	std::vector<mycelium::token> out = {};
+	int search_depth = 0;
+	while (!(search_depth == 0 && tokenizer.tokens[index].string == close)) {
+		if (tokenizer.tokens[index].string == open) {
+			search_depth++;
+		}
+		else if (tokenizer.tokens[index].string == close) {
+			search_depth--;
+		}
+		else {
+			out.push_back(tokenizer.tokens[index]);
+		}
+		index++;
+	}
+	return out;
+}
+
+void mycelium::parser::find_function_declarations() {
+	std::vector<mycelium::token> tmp = {};
+
+	std::cout << "1\n";
+
+	for (int i = 0; i < tokenizer.tokens.size(); i++) {
+		mycelium::token current_token = tokenizer.tokens[i];
+		if (current_token.type == keyword) {
+			if (current_token.string == "fn") {
+				mycelium::token name = {};
+				std::vector<mycelium::token> ret = {};
+				std::vector<mycelium::token> args = {};
+
+				int next_token_index = 1;
+
+				if (tokenizer.tokens[i + next_token_index].string == "<") {
+					int search_depth = 0;
+					int search_index = i + next_token_index + 1;
+					std::cout << tokenizer.tokens[search_index].string << std::endl;
+					for (auto& token : find_in_grouping(search_index, "<", ">")) {
+						std::cout << "ret: " << token.string << std::endl;
+						ret.push_back(token);
+					}
+					tmp.clear();
+					next_token_index = (search_index - i) + 1;
+				}
+				else {
+					std::cout << ":(" << std::endl;
+				}
+
+
+				if (tokenizer.tokens[i + next_token_index].type == word) {
+					std::cout << "name: " << tokenizer.tokens[i + next_token_index].string << std::endl;
+					name = tokenizer.tokens[i + next_token_index];
+					next_token_index++;
+				}
+				else {
+					std::cout << tokenizer.tokens[i + next_token_index].string << std::endl;
+					mycelium::throw_error("functions must have a name", 40001);
+				}
+
+				std::cout << tokenizer.tokens[i + next_token_index].string << std::endl;
+
+				if (tokenizer.tokens[i + next_token_index].string == "(") {
+					int search_index = i + next_token_index + 1;
+					for (auto& token : find_in_grouping(search_index, "(", ")")) {
+						std::cout << "arg: " << token.string << std::endl;
+						args.push_back(token);
+					}
+					tmp.clear();
+					next_token_index = (search_index - i) + 1;
+				}
+
+				if (tokenizer.tokens[i + next_token_index].string == "{") {
+					int search_depth = 0;
+					int search_index = next_token_index + 1;
+					while (!(search_depth == 0 && tokenizer.tokens[i + search_index].string == "}")) {
+						if (tokenizer.tokens[i + search_index].string == "{") {
+							search_depth++;
+						}
+						else if (tokenizer.tokens[i + search_index].string == "}") {
+							search_depth--;
+						}
+						search_index++;
+					}
+					next_token_index = search_index;
+				}
+				else {
+					mycelium::throw_error("functions must have a body", 40001);
+				}
+
+				functions.emplace_back(current_token, name, ret, args);
+
+				i = next_token_index;
+			}
+			else if (current_token.string == "op") {
+
+			}
+			else if (current_token.string == "cn") {
+
+			}
+		}
+	}
+}
+
+/*
 int mycelium::parser::parse_keyword_token(const mycelium::parsed_token& ptoken, int index) {
 	int group_string_index = vector_find(token::grouping_strings, tokenizer.tokens[index].string) + 1;
 
@@ -195,3 +319,4 @@ int mycelium::parser::parse_keyword_token(const mycelium::parsed_token& ptoken, 
 
 	return (int)tokenizer.tokens.size();
 }
+*/

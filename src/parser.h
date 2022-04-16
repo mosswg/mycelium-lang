@@ -36,11 +36,11 @@ namespace mycelium {
 
 		void parse();
 
-		int parse_keyword_token(const parsed_token&, int index);
-
-		explicit parser(mycelium::tokenizer tokenizer) : tokenizer(std::move(tokenizer)), state(idle), search_type({}) {}
+		explicit parser(mycelium::tokenizer tokenizer) : tokenizer(std::move(tokenizer)), state(idle), search_type() {}
 
 		parsed_token parse_token(int &index);
+
+		void find_function_declarations();
 
 		std::vector<parsed_token> parse_func_body(int &index);
 
@@ -49,5 +49,7 @@ namespace mycelium {
 		function parse_operator(int &index);
 
 		function parse_cond(int &index);
+
+		std::vector<token> find_in_grouping(int& index, const std::string &open, const std::string &close);
 	};
 }
