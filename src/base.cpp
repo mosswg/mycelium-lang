@@ -14,6 +14,7 @@ const mycelium::type oper(6, "oper", 8);
 const mycelium::type array(7, "array", 8);
 const mycelium::type cstring(8, "cstring", 8);
 const mycelium::type token(9, "token", 8);
+const mycelium::type none(10, "none", 0);
 
 std::vector<std::string> mycelium::type::strings = {};
 

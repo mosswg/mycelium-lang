@@ -48,6 +48,8 @@ namespace mycelium {
 	public:
 		token(token_type type, std::string str) : type(type), string(std::move(str)) {}
 
+		token() : type(invalid) {}
+
 		explicit token(std::string str) : string(std::move(str)) {
 			this->type = find_type(str);
 		}
@@ -77,6 +79,7 @@ namespace mycelium {
 		static const type array;
 		static const type cstring;
 		static const type token;
+		static const type none;
 	};
 
 
