@@ -147,28 +147,28 @@ namespace mycelium {
 
 		std::vector<mycelium::token> body;
 
-		function_base(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret, std::vector<mycelium::token> body) : parsed_token(std::move(token)), name(std::move(name)), body(std::move(body)), ret(std::move(ret)) {}
+		function_base(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret) : parsed_token(std::move(token)), name(std::move(name)), body({}), ret(std::move(ret)) {}
 	};
 
 	class function : public function_base {
 	public:
 		std::vector<mycelium::token> args;
 
-		function(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret, std::vector<mycelium::token> args, std::vector<mycelium::token> body) : function_base(std::move(token), std::move(name), std::move(ret), std::move(body)), args(std::move(args)) {}
+		function(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret, std::vector<mycelium::token> args) : function_base(std::move(token), std::move(name), std::move(ret)), args(std::move(args)) {}
 	};
 
 	class oper : public function_base {
 	public:
 		std::vector<mycelium::token> context;
 
-		oper(mycelium::token token, std::vector<mycelium::token> context, std::string name, std::vector<mycelium::token> ret, std::vector<mycelium::token> body) : function_base(std::move(token), mycelium::token(word, std::move(name)), std::move(ret), std::move(body)), context(std::move(context)) {}
+		oper(mycelium::token token, std::vector<mycelium::token> context, std::string name, std::vector<mycelium::token> ret) : function_base(std::move(token), mycelium::token(word, std::move(name)), std::move(ret)), context(std::move(context)) {}
 	};
 
 	class cond : public function_base {
 	public:
 		std::vector<mycelium::token> args;
 
-		cond(mycelium::token token, mycelium::token name, std::vector<mycelium::token> args, std::vector<mycelium::token> body) : function_base(std::move(token), std::move(name), {{}}, std::move(body)), args(std::move(args)) {}
+		cond(mycelium::token token, mycelium::token name, std::vector<mycelium::token> args) : function_base(std::move(token), std::move(name), {{}}), args(std::move(args)) {}
 	};
 
 
