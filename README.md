@@ -18,10 +18,10 @@ Mycelium is going to be completely rewritten in C++. The reason for this change 
   - [ ] condition definitions
   - [ ] condition declaration
   - [ ] operator calls
-  - [ ] operator definitions
+  - [x] operator definitions
   - [ ] operator declaration
   - [ ] function calls
-  - [ ] function definitions
+  - [x] function definitions
   - [ ] operator declaration
   - [ ] class definitions
 - [ ] interpreter
