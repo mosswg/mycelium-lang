@@ -154,15 +154,16 @@ namespace mycelium {
 			}
 			return -1;
 		}
+
+		static pattern_match generate_pattern_from_tokens(std::vector<mycelium::token>);
 	};
 
-	class parsed_token {
+	class variable : public parsed_token {
 	public:
+		mycelium::type type;
+		long value = 0;
 
-		mycelium::token token;
-
-
-		explicit parsed_token(mycelium::token token) : token(std::move(token)) {}
+		variable(mycelium::token name, mycelium::type type) : parsed_token(std::move(name), var), type(std::move(type)) {}
 	};
 
 	class function_base : public parsed_token {
