@@ -45,6 +45,9 @@ namespace mycelium {
 		static std::vector<std::vector<std::string>> string_lists;
 		static std::vector<std::string> strings;
 		static std::vector<std::string> type_names;
+		static std::string line_comment;
+		static std::string open_block_comment;
+		static std::string close_block_comment;
 
 
 	public:

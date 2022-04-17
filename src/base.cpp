@@ -28,6 +28,9 @@ std::vector<std::string> mycelium::token::oper_strings = {};
 std::vector<std::vector<std::string>> mycelium::token::string_lists = {};
 std::vector<std::string> mycelium::token::strings = {};
 std::vector<std::string> mycelium::token::type_names = {};
+std::string mycelium::token::line_comment = "//";
+std::string mycelium::token::open_block_comment = "/*";
+std::string mycelium::token::close_block_comment = "*/";
 
 
 void mycelium::throw_error(const std::string& error, int code) {
