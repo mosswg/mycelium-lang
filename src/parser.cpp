@@ -287,9 +287,26 @@ void mycelium::parser::find_function_declarations() {
 					ret.clear();
 				}
 
+				if (tokenizer.tokens[i + next_token_index].string == "{") {
+					int search_depth = 0;
+					int search_index = next_token_index + 1;
+					while (!(search_depth == 0 && tokenizer.tokens[i + search_index].string == "}")) {
+						if (tokenizer.tokens[i + search_index].string == "{") {
+							search_depth++;
+						}
+						else if (tokenizer.tokens[i + search_index].string == "}") {
+							search_depth--;
+						}
+						search_index++;
+					}
+					next_token_index = search_index;
+				}
+
 				name = oper::generate_name_from_context(context);
 
 				operators.emplace_back(current_token, context, name, ret);
+				
+				i += next_token_index;
 
 				std::cout << "\n";
 			}
