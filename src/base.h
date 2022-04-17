@@ -174,21 +174,23 @@ namespace mycelium {
 
 		std::vector<mycelium::token> body;
 
-		function_base(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret) : parsed_token(std::move(token)), name(std::move(name)), body({}), ret(std::move(ret)) {}
+		function_base(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret, parsed_token_type type) : parsed_token(std::move(token), type), name(std::move(name)), body({}), ret(std::move(ret)) {}
 	};
 
 	class function : public function_base {
 	public:
 		std::vector<mycelium::token> args;
 
-		function(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret, std::vector<mycelium::token> args) : function_base(std::move(token), std::move(name), std::move(ret)), args(std::move(args)) {}
+		function(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret, std::vector<mycelium::token> args) : function_base(std::move(token), std::move(name), std::move(ret), func), args(std::move(args)) {}
 	};
 
 	class oper : public function_base {
 	public:
-		pattern_match context;
+		pattern_match pattern;
 
-		oper(mycelium::token token, std::vector<mycelium::token> context, std::string name, std::vector<mycelium::token> ret) : function_base(std::move(token), mycelium::token(word, std::move(name)), std::move(ret)), context(std::move(context)) {}
+		std::vector<mycelium::token> context;
+
+		oper(mycelium::token token, std::vector<mycelium::token> context, std::string name, std::vector<mycelium::token> ret) : function_base(std::move(token), mycelium::token(word, std::move(name)), std::move(ret), parsed_token_type::oper), context(std::move(context)) {}
 
 		static std::string encode_operator (const std::string& oper);
 
@@ -199,18 +201,18 @@ namespace mycelium {
 	public:
 		std::vector<mycelium::token> args;
 
-		cond(mycelium::token token, mycelium::token name, std::vector<mycelium::token> args) : function_base(std::move(token), std::move(name), {{}}), args(std::move(args)) {}
+		cond(mycelium::token token, mycelium::token name, std::vector<mycelium::token> args) : function_base(std::move(token), std::move(name), {{}}, parsed_token_type::cond), args(std::move(args)) {}
 	};
 
-
-	class variable : public parsed_token {
-	public:
-		static std::vector<mycelium::variable> variables;
-
-		mycelium::token name;
-		mycelium::type type;
-		int value = 0;
-	};
+//
+//	class variable : public parsed_token {
+//	public:
+//		static std::vector<mycelium::variable> variables;
+//
+//		mycelium::token name;
+//		mycelium::type type;
+//		int value = 0;
+//	};
 
 	// from: https://stackoverflow.com/questions/5100718/integer-to-hex-string-in-c
 	template <typename I> std::string int_to_hex_string(I w, size_t hex_len = sizeof(I)<<1) {
