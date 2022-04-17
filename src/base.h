@@ -136,7 +136,7 @@ namespace mycelium {
 			return true;
 		}
 
-		bool is_match_at_index(const std::vector<token>& test, int index) {
+		bool is_match_at_index(const std::vector<parsed_token>& test, int index) {
 
 			for (int i = 0; i < pattern.size(); ++i) {
 				if (test[i + index].type != pattern[i].type) {
@@ -146,7 +146,7 @@ namespace mycelium {
 			return true;
 		}
 
-		int find_match(const std::vector<token>& tokens) {
+		int find_match(const std::vector<parsed_token>& tokens) {
 			for (int i = 0; i < tokens.size(); i++) {
 				if (is_match_at_index(tokens, i)) {
 					return i;
