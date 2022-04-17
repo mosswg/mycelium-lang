@@ -184,24 +184,24 @@ namespace mycelium {
 		function(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret, std::vector<mycelium::token> args) : function_base(std::move(token), std::move(name), std::move(ret), func), args(std::move(args)) {}
 	};
 
-	class oper : public function_base {
+	class operatr : public function_base {
 	public:
 		pattern_match pattern;
 
 		std::vector<mycelium::token> context;
 
-		oper(mycelium::token token, std::vector<mycelium::token> context, std::string name, std::vector<mycelium::token> ret) : function_base(std::move(token), mycelium::token(word, std::move(name)), std::move(ret), parsed_token_type::oper), context(std::move(context)) {}
+		operatr(mycelium::token token, std::vector<mycelium::token> context, std::string name, std::vector<mycelium::token> ret) : function_base(std::move(token), mycelium::token(word, std::move(name)), std::move(ret), parsed_token_type::oper), context(std::move(context)) {}
 
 		static std::string encode_operator (const std::string& oper);
 
 		static std::string generate_name_from_context(std::vector<mycelium::token>& context);
 	};
 
-	class cond : public function_base {
+	class conditional : public function_base {
 	public:
 		std::vector<mycelium::token> args;
 
-		cond(mycelium::token token, mycelium::token name, std::vector<mycelium::token> args) : function_base(std::move(token), std::move(name), {{}}, parsed_token_type::cond), args(std::move(args)) {}
+		conditional(mycelium::token token, mycelium::token name, std::vector<mycelium::token> args) : function_base(std::move(token), std::move(name), {{}}, parsed_token_type::cond), args(std::move(args)) {}
 	};
 
 //

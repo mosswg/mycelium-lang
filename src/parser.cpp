@@ -39,7 +39,7 @@ void mycelium::parser::parse() {
 		std::cout << func.name.string << " : ";
 		print_the_thing(func.ret);
 		std::cout << " : ";
-		print_the_thing(func.context.pattern);
+		print_the_thing(func.context);
 		std::cout << "\n\n\n" << std::endl;
 	}
 
@@ -302,7 +302,7 @@ void mycelium::parser::find_function_declarations() {
 					next_token_index = search_index;
 				}
 
-				name = oper::generate_name_from_context(context);
+				name = operatr::generate_name_from_context(context);
 
 				operators.emplace_back(current_token, context, name, ret);
 				

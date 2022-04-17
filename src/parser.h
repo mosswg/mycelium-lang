@@ -18,8 +18,8 @@ namespace mycelium {
 	public:
 
 		std::vector<mycelium::function> functions = {};
-		std::vector<mycelium::oper> operators = {};
-		std::vector<mycelium::cond> conditionals = {};
+		std::vector<mycelium::operatr> operators = {};
+		std::vector<mycelium::conditional> conditionals = {};
 
 		enum state {
 			idle,

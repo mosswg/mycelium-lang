@@ -172,7 +172,7 @@ mycelium::token_type mycelium::token::find_type(const std::string &string) {
 	}
 }
 
-std::string mycelium::oper::generate_name_from_context(std::vector<mycelium::token> &context) {
+std::string mycelium::operatr::generate_name_from_context(std::vector<mycelium::token> &context) {
 	std::string out;
 
 	bool op_found = false;
@@ -217,7 +217,7 @@ std::string mycelium::oper::generate_name_from_context(std::vector<mycelium::tok
 	return out;
 }
 
-std::string mycelium::oper::encode_operator(const std::string &oper) {
+std::string mycelium::operatr::encode_operator(const std::string &oper) {
 	std::string out;
 
 	std::cout << oper << std::endl;
