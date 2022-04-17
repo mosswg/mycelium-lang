@@ -97,13 +97,33 @@ namespace mycelium {
 		}
 	};
 
+	enum parsed_token_type {
+		func,
+		oper,
+		cond,
+		var
+	};
+
+	class parsed_token {
+	public:
+
+		mycelium::token token;
+
+		mycelium::parsed_token_type type;
+
+
+		explicit parsed_token(mycelium::token token, parsed_token_type type) : token(std::move(token)), type(type) {}
+	};
+
 	class pattern_match {
 	public:
-		std::vector<token> pattern;
+		std::vector<parsed_token> pattern;
 
-		explicit pattern_match(std::vector<token> tokens) : pattern(std::move(tokens)) {}
+		pattern_match() : pattern({}) {}
 
-		bool is_match(const std::vector<token>& test) {
+		explicit pattern_match(std::vector<parsed_token> tokens) : pattern(std::move(tokens)) {}
+
+		bool is_match(const std::vector<parsed_token>& test) {
 			if (test.size() != pattern.size()) {
 				return false;
 			}
