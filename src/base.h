@@ -150,7 +150,7 @@ namespace mycelium {
 
 		virtual std::string to_string() = 0;
 
-		virtual bool is_same_type(std::shared_ptr<parsed_token> compare) = 0;
+		virtual bool is_similar(std::shared_ptr<parsed_token> compare) = 0;
 	};
 
 	class operator_use : public parsed_token {
@@ -161,7 +161,7 @@ namespace mycelium {
 			return "operator_use: " + token.string;
 		}
 
-		bool is_same_type(std::shared_ptr<parsed_token> compare) override {
+		bool is_similar(std::shared_ptr<parsed_token> compare) override {
 			return compare->token.string == this->token.string;
 		}
 	};
@@ -233,7 +233,7 @@ namespace mycelium {
 			return out;
 		}
 
-		bool is_same_type(std::shared_ptr<parsed_token> compare) override {
+		bool is_similar(std::shared_ptr<parsed_token> compare) override {
 			if (compare->type == var) {
 				auto* compvar = (variable*)compare.get();
 
@@ -292,7 +292,7 @@ namespace mycelium {
 																							  std::move(ret), func, parent_scope), args(std::move(args)) {}
 
 
-		bool is_same_type(std::shared_ptr<parsed_token> compare) override {
+		bool is_similar(std::shared_ptr<parsed_token> compare) override {
 			if (compare->type == func) {
 				auto* compfunc = (function*)compare.get();
 
@@ -337,7 +337,7 @@ namespace mycelium {
 																																				 context(std::move(context)) {}
 
 
-		bool is_same_type(std::shared_ptr<parsed_token> compare) override {
+		bool is_similar(std::shared_ptr<parsed_token> compare) override {
 			if (compare->type == func) {
 				auto* compfunc = (operatr*)compare.get();
 
@@ -381,7 +381,7 @@ namespace mycelium {
 																																				   {{}}, parsed_token_type::cond, parent_scope),
 																																				   args(std::move(args)) {}
 
-		bool is_same_type(std::shared_ptr<parsed_token> compare) override {
+		bool is_similar(std::shared_ptr<parsed_token> compare) override {
 			if (compare->type == func) {
 				auto* compfunc = (conditional*)compare.get();
 
