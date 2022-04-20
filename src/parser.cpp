@@ -86,6 +86,7 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(int& index
 			int type = validate_type(current_token);
 
 			std::shared_ptr<variable> var = parse_variable(index, type);
+			current_scope->add_variable(var.get());
 			std::cout << var->type.name << ": " << var->token.string << "\n";
 			return var;
 		}

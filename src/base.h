@@ -156,16 +156,7 @@ namespace mycelium {
 		static pattern_match generate_pattern_from_tokens(std::vector<mycelium::token>);
 	};
 
-	class variable;
-
-	class scope {
-		std::vector<variable> var = {};
-		bool has_parent = true;
-		scope* parent;
-
-	public:
-		explicit scope(scope* parent) : parent(parent) {}
-	};
+	class scope;
 
 	class variable : public parsed_token {
 	public:
@@ -174,6 +165,32 @@ namespace mycelium {
 		scope* parent_scope;
 
 		variable(mycelium::token name, mycelium::type type, scope* parent_scope) : parsed_token(std::move(name), var), type(std::move(type)), parent_scope(parent_scope) {}
+	};
+
+	class scope {
+		std::vector<variable> variables = {};
+		bool has_parent = true;
+		scope* parent;
+
+	public:
+		explicit scope(scope* parent) : parent(parent) {}
+
+		~scope() {
+			variables.clear();
+		}
+
+		void add_variable(const mycelium::variable* var) {
+			this->variables.push_back(*var);
+		}
+
+		int variable_index(const std::string& name) {
+			for (int i = 0; i < variables.size(); i++) {
+				if (variables[i].token.string == name) {
+					return i;
+				}
+			}
+			return -1;
+		}
 	};
 
 	class function_base : public parsed_token {
