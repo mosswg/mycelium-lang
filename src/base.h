@@ -168,36 +168,48 @@ namespace mycelium {
 
 	class pattern_match {
 	public:
-		std::vector<std::shared_ptr<parsed_token>> pattern;
+		std::vector<token> pattern;
 
 		pattern_match() : pattern({}) {}
 
-		explicit pattern_match(std::vector<std::shared_ptr<parsed_token>> tokens) : pattern(std::move(tokens)) {}
+		explicit pattern_match(std::vector<token> tokens) : pattern(std::move(tokens)) {}
 
-		bool is_match(const std::vector<std::shared_ptr<parsed_token>>& test) {
-			if (test.size() != pattern.size()) {
+		bool is_match(const std::vector<token>& test) {
+			long test_size = test.size();
+			if (test.back().type == newline) {
+				test_size--;
+			}
+
+			if (test_size != pattern.size()) {
+				std::cout << "not long enough :(" << std::endl;
+				std::cout << test_size << '\n' << pattern.size() << std::endl;
 				return false;
 			}
 
-			for (int i = 0; i < test.size(); ++i) {
-				if (!test[i]->is_same_type(pattern[i])) {
+			for (int i = 0; i < test_size; ++i) {
+				if (test[i].type != pattern[i].type) {
 					return false;
+				}
+				else {
+					if (test[i].type == ttype && test[i].string != pattern[i].string) {
+						return false;
+					}
 				}
 			}
 			return true;
 		}
 
-		bool is_match_at_index(const std::vector<std::shared_ptr<parsed_token>>& test, int index) {
+		bool is_match_at_index(const std::vector<token>& test, int index) {
 
 			for (int i = 0; i < pattern.size(); ++i) {
-				if (test[i + index]->is_same_type(pattern[i])) {
+				if (test[i + index].type != pattern[i].type) {
 					return false;
 				}
 			}
 			return true;
 		}
 
-		int find_match(const std::vector<std::shared_ptr<parsed_token>>& tokens, int num_to_skip = 0) {
+		int find_match(const std::vector<token>& tokens, int num_to_skip = 0) {
 			for (int i = 0; i < tokens.size(); i++) {
 				if (is_match_at_index(tokens, i)) {
 					if (num_to_skip != 0) {
@@ -209,8 +221,6 @@ namespace mycelium {
 			}
 			return -1;
 		}
-
-		static pattern_match generate_pattern_from_tokens(const std::vector<mycelium::token>&);
 	};
 
 	class scope;

@@ -20,18 +20,14 @@ bool test_pattern_match() {
 	tokens.emplace_back(mycelium::token_type::ttype, "int");
 	tokens.emplace_back(mycelium::token_type::word, "var2");
 
-	auto pm = mycelium::pattern_match::generate_pattern_from_tokens(tokens);
+	mycelium::pattern_match pm(tokens);
 
 	std::string test = "int var1 + int var2";
 	mycelium::tokenizer tk({ test });
 
 	tk.tokenize();
 
-	mycelium::parser parser(tk);
-
-	parser.parse();
-
-	if (!pm.is_match(parser.parsed_tokens)) {
+	if (!pm.is_match(tk.tokens)) {
 		test_passed = false;
 		print_failed();
 		print_test_name("pattern match");
@@ -45,15 +41,11 @@ bool test_pattern_match() {
 
 
 	test = "int a + int b";
-	tk = mycelium::tokenizer({ test });
+	tk.lines = { test };
 
 	tk.tokenize();
 
-	parser = mycelium::parser(tk);
-
-	parser.parse();
-
-	if (!pm.is_match(parser.parsed_tokens)) {
+	if (!pm.is_match(tk.tokens)) {
 		test_passed = false;
 		print_failed();
 		print_test_name("pattern match");
@@ -67,15 +59,11 @@ bool test_pattern_match() {
 
 
 	test = "string a + string b";
-	tk = mycelium::tokenizer({ test });
+	tk.lines = { test };
 
 	tk.tokenize();
 
-	parser = mycelium::parser(tk);
-
-	parser.parse();
-
-	if (pm.is_match(parser.parsed_tokens)) {
+	if (pm.is_match(tk.tokens)) {
 		test_passed = false;
 		print_failed();
 		print_test_name("pattern match");
@@ -89,15 +77,11 @@ bool test_pattern_match() {
 
 
 	test = "string a + int b";
-	tk = mycelium::tokenizer({ test });
+	tk.lines = { test };
 
 	tk.tokenize();
 
-	parser = mycelium::parser(tk);
-
-	parser.parse();
-
-	if (pm.is_match(parser.parsed_tokens)) {
+	if (pm.is_match(tk.tokens)) {
 		test_passed = false;
 		print_failed();
 		print_test_name("pattern match");

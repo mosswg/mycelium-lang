@@ -265,14 +265,3 @@ std::string mycelium::operatr::encode_operator(const std::string &oper) {
 
 	return out;
 }
-
-mycelium::pattern_match mycelium::pattern_match::generate_pattern_from_tokens(const std::vector<mycelium::token>&) {
-	std::vector<std::shared_ptr<mycelium::parsed_token>> tokens = {};
-
-	// FIXME: This is just a hack for testing this needs to actually be implemented
-	tokens.push_back(std::shared_ptr<parsed_token> (new variable(token(token_type::word, "var1"), type::integer, new scope(nullptr))));
-	tokens.push_back(std::shared_ptr<parsed_token> (new operator_use(token(token_type::op, "+"))));
-	tokens.push_back(std::shared_ptr<parsed_token> (new variable(token(token_type::word, "var1"), type::integer, new scope(nullptr))));
-
-	return pattern_match(tokens);
-}
