@@ -47,6 +47,11 @@ namespace mycelium {
 		static std::string line_comment;
 		static std::string open_block_comment;
 		static std::string close_block_comment;
+		static std::string function_keyword;
+		static std::string operator_keyword;
+		static std::string conditional_keyword;
+		static std::string class_keyword;
+
 
 
 	public:

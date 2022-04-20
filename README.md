@@ -69,14 +69,14 @@ var1 = 5;
 
 
 ### Functions
-Functions are decalred with the `fn` keyword. 
+Functions are decalred with the `func` keyword. 
 Then return types and amount are defined. 
 This can be omitted if the function does not return anything. 
 Next the function name is defined. Then the arguments.
 
 e.g. a function that takes two `int`s and returns two `int`s
 ``` c++
-fn<int, int> my_func(int a, int b) {
+func<int, int> my_func(int a, int b) {
 	...
 }
 ```
@@ -84,21 +84,21 @@ Functions can also use the `any` and `auto` types
 e.g.
 
 ``` c++
-fn<any> my_other_func(auto a) {
+func<any> my_other_func(auto a) {
 	...
 }
 ```
 A function that returns nothing and takes no arguments could be defined as.
 
 ``` c++
-fn my_third_func() {
+func my_third_func() {
 	...
 }
 ```
 Or defined as.
 
 ``` c++
-fn<> my_other_third_func() {
+func<> my_other_third_func() {
 	...
 }
 ```
@@ -107,7 +107,7 @@ A function can also use custom argument syntax
 e.g. a function that uses semi-colons instead of commas
 
 ``` c++
-fn my_semi_colon_func(int a; int b) {
+func my_semi_colon_func(int a; int b) {
 	...
 }
 ```
@@ -115,7 +115,7 @@ or a function could take arguments in the form of a string
 
 ``` c++
 // TODO: Change this syntax
-fn my_weird_func(My arguments are {auto a} and {auto b}) {
+func my_weird_func(My arguments are {auto a} and {auto b}) {
 	...
 }
 ```
@@ -124,7 +124,7 @@ A function can use the special keyword `cn` and then is a conditional which take
 It should return a boolean to indicate that the condition was true. This can be used to define custom if statements
 e.g. a conditional that takes a string and executes the code if the string is empty
 ``` c++
-cn if_empty_string(fn func, string str) {
+cn if_empty_string(func func, string str) {
 	if (str.is_empty()) {
 		func.run();
 		return true;
@@ -146,7 +146,7 @@ Note: infinite recursion will not result in a stack overflow but will cause erro
 
 e.g. A loop that runs n number of times
 ```c++
-cn loop_n_times(fn func, int counter) {
+cn loop_n_times(func func, int counter) {
 	if (n != 0) {
 		func.run();
 		loop_n_times(func, counter - 1);
@@ -174,13 +174,13 @@ All syntax here is in development and is most likely going to change.
 A function can be declared multiple times with different arguments and do different things based on which arguments it are used.
 e.g. two print functions that take a string and an int could be decalred as. 
 ``` c++
-fn print(string str) {
+func print(string str) {
     ...
 }
 ```
 and
 ``` c++
-fn print(int num) {
+func print(int num) {
     ...
 }
 ```
@@ -201,7 +201,7 @@ A function can also be decalred with different return types. Note that the conte
 e.g. two functions that divide an integer where one returns just the quotent and the other returns the quotent and the remainder.
 
 ``` c++
-fn<int> div(int a, int b) {
+func<int> div(int a, int b) {
 	...
 	return result;
 }
@@ -209,7 +209,7 @@ fn<int> div(int a, int b) {
 and
 
 ``` c++
-fn<int, int> div(int a, int b) {
+func<int, int> div(int a, int b) {
 	...
 	return result, remainder;
 }
@@ -241,7 +241,7 @@ class pair {
 Then the `+` operator could be defined with
 
 ``` c++
-op<pair ret><this + pair b> {
+oper<pair><this + pair b> {
 	...
 }
 ```
@@ -290,7 +290,7 @@ Where the value in rax is the argument passed and rsi is the return value
 A function can be declared with the keyword inline and after being turned into assembly code it will directly be placed wherever it is called
 e.g. a function `add` can be defined as.
 ``` c++
-fn<int> add(int a, int b) {
+func<int> add(int a, int b) {
     return a + b;
 }
 ```
@@ -303,7 +303,7 @@ add_ret_int_arg_int_int:
 ```
 However, if defined like this
 ``` c++
-inline fn<int> add(int a, int b) {
+inline func<int> add(int a, int b) {
     return a + b;
 }
 ```

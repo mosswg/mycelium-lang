@@ -1,16 +1,16 @@
-fn<int> print(int a) {
-    output << a;
+func<int> print(int a) {
+    // do stuff
 }
 
-fn<string> get_string(int num) {}
+func<string> get_string(int num) {}
 
 print(1);
 
-fn set_string(int num) {}
+func set_string(int num) {}
 
-fn test {}
+func test {}
 
-fn test2
+func test2
 {
 
 }

@@ -177,7 +177,7 @@ void mycelium::parser::find_function_declarations() {
 	for (int i = 0; i < tokenizer.tokens.size(); i++) {
 		mycelium::token current_token = tokenizer.tokens[i];
 		if (current_token.type == keyword) {
-			if (current_token.string == "fn") {
+			if (current_token.string == token::function_keyword) {
 				mycelium::token name = {};
 				std::vector<mycelium::token> ret = {};
 				std::vector<mycelium::token> args = {};
@@ -249,7 +249,7 @@ void mycelium::parser::find_function_declarations() {
 
 				i += next_token_index;
 			}
-			else if (current_token.string == "op") {
+			else if (current_token.string == token::operator_keyword) {
 				std::string name;
 				std::vector<mycelium::token> ret = {};
 				std::vector<mycelium::token> context = {};
@@ -313,8 +313,8 @@ void mycelium::parser::find_function_declarations() {
 
 				std::cout << "\n";
 			}
-			else if (current_token.string == "cn") {
-				
+			else if (current_token.string == token::conditional_keyword) {
+
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-cn if(fn func, bool run) {
+cond if(fn func, bool run) {
     if (run) {
         func();
     }

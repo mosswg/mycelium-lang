@@ -32,6 +32,10 @@ std::vector<std::string> mycelium::token::type_names = {};
 std::string mycelium::token::line_comment = "//";
 std::string mycelium::token::open_block_comment = "/*";
 std::string mycelium::token::close_block_comment = "*/";
+std::string mycelium::token::function_keyword = "func";
+std::string mycelium::token::operator_keyword = "oper";
+std::string mycelium::token::conditional_keyword = "cond";
+std::string mycelium::token::class_keyword = "class";
 
 
 void mycelium::throw_error(const std::string& error, int code) {
@@ -53,7 +57,7 @@ void mycelium::initialize_static_values() {
 
 	token::whitespace_strings.insert(token::whitespace_strings.end(), {" ", "	"});
 	token::grouping_strings.insert(token::grouping_strings.end(), {"(", ")", "{", "}", "[", "]", "<", ">"});
-	token::keyword_strings.insert(token::keyword_strings.end(), {"fn", "op", "cn", "this"});
+	token::keyword_strings.insert(token::keyword_strings.end(), {token::function_keyword, token::operator_keyword, token::conditional_keyword, token::class_keyword, "this"});
 	token::line_end.insert(token::line_end.end(), {";\n", ";"});
 	token::line_end.insert(token::line_end.end(), {","});
 	token::oper_strings.insert(token::oper_strings.end(), {"+", "-", "*", "/", "%", "=", "==", "!=", "<=", ">=",
