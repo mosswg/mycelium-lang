@@ -83,9 +83,9 @@ mycelium::parsed_token mycelium::parser::parse_token(int& index) {
 		case num:
 			break;
 		case ttype:
-			validate_type(current_token);
+			int type = validate_type(current_token);
 
-			return parse_variable(index);
+			return parse_variable(index, type);
 			break;
 		case invalid:
 			throw_error("invalid token: " + current_token.string, 80000);
@@ -320,95 +320,17 @@ void mycelium::parser::find_function_declarations() {
 	}
 }
 
-void mycelium::parser::validate_type(const mycelium::token& type) {
-	for (auto& check_type_string : type::strings) {
-		if (check_type_string == type.string) {
+int mycelium::parser::validate_type(const mycelium::token& type) {
+	for (int i = 0; i < type::strings.size(); i++;) {
+		if (type::strings[i] == type.string) {
 			std::cout << "type \"" << type.string << "\" validated" << std::endl;
-			return;
+			return i;
 		}
 	}
 	mycelium::throw_error("unknown type \"" + type.string + "\"", 50001);
+	return -1;
 }
 
-mycelium::parsed_token mycelium::parser::parse_variable(int &index) {
+mycelium::parsed_token mycelium::parser::parse_variable(int &index, int variable_type) {
 
 }
-
-/*
-int mycelium::parser::parse_keyword_token(const mycelium::parsed_token& ptoken, int index) {
-	int group_string_index = vector_find(token::grouping_strings, tokenizer.tokens[index].string) + 1;
-
-	searching_for = token::grouping_strings[group_string_index];
-
-	temp.clear();
-
-	int search_depth = 0;
-
-	for (int i = index; i < tokenizer.tokens.size() - 1; i++) {
-		mycelium::token current_token = tokenizer.tokens[i];
-		mycelium::token next_token = tokenizer.tokens[i + 1];
-		std::cout << "\ns: " << searching_for << std::endl;
-		std::cout << "c: " << current_token.string << std::endl;
-		std::cout << "d: " << search_depth << std::endl;
-		if (vector_contains(token::grouping_strings, searching_for)) {
-			if (current_token.type == grouping) {
-				if (!(vector_find(token::grouping_strings, current_token.string) % 2)) {
-					search_depth++;
-				} else {
-					search_depth--;
-				}
-			}
-		}
-
-		if (current_token.type != newline) {
-			temp.push_back(current_token);
-		}
-
-		if (search_depth == 0 && current_token.string == searching_for) {
-			parsed_tokens.back().context.emplace_back(temp);
-
-			for (auto &token: parsed_tokens) {
-				std::cout << "Token: " << token.token.string << "\tContext: ";
-				for (int j = 0; j < token.context.size(); j++) {
-					for (auto &ctx_token: token.context[j]) {
-						std::cout << "\"" << ctx_token.string << "\" ";
-					}
-					if (j != token.context.size() - 1) {
-						std::cout << "\tNext: ";
-					}
-				}
-				std::cout << std::endl;
-			}
-
-			if (searching_for == "}") {
-				return i;
-			}
-			state = searching;
-			search_type = next_token;
-			temp = {};
-			int idx = i;
-			if (next_token.type == newline) {
-				while (tokenizer.tokens[idx++].type == newline);
-			}
-			else {
-				idx++;
-			}
-
-			temp.push_back(tokenizer.tokens[idx]);
-
-			if (tokenizer.tokens[idx].string == "(") {
-				search_depth++;
-				searching_for = ")";
-			} else if (tokenizer.tokens[idx].string == "{") {
-				search_depth++;
-				searching_for = "}";
-			} else {
-				throw_error("keyword definitions should be followed by '(' or '{'", 3);
-			}
-			i = idx;
-		}
-	}
-
-	return (int)tokenizer.tokens.size();
-}
-*/

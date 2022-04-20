@@ -54,8 +54,8 @@ namespace mycelium {
 
 		std::vector<token> find_in_grouping(int& index, const std::string &open, const std::string &close);
 
-		static void validate_type(const token& type);
+		static int validate_type(const token& type);
 
-		mycelium::parsed_token parse_variable(int &index);
+		mycelium::parsed_token parse_variable(int &index, int variable_type);
 	};
 }
