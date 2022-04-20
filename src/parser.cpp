@@ -55,7 +55,7 @@ void mycelium::parser::parse() {
 	}
 }
 
-mycelium::parsed_token mycelium::parser::parse_token(int& index) {
+std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(int& index) {
 
 	mycelium::token current_token = tokenizer.tokens[index];
 	std::cout << "Current token: " << current_token.string << std::endl;
@@ -82,11 +82,13 @@ mycelium::parsed_token mycelium::parser::parse_token(int& index) {
 			break;
 		case num:
 			break;
-		case ttype:
+		case ttype: {
 			int type = validate_type(current_token);
 
-			return parse_variable(index, type);
-			break;
+			std::shared_ptr<variable> var = parse_variable(index, type);
+			std::cout << var->type.name << ": " << var->token.string << "\n";
+			return var;
+		}
 		case invalid:
 			throw_error("invalid token: " + current_token.string, 80000);
 			break;
@@ -97,7 +99,7 @@ mycelium::parsed_token mycelium::parser::parse_token(int& index) {
 	return {};
 }
 
-std::vector<mycelium::parsed_token> mycelium::parser::parse_func_body(int& index) {
+std::vector<std::shared_ptr<mycelium::parsed_token>> mycelium::parser::parse_func_body(int& index) {
 	temp.clear();
 
 	auto search_depth = new int[token::grouping_strings.size() % 2];
@@ -119,13 +121,14 @@ std::vector<mycelium::parsed_token> mycelium::parser::parse_func_body(int& index
 		std::cout << search_depth << std::endl;
 
 		if (search_depth[curly_brace_index] == 0 && next_token.string == "}") {
-			return temp;
+			break;
 		}
 	}
+	return temp;
 }
 
-mycelium::function mycelium::parser::parse_function(int& index) {
-	temp = {};
+std::shared_ptr<mycelium::function> mycelium::parser::parse_function(int& index) {
+	temp.clear();
 	int idx = index;
 	int search_depth = 0;
 	if (tokenizer.tokens[idx + 1].type == newline) {
@@ -145,11 +148,11 @@ mycelium::function mycelium::parser::parse_function(int& index) {
 	}
 }
 
-mycelium::function mycelium::parser::parse_operator(int& index) {
+std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(int& index) {
 
 }
 
-mycelium::function mycelium::parser::parse_cond(int& index) {
+std::shared_ptr<mycelium::conditional> mycelium::parser::parse_cond(int& index) {
 
 }
 
@@ -243,7 +246,7 @@ void mycelium::parser::find_function_declarations() {
 					mycelium::throw_error("functions must have a body", 40001);
 				}
 
-				functions.emplace_back(current_token, name, ret, args, &global_scope);
+				functions.emplace_back(current_token, name, ret, args, current_scope);
 
 				std::cout << std::endl;
 
@@ -307,7 +310,7 @@ void mycelium::parser::find_function_declarations() {
 
 				name = operatr::generate_name_from_context(context);
 
-				operators.emplace_back(current_token, context, name, ret, &global_scope);
+				operators.emplace_back(current_token, context, name, ret, current_scope);
 				
 				i += next_token_index;
 
@@ -321,7 +324,7 @@ void mycelium::parser::find_function_declarations() {
 }
 
 int mycelium::parser::validate_type(const mycelium::token& type) {
-	for (int i = 0; i < type::strings.size(); i++;) {
+	for (int i = 0; i < type::strings.size(); i++) {
 		if (type::strings[i] == type.string) {
 			std::cout << "type \"" << type.string << "\" validated" << std::endl;
 			return i;
@@ -331,6 +334,10 @@ int mycelium::parser::validate_type(const mycelium::token& type) {
 	return -1;
 }
 
-mycelium::parsed_token mycelium::parser::parse_variable(int &index, int variable_type) {
+std::shared_ptr<mycelium::variable> mycelium::parser::parse_variable(int &index, int variable_type) {
+	index++;
 
+	std::shared_ptr<variable> out(new variable(tokenizer.tokens[index++], type::types[variable_type], current_scope));
+
+	return out;
 }

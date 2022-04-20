@@ -23,6 +23,8 @@ namespace mycelium {
 
 		scope global_scope;
 
+		scope* current_scope;
+
 		enum state {
 			idle,
 			searching
@@ -33,29 +35,31 @@ namespace mycelium {
 		state state;
 		mycelium::token search_type;
 		std::string searching_for;
-		std::vector<mycelium::parsed_token> temp = {};
-		std::vector<mycelium::parsed_token> parsed_tokens = {};
+		std::vector<std::shared_ptr<mycelium::parsed_token>> temp = {};
+		std::vector<std::shared_ptr<mycelium::parsed_token>> parsed_tokens = {};
 
 		void parse();
 
-		explicit parser(mycelium::tokenizer tokenizer) : tokenizer(std::move(tokenizer)), state(idle), search_type(), global_scope(nullptr) {}
+		explicit parser(mycelium::tokenizer tokenizer) : tokenizer(std::move(tokenizer)), state(idle), search_type(), global_scope(nullptr) {
+			current_scope = &global_scope;
+		}
 
-		parsed_token parse_token(int &index);
+		std::shared_ptr<parsed_token> parse_token(int &index);
 
 		void find_function_declarations();
 
-		std::vector<parsed_token> parse_func_body(int &index);
+		std::vector<std::shared_ptr<parsed_token>> parse_func_body(int &index);
 
-		function parse_function(int &index);
+		std::shared_ptr<mycelium::function> parse_function(int &index);
 
-		function parse_operator(int &index);
+		std::shared_ptr<mycelium::operatr> parse_operator(int &index);
 
-		function parse_cond(int &index);
+		std::shared_ptr<mycelium::conditional> parse_cond(int &index);
 
 		std::vector<token> find_in_grouping(int& index, const std::string &open, const std::string &close);
 
 		static int validate_type(const token& type);
 
-		mycelium::parsed_token parse_variable(int &index, int variable_type);
+		std::shared_ptr<mycelium::variable> parse_variable(int &index, int variable_type);
 	};
 }

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <utility>
 #include <vector>
+#include <memory>
 
 namespace mycelium {
 	void throw_error(const std::string& error, int code);
@@ -155,13 +156,7 @@ namespace mycelium {
 		static pattern_match generate_pattern_from_tokens(std::vector<mycelium::token>);
 	};
 
-	class variable : public parsed_token {
-	public:
-		mycelium::type type;
-		long value = 0;
-
-		variable(mycelium::token name, mycelium::type type) : parsed_token(std::move(name), var), type(std::move(type)) {}
-	};
+	class variable;
 
 	class scope {
 		std::vector<variable> var = {};
@@ -170,6 +165,15 @@ namespace mycelium {
 
 	public:
 		explicit scope(scope* parent) : parent(parent) {}
+	};
+
+	class variable : public parsed_token {
+	public:
+		mycelium::type type;
+		long value = 0;
+		scope* parent_scope;
+
+		variable(mycelium::token name, mycelium::type type, scope* parent_scope) : parsed_token(std::move(name), var), type(std::move(type)), parent_scope(parent_scope) {}
 	};
 
 	class function_base : public parsed_token {
