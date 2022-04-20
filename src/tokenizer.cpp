@@ -6,6 +6,8 @@
 
 void mycelium::tokenizer::tokenize() {
 
+	tokens.clear();
+
 	if (show_debug_lines) {
 		std::cout << lines << std::endl;
 	}
