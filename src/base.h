@@ -102,6 +102,7 @@ namespace mycelium {
 
 		mycelium::parsed_token_type type;
 
+		parsed_token() : token(invalid, ""), type(bad) {}
 
 		explicit parsed_token(mycelium::token token, parsed_token_type type) : token(std::move(token)), type(type) {}
 	};
