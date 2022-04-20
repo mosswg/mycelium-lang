@@ -141,7 +141,7 @@ else {
 }
 ```
 #### Loops
-Using the conditional function type and the cond argument type a loop can be made.
+Using the conditional function type and the conditional argument type a loop can be made.
 Note: infinite recursion will not result in a stack overflow but will cause errors after 18 quintillion times (when the recursion counter goes negative). 
 
 e.g. A loop that runs n number of times
