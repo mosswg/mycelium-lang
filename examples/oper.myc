@@ -1,3 +1,12 @@
 op<int><int a + int b> {
     a + b
 }
+
+op<string a + string b>
+{
+
+}
+
+op<this and int r> {}
+
+op<int a ++> {}
