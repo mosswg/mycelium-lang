@@ -158,6 +158,15 @@ namespace mycelium {
 		variable(mycelium::token name, mycelium::type type) : parsed_token(std::move(name), var), type(std::move(type)) {}
 	};
 
+	class scope {
+		std::vector<variable> var = {};
+		bool has_parent = true;
+		scope* parent;
+
+	public:
+		explicit scope(scope* parent) : parent(parent) {}
+	};
+
 	class function_base : public parsed_token {
 	public:
 
@@ -166,14 +175,19 @@ namespace mycelium {
 
 		std::vector<mycelium::token> body;
 
-		function_base(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret, parsed_token_type type) : parsed_token(std::move(token), type), name(std::move(name)), body({}), ret(std::move(ret)) {}
+		mycelium::scope scope;
+
+		function_base(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret, parsed_token_type type, mycelium::scope* parent_scope) : parsed_token(std::move(token), type),
+																										name(std::move(name)), body({}), ret(std::move(ret)), scope(parent_scope) {}
 	};
 
 	class function : public function_base {
 	public:
 		std::vector<mycelium::token> args;
 
-		function(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret, std::vector<mycelium::token> args) : function_base(std::move(token), std::move(name), std::move(ret), func), args(std::move(args)) {}
+		function(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret, std::vector<mycelium::token> args, mycelium::scope* parent_scope) :
+																				function_base(std::move(token), std::move(name),
+																							  std::move(ret), func, parent_scope), args(std::move(args)) {}
 	};
 
 	class operatr : public function_base {
@@ -182,7 +196,11 @@ namespace mycelium {
 
 		std::vector<mycelium::token> context;
 
-		operatr(mycelium::token token, std::vector<mycelium::token> context, std::string name, std::vector<mycelium::token> ret) : function_base(std::move(token), mycelium::token(word, std::move(name)), std::move(ret), parsed_token_type::oper), context(std::move(context)) {}
+		operatr(mycelium::token token, std::vector<mycelium::token> context, std::string name, std::vector<mycelium::token> ret, mycelium::scope* parent_scope) : function_base(std::move(token),
+																																				 mycelium::token(word,std::move(name)),
+																																				 std::move(ret), parsed_token_type::oper,
+																																				 parent_scope),
+																																				 context(std::move(context)) {}
 
 		static std::string encode_operator (const std::string& oper);
 
@@ -193,7 +211,9 @@ namespace mycelium {
 	public:
 		std::vector<mycelium::token> args;
 
-		conditional(mycelium::token token, mycelium::token name, std::vector<mycelium::token> args) : function_base(std::move(token), std::move(name), {{}}, parsed_token_type::cond), args(std::move(args)) {}
+		conditional(mycelium::token token, mycelium::token name, std::vector<mycelium::token> args, mycelium::scope* parent_scope) : function_base(std::move(token), std::move(name),
+																																				   {{}}, parsed_token_type::cond, parent_scope),
+																																				   args(std::move(args)) {}
 	};
 
 //
