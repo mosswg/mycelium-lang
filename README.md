@@ -11,7 +11,7 @@ Mycelium is going to be completely rewritten in C++. The reason for this change 
 ## Milestones
 - [x] tokenizer
 - [ ] parser
-  - [ ] variable creation
+  - [x] variable creation
   - [ ] constant creation
   - [ ] math evaluation
   - [ ] condition calls

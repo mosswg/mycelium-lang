@@ -183,7 +183,7 @@ namespace mycelium {
 			this->variables.push_back(*var);
 		}
 
-		int variable_index(const std::string& name) {
+		int get_variable_index(const std::string& name) {
 			for (int i = 0; i < variables.size(); i++) {
 				if (variables[i].token.string == name) {
 					return i;
