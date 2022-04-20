@@ -28,6 +28,8 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	mycelium::show_debug_lines = true;
+
 	mycelium::initialize_static_values();
 
 	mycelium::tokenizer tokenizer(program);

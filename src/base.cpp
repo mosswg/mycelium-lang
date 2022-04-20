@@ -53,7 +53,9 @@ void mycelium::initialize_static_values() {
 		type::strings.push_back(type.name);
 	}
 
-	std::cout << type::strings << std::endl;
+	if (show_debug_lines) {
+		std::cout << type::strings << std::endl;
+	}
 
 	token::whitespace_strings.insert(token::whitespace_strings.end(), {" ", "	"});
 	token::grouping_strings.insert(token::grouping_strings.end(), {"(", ")", "{", "}", "[", "]", "<", ">"});
@@ -68,7 +70,9 @@ void mycelium::initialize_static_values() {
 	token::type_names.insert(mycelium::token::type_names.end(), {"operator", "whitespace", "grouping", "keyword", "type", "endline", "word", "num",
 													 "invalid", "newline"});
 
-	std::cout << token::string_lists << std::endl;
+	if (show_debug_lines) {
+		std::cout << token::string_lists << std::endl;
+	}
 
 	for (const auto& token_string_list : token::string_lists) {
 		for (const auto& token_string : token_string_list) {
@@ -171,7 +175,15 @@ mycelium::token_type mycelium::token::find_type(const std::string &string) {
 
 	for (char c: string) {
 		if (!isdigit(c)) {
+			if (show_debug_lines) {
+				std::cout << c << " is not a digit" << std::endl;
+			}
 			is_num = false;
+		}
+		else {
+			if (show_debug_lines) {
+				std::cout << c << " is a digit" << std::endl;
+			}
 		}
 	}
 
@@ -189,10 +201,15 @@ std::string mycelium::operatr::generate_name_from_context(std::vector<mycelium::
 
 	bool op_found = false;
 
-	std::cout << context.size() << std::endl;
+	if (show_debug_lines) {
+		std::cout << context.size() << std::endl;
+	}
 
 	for (int i = 0; i < context.size(); i++) {
-		std::cout << "i: " << i << "\ttoken: " << context[i].string << std::endl;
+		if (show_debug_lines) {
+			std::cout << "i: " << i << "\ttoken: " << context[i].string << std::endl;
+		}
+
 		if (context[i].type == ttype) {
 			out.append(context[i].string);
 			i++;
@@ -205,7 +222,9 @@ std::string mycelium::operatr::generate_name_from_context(std::vector<mycelium::
 				throw_error("operator definitions can only contain one operator", 42001);
 			}
 
-			std::cout << "oper: " << context[i].string << std::endl;
+			if (show_debug_lines) {
+				std::cout << "oper: " << context[i].string << std::endl;
+			}
 
 			context[i].type = op;
 

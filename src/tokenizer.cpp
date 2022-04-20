@@ -6,7 +6,9 @@
 
 void mycelium::tokenizer::tokenize() {
 
-	std::cout << lines << std::endl;
+	if (show_debug_lines) {
+		std::cout << lines << std::endl;
+	}
 
 	std::vector<std::vector<std::string>> split_lines;
 
