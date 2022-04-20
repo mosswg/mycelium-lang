@@ -90,18 +90,23 @@ namespace mycelium {
 
 		token() : type(invalid) {}
 
-		explicit token(std::string str) : string(std::move(str)) {
+		explicit token(const std::string& str) : string(str) {
 			this->type = find_type(str);
 		}
 
 		static token_type find_type(const std::string &string);
+
+
+		bool operator==(const token& tk) const {
+			return this->type == tk.type;
+		}
 	};
 
 	class type {
 	public:
-		const int code;
-		const std::string name;
-		const int size;
+		int code = -1;
+		std::string name;
+		int size = 8;
 
 
 		static std::vector<std::string> strings;
@@ -128,6 +133,7 @@ namespace mycelium {
 		oper,
 		cond,
 		var,
+		oper_use,
 		bad
 	};
 
@@ -141,49 +147,70 @@ namespace mycelium {
 		parsed_token() : token(invalid, ""), type(bad) {}
 
 		explicit parsed_token(mycelium::token token, parsed_token_type type) : token(std::move(token)), type(type) {}
+
+		virtual std::string to_string() = 0;
+
+		virtual bool is_same_type(std::shared_ptr<parsed_token> compare) = 0;
+	};
+
+	class operator_use : public parsed_token {
+	public:
+		explicit operator_use(mycelium::token token) : parsed_token(std::move(token), oper_use) {}
+
+		std::string to_string() override {
+			return "operator_use: " + token.string;
+		}
+
+		bool is_same_type(std::shared_ptr<parsed_token> compare) override {
+			return compare->token.string == this->token.string;
+		}
 	};
 
 	class pattern_match {
 	public:
-		std::vector<parsed_token> pattern;
+		std::vector<std::shared_ptr<parsed_token>> pattern;
 
 		pattern_match() : pattern({}) {}
 
-		explicit pattern_match(std::vector<parsed_token> tokens) : pattern(std::move(tokens)) {}
+		explicit pattern_match(std::vector<std::shared_ptr<parsed_token>> tokens) : pattern(std::move(tokens)) {}
 
-		bool is_match(const std::vector<parsed_token>& test) {
+		bool is_match(const std::vector<std::shared_ptr<parsed_token>>& test) {
 			if (test.size() != pattern.size()) {
 				return false;
 			}
 
 			for (int i = 0; i < test.size(); ++i) {
-				if (test[i].type != pattern[i].type) {
+				if (!test[i]->is_same_type(pattern[i])) {
 					return false;
 				}
 			}
 			return true;
 		}
 
-		bool is_match_at_index(const std::vector<parsed_token>& test, int index) {
+		bool is_match_at_index(const std::vector<std::shared_ptr<parsed_token>>& test, int index) {
 
 			for (int i = 0; i < pattern.size(); ++i) {
-				if (test[i + index].type != pattern[i].type) {
+				if (test[i + index]->is_same_type(pattern[i])) {
 					return false;
 				}
 			}
 			return true;
 		}
 
-		int find_match(const std::vector<parsed_token>& tokens) {
+		int find_match(const std::vector<std::shared_ptr<parsed_token>>& tokens, int num_to_skip = 0) {
 			for (int i = 0; i < tokens.size(); i++) {
 				if (is_match_at_index(tokens, i)) {
+					if (num_to_skip != 0) {
+						num_to_skip--;
+						continue;
+					}
 					return i;
 				}
 			}
 			return -1;
 		}
 
-		static pattern_match generate_pattern_from_tokens(std::vector<mycelium::token>);
+		static pattern_match generate_pattern_from_tokens(const std::vector<mycelium::token>&);
 	};
 
 	class scope;
@@ -195,6 +222,25 @@ namespace mycelium {
 		scope* parent_scope;
 
 		variable(mycelium::token name, mycelium::type type, scope* parent_scope) : parsed_token(std::move(name), var), type(std::move(type)), parent_scope(parent_scope) {}
+
+		std::string to_string() override {
+			std::string out = "variable ";
+			out += type.name;
+			out += ' ';
+			out += token.string;
+			out += ": ";
+			out += std::to_string(value);
+			return out;
+		}
+
+		bool is_same_type(std::shared_ptr<parsed_token> compare) override {
+			if (compare->type == var) {
+				auto* compvar = (variable*)compare.get();
+
+				return compvar->type.code == this->type.code;
+			}
+			return false;
+		}
 	};
 
 	class scope {
@@ -244,6 +290,38 @@ namespace mycelium {
 		function(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret, std::vector<mycelium::token> args, mycelium::scope* parent_scope) :
 																				function_base(std::move(token), std::move(name),
 																							  std::move(ret), func, parent_scope), args(std::move(args)) {}
+
+
+		bool is_same_type(std::shared_ptr<parsed_token> compare) override {
+			if (compare->type == func) {
+				auto* compfunc = (function*)compare.get();
+
+				return (compfunc->ret == this->ret) && (compfunc->args == this->args);
+			}
+			return false;
+		}
+
+		std::string to_string() override {
+			std::string out = "function ";
+			out += name.string;
+			out += '(';
+			for (int i = 0; i < args.size(); i++) {
+				out += args[i].string;
+				if (i < args.size()-1) {
+					out += ", ";
+				}
+			}
+			out += ')';
+			out += ": ";
+			for (int i = 0; i < ret.size(); i++) {
+				out += ret[i].string;
+				if (i < ret.size()-1) {
+					out += ", ";
+				}
+			}
+
+			return out;
+		}
 	};
 
 	class operatr : public function_base {
@@ -258,6 +336,38 @@ namespace mycelium {
 																																				 parent_scope),
 																																				 context(std::move(context)) {}
 
+
+		bool is_same_type(std::shared_ptr<parsed_token> compare) override {
+			if (compare->type == func) {
+				auto* compfunc = (operatr*)compare.get();
+
+				return (compfunc->ret == this->ret) && (compfunc->context == this->context);
+			}
+			return false;
+		}
+
+		std::string to_string() override {
+			std::string out = "function ";
+			out += name.string;
+			out += '<';
+			for (int i = 0; i < context.size(); i++) {
+				out += context[i].string;
+				if (i < context.size()-1) {
+					out += ", ";
+				}
+			}
+			out += '>';
+			out += ": ";
+			for (int i = 0; i < ret.size(); i++) {
+				out += ret[i].string;
+				if (i < ret.size()-1) {
+					out += ", ";
+				}
+			}
+
+			return out;
+		}
+
 		static std::string encode_operator (const std::string& oper);
 
 		static std::string generate_name_from_context(std::vector<mycelium::token>& context);
@@ -270,6 +380,37 @@ namespace mycelium {
 		conditional(mycelium::token token, mycelium::token name, std::vector<mycelium::token> args, mycelium::scope* parent_scope) : function_base(std::move(token), std::move(name),
 																																				   {{}}, parsed_token_type::cond, parent_scope),
 																																				   args(std::move(args)) {}
+
+		bool is_same_type(std::shared_ptr<parsed_token> compare) override {
+			if (compare->type == func) {
+				auto* compfunc = (conditional*)compare.get();
+
+				return (compfunc->ret == this->ret) && (compfunc->args == this->args);
+			}
+			return false;
+		}
+
+		std::string to_string() override {
+			std::string out = "function ";
+			out += name.string;
+			out += '(';
+			for (int i = 0; i < args.size(); i++) {
+				out += args[i].string;
+				if (i < args.size()-1) {
+					out += ", ";
+				}
+			}
+			out += ')';
+			out += ": ";
+			for (int i = 0; i < ret.size(); i++) {
+				out += ret[i].string;
+				if (i < ret.size()-1) {
+					out += ", ";
+				}
+			}
+
+			return out;
+		}
 	};
 
 //

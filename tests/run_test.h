@@ -8,13 +8,13 @@
 #include <base.h>
 
 void print_failed() {
-	std::cerr << '[' << mycelium::RED << "FAILED" << mycelium::RESET << "]:  ";
+	std::cerr << '[' << mycelium::colored_text::RED << "FAILED" << mycelium::colored_text::RESET << "]:  ";
 }
 
 void print_success() {
-	std::cerr << '[' << mycelium::GREEN << "SUCCESS" << mycelium::RESET << "]: ";
+	std::cerr << '[' << mycelium::colored_text::GREEN << "SUCCESS" << mycelium::colored_text::RESET << "]: ";
 }
 
 void print_test_name(const std::string& name) {
-	std::cerr << mycelium::YELLOW << name << mycelium::RESET << " ";
+	std::cerr << mycelium::colored_text::YELLOW << name << mycelium::colored_text::RESET << " ";
 }
