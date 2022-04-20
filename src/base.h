@@ -38,7 +38,6 @@ namespace mycelium {
 		static std::vector<std::string> whitespace_strings;
 		static std::vector<std::string> grouping_strings;
 		static std::vector<std::string> keyword_strings;
-		static std::vector<std::string> type_strings;
 		static std::vector<std::string> oper_strings;
 		static std::vector<std::string> line_end;
 		static std::vector<std::string> seperator_strings;
@@ -84,24 +83,16 @@ namespace mycelium {
 		static const type cstring;
 		static const type token;
 		static const type none;
+		static std::vector<type> types;
 	};
 
-
-	class list {
-	private:
-		void *storage;
-
-	public:
-		list(int length) {
-
-		}
-	};
 
 	enum parsed_token_type {
 		func,
 		oper,
 		cond,
-		var
+		var,
+		bad
 	};
 
 	class parsed_token {

@@ -4,24 +4,25 @@
 
 #include "base.h"
 
-const mycelium::type pointer(0, "pointer", 8);
-const mycelium::type integer(1, "integer", 8);
-const mycelium::type character(2, "character", 1);
-const mycelium::type string(3, "string", 8);
-const mycelium::type list(4, "list", 8);
-const mycelium::type tuple(5, "tuple", 8);
-const mycelium::type oper(6, "oper", 8);
-const mycelium::type array(7, "array", 8);
-const mycelium::type cstring(8, "cstring", 8);
-const mycelium::type token(9, "token", 8);
-const mycelium::type none(10, "none", 0);
+const mycelium::type mycelium::type::pointer(0, "pointer", 8);
+const mycelium::type mycelium::type::integer(1, "int", 8);
+const mycelium::type mycelium::type::character(2, "character", 1);
+const mycelium::type mycelium::type::string(3, "string", 8);
+const mycelium::type mycelium::type::list(4, "list", 8);
+const mycelium::type mycelium::type::tuple(5, "tuple", 8);
+const mycelium::type mycelium::type::oper(6, "operator", 8);
+const mycelium::type mycelium::type::array(7, "array", 8);
+const mycelium::type mycelium::type::cstring(8, "twine", 8);
+const mycelium::type mycelium::type::token(9, "token", 8);
+const mycelium::type mycelium::type::none(10, "none", 0);
+
+std::vector<mycelium::type> mycelium::type::types = {};
 
 std::vector<std::string> mycelium::type::strings = {};
 
 std::vector<std::string> mycelium::token::whitespace_strings = {};
 std::vector<std::string> mycelium::token::grouping_strings = {};
 std::vector<std::string> mycelium::token::keyword_strings = {};
-std::vector<std::string> mycelium::token::type_strings = {};
 std::vector<std::string> mycelium::token::line_end = {};
 std::vector<std::string> mycelium::token::seperator_strings = {};
 std::vector<std::string> mycelium::token::oper_strings = {};
@@ -40,18 +41,25 @@ void mycelium::throw_error(const std::string& error, int code) {
 
 
 void mycelium::initialize_static_values() {
-	type::strings.insert(type::strings.end(), {"int", "ptr", "string", "list", "array", "tuple", "twine", "operator", "char"});
+	for (auto& type : {mycelium::type::pointer, mycelium::type::integer, mycelium::type::character, mycelium::type::string, mycelium::type::list, mycelium::type::tuple, mycelium::type::oper, mycelium::type::array, mycelium::type::cstring, mycelium::type::token, mycelium::type::none}) {
+		type::types.push_back(type);
+	}
+
+	for (auto& type : type::types) {
+		type::strings.push_back(type.name);
+	}
+
+	std::cout << type::strings << std::endl;
 
 	token::whitespace_strings.insert(token::whitespace_strings.end(), {" ", "	"});
 	token::grouping_strings.insert(token::grouping_strings.end(), {"(", ")", "{", "}", "[", "]", "<", ">"});
 	token::keyword_strings.insert(token::keyword_strings.end(), {"fn", "op", "cn", "this"});
-	token::type_strings.insert(token::type_strings.end(), type::strings.begin(), type::strings.end());
 	token::line_end.insert(token::line_end.end(), {";\n", ";"});
 	token::line_end.insert(token::line_end.end(), {","});
 	token::oper_strings.insert(token::oper_strings.end(), {"+", "-", "*", "/", "%", "=", "==", "!=", "<=", ">=",
 														   "&&", "||", "++", "--", "!", "<<", ">>", "&", "|", "~"});
 	token::string_lists.insert(token::string_lists.end(), {token::oper_strings, token::whitespace_strings,
-														   token::grouping_strings, token::keyword_strings, token::type_strings, token::line_end});
+														   token::grouping_strings, token::keyword_strings, type::strings, token::line_end});
 
 	token::type_names.insert(mycelium::token::type_names.end(), {"operator", "whitespace", "grouping", "keyword", "type", "endline", "word", "num",
 													 "invalid", "newline"});
