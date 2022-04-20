@@ -251,13 +251,28 @@ std::string mycelium::operatr::generate_name_from_context(std::vector<mycelium::
 std::string mycelium::operatr::encode_operator(const std::string &oper) {
 	std::string out;
 
-	std::cout << oper << std::endl;
+	if (show_debug_lines) {
+		std::cout << oper << std::endl;
+	}
 
 	for (char c : oper) {
 		out.append(int_to_hex_string(c));
 	}
 
-	std::cout << out << std::endl;
+	if (show_debug_lines) {
+		std::cout << out << std::endl;
+	}
 
 	return out;
+}
+
+mycelium::pattern_match mycelium::pattern_match::generate_pattern_from_tokens(const std::vector<mycelium::token>&) {
+	std::vector<std::shared_ptr<mycelium::parsed_token>> tokens = {};
+
+	// FIXME: This is just a hack for testing this needs to actually be implemented
+	tokens.push_back(std::shared_ptr<parsed_token> (new variable(token(token_type::word, "var1"), type::integer, new scope(nullptr))));
+	tokens.push_back(std::shared_ptr<parsed_token> (new operator_use(token(token_type::op, "+"))));
+	tokens.push_back(std::shared_ptr<parsed_token> (new variable(token(token_type::word, "var1"), type::integer, new scope(nullptr))));
+
+	return pattern_match(tokens);
 }
