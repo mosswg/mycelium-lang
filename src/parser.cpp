@@ -45,16 +45,14 @@ void mycelium::parser::parse() {
 
 	std::cout << token::oper_strings << std::endl;
 
-	std::cout << "bye" << std::endl;
-
 	// TODO: Verify that no functions have been declared more than once
-
-	return;
 
 	for (auto& token : tokenizer.tokens) {
 		std::cout << "(" << token::type_names[token.type] << ", \"" << token.string << "\")\n";
 	}
-	for (int i = 0; i < tokenizer.tokens.size()-1; i++) {}
+	for (int i = 0; i < tokenizer.tokens.size()-1; i++) {
+		parse_token(i);
+	}
 }
 
 mycelium::parsed_token mycelium::parser::parse_token(int& index) {
@@ -62,36 +60,41 @@ mycelium::parsed_token mycelium::parser::parse_token(int& index) {
 	mycelium::token current_token = tokenizer.tokens[index];
 	std::cout << "Current token: " << current_token.string << std::endl;
 	mycelium::token next_token = tokenizer.tokens[index+1];
+	std::cout << index << std::endl;
 	switch (current_token.type) {
 		case op:
 			break;
 		case keyword:
-			if (current_token.string == "fn") {
-				return parse_function(index);
-			}
-			else if (current_token.string == "op") {
-				if (next_token.string != "<") {
-					throw_error("op keyword must be followed by \'<\'", 41001);
-				}
-				return parse_operator(index);
-			}
-			else if (current_token.string == "cn") {
-				return parse_cond(index);
-			}
+//			if (current_token.string == "fn") {
+//				return parse_function(index);
+//			}
+//			else if (current_token.string == "op") {
+//				if (next_token.string != "<") {
+//					throw_error("op keyword must be followed by \'<\'", 41001);
+//				}
+//				return parse_operator(index);
+//			}
+//			else if (current_token.string == "cn") {
+//				return parse_cond(index);
+//			}
 			break;
 		case word:
 			break;
 		case num:
 			break;
 		case ttype:
+			validate_type(current_token);
 
+			return parse_variable(index);
 			break;
 		case invalid:
-			throw_error("invalid token: " + current_token.string, 2);
+			throw_error("invalid token: " + current_token.string, 80000);
 			break;
 		default:
 			break;
 	}
+
+	return {};
 }
 
 std::vector<mycelium::parsed_token> mycelium::parser::parse_func_body(int& index) {
@@ -240,7 +243,7 @@ void mycelium::parser::find_function_declarations() {
 					mycelium::throw_error("functions must have a body", 40001);
 				}
 
-				functions.emplace_back(current_token, name, ret, args);
+				functions.emplace_back(current_token, name, ret, args, &global_scope);
 
 				std::cout << std::endl;
 
@@ -304,17 +307,31 @@ void mycelium::parser::find_function_declarations() {
 
 				name = operatr::generate_name_from_context(context);
 
-				operators.emplace_back(current_token, context, name, ret);
+				operators.emplace_back(current_token, context, name, ret, &global_scope);
 				
 				i += next_token_index;
 
 				std::cout << "\n";
 			}
 			else if (current_token.string == "cn") {
-
+				
 			}
 		}
 	}
+}
+
+void mycelium::parser::validate_type(const mycelium::token& type) {
+	for (auto& check_type_string : type::strings) {
+		if (check_type_string == type.string) {
+			std::cout << "type \"" << type.string << "\" validated" << std::endl;
+			return;
+		}
+	}
+	mycelium::throw_error("unknown type \"" + type.string + "\"", 50001);
+}
+
+mycelium::parsed_token mycelium::parser::parse_variable(int &index) {
+
 }
 
 /*

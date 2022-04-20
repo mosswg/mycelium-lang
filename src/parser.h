@@ -21,6 +21,8 @@ namespace mycelium {
 		std::vector<mycelium::operatr> operators = {};
 		std::vector<mycelium::conditional> conditionals = {};
 
+		scope global_scope;
+
 		enum state {
 			idle,
 			searching
@@ -36,7 +38,7 @@ namespace mycelium {
 
 		void parse();
 
-		explicit parser(mycelium::tokenizer tokenizer) : tokenizer(std::move(tokenizer)), state(idle), search_type() {}
+		explicit parser(mycelium::tokenizer tokenizer) : tokenizer(std::move(tokenizer)), state(idle), search_type(), global_scope(nullptr) {}
 
 		parsed_token parse_token(int &index);
 
@@ -51,5 +53,9 @@ namespace mycelium {
 		function parse_cond(int &index);
 
 		std::vector<token> find_in_grouping(int& index, const std::string &open, const std::string &close);
+
+		static void validate_type(const token& type);
+
+		mycelium::parsed_token parse_variable(int &index);
 	};
 }
