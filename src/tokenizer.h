@@ -33,5 +33,7 @@ namespace mycelium {
             int get_ending_grouping_token_index();
 
             void skip_tokens_inside_grouping();
+
+            bool has_next_token() const;
 	};
 }

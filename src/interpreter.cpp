@@ -40,5 +40,7 @@ int main(int argc, char** argv) {
 
 	parser.parse();
 
+    parser.execute();
+
 	return 0;
 }

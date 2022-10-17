@@ -4,17 +4,18 @@
 
 #include "base.h"
 
-const mycelium::type mycelium::type::pointer(0, "pointer", 8);
+const mycelium::type mycelium::type::reference(0, "reference", 8);
 const mycelium::type mycelium::type::integer(1, "int", 8);
 const mycelium::type mycelium::type::character(2, "character", 1);
 const mycelium::type mycelium::type::string(3, "string", 8);
 const mycelium::type mycelium::type::list(4, "list", 8);
 const mycelium::type mycelium::type::tuple(5, "tuple", 8);
 const mycelium::type mycelium::type::oper(6, "operator", 8);
-const mycelium::type mycelium::type::array(7, "array", 8);
-const mycelium::type mycelium::type::cstring(8, "twine", 8);
-const mycelium::type mycelium::type::token(9, "token", 8);
-const mycelium::type mycelium::type::none(10, "none", 0);
+const mycelium::type mycelium::type::func(7, "function", 8);
+const mycelium::type mycelium::type::array(8, "array", 8);
+const mycelium::type mycelium::type::cstring(9, "twine", 8);
+const mycelium::type mycelium::type::token(10, "token", 8);
+const mycelium::type mycelium::type::none(11, "none", 0);
 
 std::vector<mycelium::type> mycelium::type::types = {};
 
@@ -45,7 +46,7 @@ void mycelium::throw_error(const std::string& error, int code) {
 
 
 void mycelium::initialize_static_values() {
-	for (auto& type : {mycelium::type::pointer, mycelium::type::integer, mycelium::type::character, mycelium::type::string, mycelium::type::list, mycelium::type::tuple, mycelium::type::oper, mycelium::type::array, mycelium::type::cstring, mycelium::type::token, mycelium::type::none}) {
+	for (auto& type : {mycelium::type::reference, mycelium::type::integer, mycelium::type::character, mycelium::type::string, mycelium::type::list, mycelium::type::tuple, mycelium::type::oper, mycelium::type::func, mycelium::type::array, mycelium::type::cstring, mycelium::type::token, mycelium::type::none}) {
 		type::types.push_back(type);
 	}
 
@@ -60,7 +61,7 @@ void mycelium::initialize_static_values() {
 	token::whitespace_strings.insert(token::whitespace_strings.end(), {" ", "	"});
 	token::grouping_strings.insert(token::grouping_strings.end(), {"(", ")", "{", "}", "[", "]", "<", ">"});
 	token::keyword_strings.insert(token::keyword_strings.end(), {token::function_keyword, token::operator_keyword, token::conditional_keyword, token::class_keyword, "this"});
-	token::line_end.insert(token::line_end.end(), {";\n", ";"});
+	token::line_end.insert(token::line_end.end(), {"\n", ";"});
 	token::line_end.insert(token::line_end.end(), {","});
 	token::oper_strings.insert(token::oper_strings.end(), {"+", "-", "*", "/", "%", "=", "==", "!=", "<=", ">=",
 														   "&&", "||", "++", "--", "!", "<<", ">>", "&", "|", "~"});
@@ -189,7 +190,7 @@ mycelium::token_type mycelium::token::find_type(const std::string &string) {
 
 	if (is_num) {
 		return num;
-	} else if (isdigit(string.c_str()[0])) {
+	} else if (isdigit(string[0])) {
 		return invalid;
 	} else {
 		return word;

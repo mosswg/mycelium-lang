@@ -20,19 +20,15 @@ namespace mycelium {
 		std::vector<std::shared_ptr<mycelium::function>> functions = {};
 		std::vector<mycelium::operatr> operators = {};
 		std::vector<mycelium::conditional> conditionals = {};
+        std::vector<mycelium::variable> variables = {};
 
-		scope global_scope;
+		int global_scope = 0;
 
-		scope* current_scope;
+		int current_scope;
 
-		enum state {
-			idle,
-			searching
-		};
-
+        std::vector<bool> scopes = std::vector<bool>(2048);
 
 		mycelium::tokenizer tokenizer;
-		state state;
 		mycelium::token search_type;
 		std::string searching_for;
 		std::vector<std::shared_ptr<mycelium::parsed_token>> temp = {};
@@ -40,8 +36,8 @@ namespace mycelium {
 
 		void parse();
 
-		explicit parser(mycelium::tokenizer tokenizer) : tokenizer(std::move(tokenizer)), state(idle), search_type(), global_scope(nullptr) {
-			current_scope = &global_scope;
+		explicit parser(mycelium::tokenizer tokenizer) : tokenizer(std::move(tokenizer)), search_type() {
+			current_scope = global_scope;
 		}
 
 		std::shared_ptr<parsed_token> parse_token();
@@ -61,5 +57,19 @@ namespace mycelium {
 		static int validate_type(const token& type);
 
 		std::shared_ptr<mycelium::variable> parse_variable(int variable_type);
-	};
+
+        std::shared_ptr<mycelium::parsed_token> parse_word();
+
+        std::shared_ptr<mycelium::function> get_word_function(const mycelium::token& word);
+
+        std::shared_ptr<mycelium::variable> get_word_variable(const mycelium::token& word);
+
+        int generate_new_scope();
+
+        void change_scope(int new_scope, bool delete_previous_scope = true);
+
+        std::shared_ptr<mycelium::variable> get_variable(const std::string& name);
+
+        void execute();
+    };
 }

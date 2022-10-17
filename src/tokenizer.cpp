@@ -57,6 +57,7 @@ mycelium::token mycelium::tokenizer::get_next_token() {
 
 mycelium::token mycelium::tokenizer::get_next_token_without_increment() {
     if (current_token_index >= this->tokens.size()) {
+        std::cerr << "Next token is out of bounds\n";
         return {};
     }
 
@@ -143,4 +144,8 @@ void mycelium::tokenizer::skip_tokens_inside_grouping() {
         }
         current_token_index++;
     }
+}
+
+bool mycelium::tokenizer::has_next_token() const {
+    return current_token_index < tokens.size();
 }

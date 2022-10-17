@@ -54,7 +54,7 @@ void mycelium::parser::parse() {
 //		 std::cout << "(" << token::type_names[token.type] << ", \"" << token.string << "\")\n";
 //	}
 
-	for (int i = 0; i < tokenizer.tokens.size()-1; i++) {
+	while (tokenizer.has_next_token()) {
 		if (show_debug_lines) {
 			std::cout << "parsing token: " << tokenizer.current_token_index << ": " << tokenizer.get_next_token_without_increment().string << std::endl;
 		}
@@ -65,11 +65,19 @@ void mycelium::parser::parse() {
 std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token() {
 
 	mycelium::token current_token = tokenizer.get_next_token();
-	mycelium::token next_token = tokenizer.get_next_token_without_increment();
+
+	mycelium::token next_token;
+    if (tokenizer.has_next_token()) {
+        next_token = tokenizer.get_next_token_without_increment();
+    }
 	switch (current_token.type) {
 		case op:
-			return std::shared_ptr<parsed_token>(new operator_use(current_token));
+			return std::make_shared<operator_use>(current_token);
 		case keyword:
+            if (next_token.type == token_type::invalid) {
+                throw_error("Keyword with nothing following found", 62002);
+            }
+
 //			std::cerr << "Keyword parsing not implemented\n";
 			if (current_token.string == token::function_keyword) {
 				return parse_function();
@@ -82,23 +90,25 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token() {
 			}
 			break;
 		case word:
-			std::cerr << "Word parsing not implemented\n";
-			break;
+            return parse_word();
 		case num:
-			std::cerr << "Num parsing not implemented\n";
-			break;
+            return std::make_shared<value>(mycelium::value(type::integer, std::stoi(current_token.string)));
 		case ttype: {
 			int type = validate_type(current_token);
 
+            if (next_token.type == token_type::invalid) {
+                throw_error("Type with no following variable name found", 62001);
+            }
+
 			std::shared_ptr<variable> var = parse_variable(type);
-			current_scope->add_variable(var.get());
+			variables.push_back(*var);
 			if (show_debug_lines) {
 				std::cout << var->type.name << ": " << var->token.string << "\n";
 			}
 			return var;
 		}
 		case invalid:
-			throw_error("invalid token: " + current_token.string, 80000);
+            throw_error("invalid token: \"" + current_token.string + '"', 80000);
 			break;
 		default:
 			break;
@@ -109,44 +119,23 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token() {
 
 
 std::vector<std::shared_ptr<mycelium::parsed_token>> mycelium::parser::parse_tokens(int start, int end) {
-    find_function_declarations();
-
-    if (show_debug_lines) {
-        std::cout << "funcs" << std::endl;
-
-        for (auto &func: functions) {
-            std::cout << func->name.string << " : ";
-            print_the_thing(func->ret);
-            std::cout << " : ";
-            print_the_thing(func->args);
-            std::cout << "\n\n\n" << std::endl;
-        }
-
-        std::cout << "ops" << std::endl;
-
-        for (auto &func: operators) {
-            std::cout << func.name.string << " : ";
-            print_the_thing(func.ret);
-            std::cout << " : ";
-            print_the_thing(func.context);
-            std::cout << "\n\n\n" << std::endl;
-        }
-
-        std::cout << token::oper_strings << std::endl;
-
-    }
-
-    // TODO: Verify that no functions have been declared more than once
-
+    // find_function_declarations();
     int starting_token_index = tokenizer.current_token_index;
 
     tokenizer.current_token_index = start;
+
+    std::vector<std::shared_ptr<parsed_token>> ptokens;
+
     while (tokenizer.current_token_index < end) {
         if (show_debug_lines) {
             std::cout << "parsing token: " << tokenizer.current_token_index << ": " << tokenizer.get_next_token_without_increment().string << std::endl;
         }
-        parsed_tokens.push_back(parse_token());
+        ptokens.push_back(parse_token());
     }
+
+    tokenizer.current_token_index = starting_token_index;
+
+    return ptokens;
 }
 
 //std::vector<std::shared_ptr<mycelium::parsed_token>> mycelium::parser::parse_func_body(int& index) {
@@ -184,7 +173,8 @@ std::shared_ptr<mycelium::function> mycelium::parser::parse_function(bool get_bo
     mycelium::token name;
     std::vector<mycelium::token> ret;
     std::vector<mycelium::token> args;
-    mycelium::scope* parent_scope;
+    int scope = generate_new_scope();
+    int parent_scope;
 
     parent_scope = this->current_scope;
     token = this->tokenizer.get_next_token();
@@ -214,7 +204,7 @@ std::shared_ptr<mycelium::function> mycelium::parser::parse_function(bool get_bo
         }
     }
 
-    std::shared_ptr<function> out = std::make_shared<mycelium::function>(token, name, ret, args, parent_scope);
+    std::shared_ptr<function> out = std::make_shared<mycelium::function>(token, name, ret, args, scope, parent_scope);
 
     std::cout << "Parsed function: " << out->to_string() << std::endl;
 
@@ -463,4 +453,100 @@ std::shared_ptr<mycelium::variable> mycelium::parser::parse_variable(int variabl
 	std::shared_ptr<variable> out(new variable(tokenizer.get_next_token(), type::types[variable_type], current_scope));
 
 	return out;
+}
+
+std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_word() {
+    tokenizer.current_token_index--;
+    mycelium::token next_token = tokenizer.get_next_token();
+
+    auto fn = get_word_function(next_token);
+    // auto var = get_word_variable(next_token);
+
+
+
+    if (fn) {
+        if (tokenizer.get_next_token_without_increment().string != "(") {
+            return std::make_shared<variable>(variable(next_token, type::func, current_scope, (long)fn.get()));
+        }
+
+        int close_grouping_index = tokenizer.get_ending_grouping_token_index();
+
+        std::vector<std::shared_ptr<parsed_token>> ptokens = this->parse_tokens(tokenizer.current_token_index, close_grouping_index);
+
+        std::vector<variable> args;
+
+        for (const auto& token : ptokens) {
+            if (token->type != var) {
+                throw_error("Non-value passed to function call", 61001);
+            }
+
+            args.push_back(*(variable *) token.get());
+        }
+        tokenizer.current_token_index = close_grouping_index + 1;
+
+        return std::make_shared<function_call>(function_call(*fn, args));
+    }
+
+    return {};
+}
+
+std::shared_ptr<mycelium::function> mycelium::parser::get_word_function(const mycelium::token& word) {
+    if (word.string == "print" || word.string == "println") {
+        return std::make_shared<function>(mycelium::function(word, word, {}, {}, 0, 0));
+    }
+
+    for (const auto& fn : functions) {
+        if (word.string == fn->name.string) {
+            return fn;
+        }
+    }
+
+    return {};
+}
+
+std::shared_ptr<mycelium::variable> mycelium::parser::get_word_variable(const mycelium::token& word) {
+    return this->get_variable(word.string);
+}
+
+int mycelium::parser::generate_new_scope() {
+    for (int i = 1; i < INT32_MAX; i++) {
+        if (scopes[i]) {
+            scopes[i] = true;
+            return i;
+        }
+    }
+    mycelium::throw_error("Could not create scope", 11001);
+    return -1;
+}
+
+void mycelium::parser::change_scope(int new_scope, bool delete_previous_scope) {
+    if (delete_previous_scope) {
+        scopes[current_scope] = false;
+        for (int i = 0; i < variables.size(); i++) {
+            if (variables[i].parent_scope == current_scope) {
+                variables.erase(variables.begin() + i);
+                i--;
+            }
+        }
+    }
+}
+
+std::shared_ptr<mycelium::variable> mycelium::parser::get_variable(const std::string& name) {
+    /// TODO: Make this handle scopes.
+    for (const auto& var : variables) {
+        if (var.token.string == name) {
+            if (var.parent_scope != -1) {
+                return std::make_shared<variable>(var);
+            }
+        }
+    }
+    return {};
+}
+
+void mycelium::parser::execute() {
+    for (auto& pt : this->parsed_tokens) {
+        if (pt) {
+            pt->execute();
+        }
+    }
 }
