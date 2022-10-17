@@ -17,7 +17,7 @@ namespace mycelium {
 
 	public:
 
-		std::vector<mycelium::function> functions = {};
+		std::vector<std::shared_ptr<mycelium::function>> functions = {};
 		std::vector<mycelium::operatr> operators = {};
 		std::vector<mycelium::conditional> conditionals = {};
 
@@ -44,22 +44,22 @@ namespace mycelium {
 			current_scope = &global_scope;
 		}
 
-		std::shared_ptr<parsed_token> parse_token(int &index);
+		std::shared_ptr<parsed_token> parse_token();
+
+        std::vector<std::shared_ptr<mycelium::parsed_token>> parse_tokens(int start, int end);
 
 		void find_function_declarations();
 
-		std::vector<std::shared_ptr<parsed_token>> parse_func_body(int &index);
+		std::shared_ptr<mycelium::function> parse_function(bool get_body = false);
 
-		std::shared_ptr<mycelium::function> parse_function(int &index);
+		std::shared_ptr<mycelium::operatr> parse_operator(bool get_body = false);
 
-		std::shared_ptr<mycelium::operatr> parse_operator(int &index);
-
-		std::shared_ptr<mycelium::conditional> parse_cond(int &index);
+		std::shared_ptr<mycelium::conditional> parse_cond(bool get_body = false);
 
 		std::vector<token> find_in_grouping(int& index, const std::string &open, const std::string &close);
 
 		static int validate_type(const token& type);
 
-		std::shared_ptr<mycelium::variable> parse_variable(int &index, int variable_type);
+		std::shared_ptr<mycelium::variable> parse_variable(int variable_type);
 	};
 }

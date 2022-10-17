@@ -196,6 +196,18 @@ mycelium::token_type mycelium::token::find_type(const std::string &string) {
 	}
 }
 
+std::string mycelium::token::get_closing_grouping(const std::string &opening_grouping) {
+    for (int i = 0; i < token::grouping_strings.size(); i++) {
+        if (token::grouping_strings[i] == opening_grouping) {
+            return token::grouping_strings[i + 1];
+        }
+    }
+
+    mycelium::throw_error("invalid grouping symbol " + opening_grouping, 30001);
+    // This return statement is here to silence warning. We exit in throw_error.
+    return {};
+}
+
 std::string mycelium::operatr::generate_name_from_context(std::vector<mycelium::token> &context) {
 	std::string out;
 

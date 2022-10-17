@@ -14,9 +14,24 @@ namespace mycelium {
 		public:
 			std::vector<mycelium::token> tokens;
 			std::vector<std::string> lines;
+            int current_token_index = 0;
 
 			explicit tokenizer(std::vector<std::string> lines) : lines(std::move(lines)) {}
 
 			void tokenize();
+
+            token get_next_token();
+
+            token get_next_token_without_increment();
+
+            token get_next_non_whitespace_token();
+
+            std::vector<mycelium::token> get_next_non_whitespace_tokens_until(const std::string& until);
+
+            std::vector<mycelium::token> get_tokens_inside_grouping();
+
+            int get_ending_grouping_token_index();
+
+            void skip_tokens_inside_grouping();
 	};
 }

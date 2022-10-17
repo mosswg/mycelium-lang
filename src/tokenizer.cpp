@@ -46,3 +46,101 @@ void mycelium::tokenizer::tokenize() {
 		}
 	}
 }
+
+mycelium::token mycelium::tokenizer::get_next_token() {
+    if (current_token_index >= this->tokens.size()) {
+        return {};
+    }
+
+    return this->tokens[current_token_index++];
+}
+
+mycelium::token mycelium::tokenizer::get_next_token_without_increment() {
+    if (current_token_index >= this->tokens.size()) {
+        return {};
+    }
+
+    return this->tokens[current_token_index];
+}
+
+mycelium::token mycelium::tokenizer::get_next_non_whitespace_token() {
+    if (current_token_index >= this->tokens.size()) {
+        return {};
+    }
+
+    if (this->tokens[current_token_index].type != mycelium::whitespace) {
+        return this->tokens[current_token_index++];
+    }
+
+    while (this->tokens[++current_token_index].type == mycelium::whitespace && current_token_index < tokens.size());
+
+    return this->tokens[current_token_index++];
+}
+
+std::vector<mycelium::token> mycelium::tokenizer::get_next_non_whitespace_tokens_until(const std::string& until) {
+    std::vector<mycelium::token> out;
+
+    while (this->tokens[current_token_index].string != until && current_token_index < this->tokens.size()) {
+        if (this->tokens[current_token_index].type != mycelium::whitespace) {
+            out.push_back(this->tokens[current_token_index]);
+        }
+        current_token_index++;
+    }
+    current_token_index++;
+
+    return out;
+}
+
+std::vector<mycelium::token> mycelium::tokenizer::get_tokens_inside_grouping() {
+    int search_depth = 0;
+    std::string opening_grouping = this->tokens[current_token_index++].string;
+    std::string closing_grouping = token::get_closing_grouping(opening_grouping);
+
+    std::vector<token> out;
+    while (!(search_depth == 0 && this->tokens[current_token_index].string == closing_grouping) && current_token_index < tokens.size()) {
+        if (this->tokens[current_token_index].string == opening_grouping) {
+            search_depth++;
+        }
+        else if (this->tokens[current_token_index].string == closing_grouping) {
+            search_depth--;
+        }
+        out.push_back(this->tokens[current_token_index]);
+        current_token_index++;
+    }
+
+    return out;
+}
+
+int mycelium::tokenizer::get_ending_grouping_token_index() {
+    int search_depth = 0;
+    std::string opening_grouping = this->tokens[current_token_index++].string;
+    std::string closing_grouping = token::get_closing_grouping(opening_grouping);
+    int index = current_token_index;
+
+    while (!(search_depth == 0 && this->tokens[index].string == closing_grouping) && current_token_index < tokens.size()) {
+        if (this->tokens[index].string == opening_grouping) {
+            search_depth++;
+        }
+        else if (this->tokens[index].string == closing_grouping) {
+            search_depth--;
+        }
+        index++;
+    }
+    return index;
+}
+
+void mycelium::tokenizer::skip_tokens_inside_grouping() {
+    int search_depth = 0;
+    std::string opening_grouping = this->tokens[current_token_index++].string;
+    std::string closing_grouping = token::get_closing_grouping(opening_grouping);
+
+    while (!(search_depth == 0 && this->tokens[current_token_index].string == closing_grouping) && current_token_index < tokens.size()) {
+        if (this->tokens[current_token_index].string == opening_grouping) {
+            search_depth++;
+        }
+        else if (this->tokens[current_token_index].string == closing_grouping) {
+            search_depth--;
+        }
+        current_token_index++;
+    }
+}

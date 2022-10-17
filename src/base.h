@@ -38,7 +38,7 @@ namespace mycelium {
 
 
 
-	static bool show_debug_lines = false;
+	static bool show_debug_lines = true;
 
 	void throw_error(const std::string& error, int code);
 
@@ -96,6 +96,7 @@ namespace mycelium {
 
 		static token_type find_type(const std::string &string);
 
+        static std::string get_closing_grouping(const std::string& opening_grouping);
 
 		bool operator==(const token& tk) const {
 			return this->type == tk.type;
@@ -148,7 +149,9 @@ namespace mycelium {
 
 		explicit parsed_token(mycelium::token token, parsed_token_type type) : token(std::move(token)), type(type) {}
 
-		virtual std::string to_string() = 0;
+        virtual ~parsed_token() = default;
+
+        virtual std::string to_string() = 0;
 
 		virtual bool is_similar(std::shared_ptr<parsed_token> compare) = 0;
 	};
@@ -285,13 +288,13 @@ namespace mycelium {
 		mycelium::token name;
 		std::vector<mycelium::token> ret;
 
-		std::vector<mycelium::token> body;
+		std::vector<std::shared_ptr<mycelium::parsed_token>> body;
 
 		mycelium::scope scope;
 
 		function_base(mycelium::token token, mycelium::token name, std::vector<mycelium::token> ret, parsed_token_type type, mycelium::scope* parent_scope) : parsed_token(std::move(token), type),
-																										name(std::move(name)), body({}), ret(std::move(ret)), scope(parent_scope) {}
-	};
+																										name(std::move(name)), ret(std::move(ret)), scope(parent_scope) {}
+    };
 
 	class function : public function_base {
 	public:

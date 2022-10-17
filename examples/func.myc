@@ -2,7 +2,10 @@ func<int> print(int a) {
     // do stuff
 }
 
-func<string> get_string(int num) {}
+func<string, int> get_string(int num) {
+    string out = to_string(num)
+    return out, out.length
+}
 
 print(1);
 
