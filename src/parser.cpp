@@ -27,22 +27,24 @@ void mycelium::parser::parse() {
 		std::cout << "funcs" << std::endl;
 
 		for (auto &func: functions) {
-			std::cout << func->name.string << " : ";
-			print_the_thing(func->ret);
-			std::cout << " : ";
-			print_the_thing(func->args);
-			std::cout << "\n\n\n" << std::endl;
+            std::cout << func->to_string();
+//			std::cout << func->name.string << " : ";
+//			print_the_thing(func->ret);
+//			std::cout << " : ";
+//			print_the_thing(func->args);
+//			std::cout << "\n\n\n" << std::endl;
 		}
 
 		std::cout << "ops" << std::endl;
 
-		for (auto &func: operators) {
-			std::cout << func.name.string << " : ";
-			print_the_thing(func.ret);
-			std::cout << " : ";
-			print_the_thing(func.context);
-			std::cout << "\n\n\n" << std::endl;
-		}
+		for (auto &oper: operators) {
+            std::cout << oper->to_string();
+//            std::cout << func->name.string << " : ";
+//            print_the_thing(func->ret);
+//            std::cout << " : ";
+//            print_the_thing(func->context);
+//            std::cout << "\n\n\n" << std::endl;
+        }
 
 		std::cout << token::oper_strings << std::endl;
 
@@ -59,6 +61,15 @@ void mycelium::parser::parse() {
 			std::cout << "parsing token: " << tokenizer.current_token_index << ": " << tokenizer.get_next_token_without_increment().string << std::endl;
 		}
 		parsed_tokens.push_back(parse_token());
+        if (current_finding_operator_index != -1) {
+            for (auto& op : operators) {
+                int check_index = parsed_tokens.size() - op->pattern.pattern.size();
+                if (op->pattern.is_match_at_index(parsed_tokens, check_index)) {
+                    parsed_tokens.push_back(operator_use::create_operator_call(*op, parsed_tokens, current_finding_operator_index, check_index));
+                    current_finding_operator_index = -1;
+                }
+            }
+        }
 	}
 }
 
@@ -70,9 +81,10 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token() {
     if (tokenizer.has_next_token()) {
         next_token = tokenizer.get_next_token_without_increment();
     }
+
 	switch (current_token.type) {
 		case op:
-			return std::make_shared<operator_use>(current_token);
+            current_finding_operator_index = parsed_tokens.size();
 		case keyword:
             if (next_token.type == token_type::invalid) {
                 throw_error("Keyword with nothing following found", 62002);
@@ -92,18 +104,18 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token() {
 		case word:
             return parse_word();
 		case num:
-            return std::make_shared<value>(mycelium::value(type::integer, std::stoi(current_token.string)));
+            return std::make_shared<constant>(mycelium::constant(type::integer, std::stoi(current_token.string)));
 		case ttype: {
-			int type = validate_type(current_token);
+			int type = type::validate_type(current_token);
 
             if (next_token.type == token_type::invalid) {
                 throw_error("Type with no following variable name found", 62001);
             }
 
 			std::shared_ptr<variable> var = parse_variable(type);
-			variables.push_back(*var);
+			variables.push_back(var);
 			if (show_debug_lines) {
-				std::cout << var->type.name << ": " << var->token.string << "\n";
+				std::cout << "Got variable: " << var->type.name << ": " << var->token.string << "\n";
 			}
 			return var;
 		}
@@ -204,7 +216,7 @@ std::shared_ptr<mycelium::function> mycelium::parser::parse_function(bool get_bo
         }
     }
 
-    std::shared_ptr<function> out = std::make_shared<mycelium::function>(token, name, ret, args, scope, parent_scope);
+    std::shared_ptr<function> out = std::make_shared<mycelium::function>(token, name, type::convert_tokens_to_types(ret), type::convert_tokens_to_types(args), scope, parent_scope);
 
     std::cout << "Parsed function: " << out->to_string() << std::endl;
 
@@ -227,10 +239,92 @@ std::shared_ptr<mycelium::function> mycelium::parser::parse_function(bool get_bo
 }
 
 std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_body) {
+    /// TODO: Handle '<' and '>' in operator definition
     if (tokenizer.tokens[tokenizer.current_token_index + 1].string != "<") {
         throw_error(token::operator_keyword + " keyword must be followed by \'<\'", 41001);
     }
 
+    std::string name;
+    std::vector<mycelium::token> ret = {};
+    std::vector<mycelium::token> context = {};
+
+    int scope = generate_new_scope();
+    int parent_scope;
+
+    parent_scope = this->current_scope;
+    token name_token;
+
+    token next_token;
+
+    // Ignore whitespace
+    for (; (next_token = tokenizer.get_next_token()).type == whitespace;);
+
+    if (next_token.string == "<") {
+        tokenizer.current_token_index++;
+        for (auto& token : find_in_grouping(tokenizer.current_token_index, "<", ">")) {
+            if (show_debug_lines) {
+                std::cout << "ret: " << token.string << std::endl;
+            }
+            ret.push_back(token);
+        }
+    }
+    else {
+        mycelium::throw_error("operator definitions must contain a context", 41001);
+    }
+
+    // Ignore whitespace
+    for (; (next_token = tokenizer.get_next_token()).type == whitespace;);
+
+    if (next_token.string == "<") {
+        tokenizer.current_token_index++;
+        for (auto& token : find_in_grouping(tokenizer.current_token_index, "<", ">")) {
+            if (show_debug_lines) {
+                std::cout << "context: " << token.string << std::endl;
+            }
+            context.push_back(token);
+        }
+    }
+    else {
+        if (show_debug_lines) {
+            std::cout << "moving from ret to context" << std::endl;
+        }
+        for (auto& token : ret) {
+            context.push_back(token);
+        }
+        ret.clear();
+    }
+
+    // Ignore whitespace
+    for (; (next_token = tokenizer.get_next_token()).type == whitespace;);
+
+    parser pars((mycelium::tokenizer(context)));
+
+    pars.parse();
+
+    name = operatr::generate_name_from_context(context);
+
+    std::shared_ptr<operatr> out = std::make_shared<mycelium::operatr>(token(), context, pattern_match(pars.parsed_tokens), name, type::convert_tokens_to_types(ret), scope, parent_scope);
+
+    if (this->tokenizer.get_next_token_without_increment().string == "{") {
+        if (get_body) {
+            int starting_body_location = tokenizer.current_token_index;
+            int ending_body_location = tokenizer.get_ending_grouping_token_index();
+
+            out->body = parse_tokens(starting_body_location, ending_body_location);
+        }
+        else {
+            tokenizer.skip_tokens_inside_grouping();
+        }
+    }
+    else {
+        mycelium::throw_error("functions must have a body", 40001);
+    }
+
+    if (show_debug_lines) {
+        std::cout << "\n";
+    }
+
+    return out;
 }
 
 std::shared_ptr<mycelium::conditional> mycelium::parser::parse_cond(bool get_body) {
@@ -353,76 +447,10 @@ void mycelium::parser::find_function_declarations() {
 				i += next_token_index;
 			}
 			else if (current_token.string == token::operator_keyword) {
-				std::string name;
-				std::vector<mycelium::token> ret = {};
-				std::vector<mycelium::token> context = {};
+                tokenizer.current_token_index = i;
+                std::shared_ptr<operatr> out = parse_operator(false);
 
-				int next_token_index = 1;
-
-				for (; tokenizer.tokens[i + next_token_index].type == newline; next_token_index++);
-
-				if (tokenizer.tokens[i + next_token_index].string == "<") {
-					int search_index = i + next_token_index + 1;
-					for (auto& token : find_in_grouping(search_index, "<", ">")) {
-						if (show_debug_lines) {
-							std::cout << "ret: " << token.string << std::endl;
-						}
-						ret.push_back(token);
-					}
-					tmp.clear();
-					next_token_index = (search_index - i) + 1;
-				}
-				else {
-					mycelium::throw_error("operator definitions must contain a context", 41001);
-				}
-
-				for (; tokenizer.tokens[i + next_token_index].type == newline; next_token_index++);
-
-				if (tokenizer.tokens[i + next_token_index].string == "<") {
-					int search_index = i + next_token_index + 1;
-					for (auto& token : find_in_grouping(search_index, "<", ">")) {
-						if (show_debug_lines) {
-							std::cout << "context: " << token.string << std::endl;
-						}
-						context.push_back(token);
-					}
-					tmp.clear();
-					next_token_index = (search_index - i) + 1;
-				}
-				else {
-					if (show_debug_lines) {
-						std::cout << "moving from ret to context" << std::endl;
-					}
-					for (auto& token : ret) {
-						context.push_back(token);
-					}
-					ret.clear();
-				}
-
-				if (tokenizer.tokens[i + next_token_index].string == "{") {
-					int search_depth = 0;
-					int search_index = next_token_index + 1;
-					while (!(search_depth == 0 && tokenizer.tokens[i + search_index].string == "}")) {
-						if (tokenizer.tokens[i + search_index].string == "{") {
-							search_depth++;
-						}
-						else if (tokenizer.tokens[i + search_index].string == "}") {
-							search_depth--;
-						}
-						search_index++;
-					}
-					next_token_index = search_index;
-				}
-
-				name = operatr::generate_name_from_context(context);
-
-				//operators.emplace_back(current_token, context, name, ret, current_scope);
-				
-				i += next_token_index;
-
-				if (show_debug_lines) {
-					std::cout << "\n";
-				}
+                operators.push_back(out);
 			}
 			else if (current_token.string == token::conditional_keyword) {
 
@@ -431,23 +459,10 @@ void mycelium::parser::find_function_declarations() {
 	}
 }
 
-int mycelium::parser::validate_type(const mycelium::token& type) {
-	for (int i = 0; i < type::strings.size(); i++) {
-		if (type::strings[i] == type.string) {
-			if (show_debug_lines) {
-				std::cout << "type \"" << type.string << "\" validated" << std::endl;
-			}
-			return i;
-		}
-	}
-	mycelium::throw_error("unknown type \"" + type.string + "\"", 50001);
-	return -1;
-}
-
 std::shared_ptr<mycelium::variable> mycelium::parser::parse_variable(int variable_type) {
 
 	if (show_debug_lines) {
-		std::cout << "parsing variable: type: " << tokenizer.get_next_token_without_increment().string << "\tname: " << tokenizer.tokens[tokenizer.current_token_index+1].string << std::endl;
+		//std::cout << "parsing variable: type: " << tokenizer.get_next_token_without_increment().string << "\tname: " << tokenizer.tokens[tokenizer.current_token_index+1].string << std::endl;
 	}
 
 	std::shared_ptr<variable> out(new variable(tokenizer.get_next_token(), type::types[variable_type], current_scope));
@@ -460,11 +475,11 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_word() {
     mycelium::token next_token = tokenizer.get_next_token();
 
     auto fn = get_word_function(next_token);
-    // auto var = get_word_variable(next_token);
+     auto var = get_word_variable(next_token);
 
 
 
-    if (fn) {
+    if (fn.get()) {
         if (tokenizer.get_next_token_without_increment().string != "(") {
             return std::make_shared<variable>(variable(next_token, type::func, current_scope, (long)fn.get()));
         }
@@ -476,7 +491,7 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_word() {
         std::vector<variable> args;
 
         for (const auto& token : ptokens) {
-            if (token->type != var) {
+            if (token->type != parsed_token_type::var) {
                 throw_error("Non-value passed to function call", 61001);
             }
 
@@ -484,17 +499,19 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_word() {
         }
         tokenizer.current_token_index = close_grouping_index + 1;
 
-        return std::make_shared<function_call>(function_call(*fn, args));
+        return std::make_shared<function_call>(function_call(fn, args));
+    }
+    else if (var.get()) {
+        return var;
+    }
+    else {
+        throw_error("Unknown word \"" + next_token.string + "\"", 70001);
+        return {};
     }
 
-    return {};
 }
 
 std::shared_ptr<mycelium::function> mycelium::parser::get_word_function(const mycelium::token& word) {
-    if (word.string == "print" || word.string == "println") {
-        return std::make_shared<function>(mycelium::function(word, word, {}, {}, 0, 0));
-    }
-
     for (const auto& fn : functions) {
         if (word.string == fn->name.string) {
             return fn;
@@ -510,7 +527,7 @@ std::shared_ptr<mycelium::variable> mycelium::parser::get_word_variable(const my
 
 int mycelium::parser::generate_new_scope() {
     for (int i = 1; i < INT32_MAX; i++) {
-        if (scopes[i]) {
+        if (!scopes[i]) {
             scopes[i] = true;
             return i;
         }
@@ -523,7 +540,7 @@ void mycelium::parser::change_scope(int new_scope, bool delete_previous_scope) {
     if (delete_previous_scope) {
         scopes[current_scope] = false;
         for (int i = 0; i < variables.size(); i++) {
-            if (variables[i].parent_scope == current_scope) {
+            if (variables[i]->parent_scope == current_scope) {
                 variables.erase(variables.begin() + i);
                 i--;
             }
@@ -534,9 +551,9 @@ void mycelium::parser::change_scope(int new_scope, bool delete_previous_scope) {
 std::shared_ptr<mycelium::variable> mycelium::parser::get_variable(const std::string& name) {
     /// TODO: Make this handle scopes.
     for (const auto& var : variables) {
-        if (var.token.string == name) {
-            if (var.parent_scope != -1) {
-                return std::make_shared<variable>(var);
+        if (var->token.string == name) {
+            if (var->parent_scope != -1) {
+                return var;
             }
         }
     }
@@ -549,4 +566,43 @@ void mycelium::parser::execute() {
             pt->execute();
         }
     }
+}
+
+void builtin_print(std::vector<mycelium::variable>& args) {
+    std::cout << args[0].get_as_string();
+}
+
+void builtin_println(std::vector<mycelium::variable>& args) {
+    if (args.empty()) {
+        std::cout << "\n";
+    }
+    else {
+        std::cout << args[0].get_as_string();
+    }
+}
+
+
+std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_functions() {
+    std::vector<std::shared_ptr<function>> out;
+
+    int new_scope = generate_new_scope();
+
+    std::shared_ptr<builtin_function> print = std::make_shared<builtin_function>(builtin_function("print", {}, {type::integer}, builtin_print, new_scope, 0));
+
+    std::shared_ptr<builtin_function> println_int = std::make_shared<builtin_function>(builtin_function("println", {}, {type::integer}, builtin_println, new_scope, 0));
+
+    std::shared_ptr<builtin_function> println_void = std::make_shared<builtin_function>(builtin_function("println", {}, {}, builtin_println, new_scope, 0));
+
+
+    out.push_back(print);
+
+    out.push_back(println_int);
+
+    out.push_back(println_void);
+
+    return out;
+}
+
+std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_operators() {
+    return std::vector<std::shared_ptr<mycelium::operatr>>();
 }

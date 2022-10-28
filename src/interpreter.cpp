@@ -38,7 +38,11 @@ int main(int argc, char** argv) {
 
 	mycelium::parser parser(tokenizer);
 
+    std::cout << "Parsing Tokens:\n";
+
 	parser.parse();
+
+    std::cout << "Executing Code:\n";
 
     parser.execute();
 

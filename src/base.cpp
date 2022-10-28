@@ -262,19 +262,19 @@ std::string mycelium::operatr::generate_name_from_context(std::vector<mycelium::
 }
 
 std::string mycelium::operatr::encode_operator(const std::string &oper) {
-	std::string out;
+    std::string out;
 
-	if (show_debug_lines) {
-		std::cout << oper << std::endl;
-	}
+    if (show_debug_lines) {
+        std::cout << oper << std::endl;
+    }
 
-	for (char c : oper) {
-		out.append(int_to_hex_string(c));
-	}
+    for (char c: oper) {
+        out.append(int_to_hex_string(c));
+    }
 
-	if (show_debug_lines) {
-		std::cout << out << std::endl;
-	}
+    if (show_debug_lines) {
+        std::cout << out << std::endl;
+    }
 
-	return out;
+    return out;
 }
