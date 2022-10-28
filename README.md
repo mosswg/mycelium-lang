@@ -12,20 +12,20 @@ Mycelium is going to be completely rewritten in C++. The reason for this change 
 - [x] tokenizer
 - [ ] parser
   - [x] variable creation
-  - [ ] constant creation
+  - [x] constant creation
   - [ ] math evaluation
   - [ ] condition calls
   - [ ] condition definitions
   - [ ] condition declaration
   - [ ] operator calls
-  - [x] operator definitions
-  - [ ] operator declaration
-  - [ ] function calls
-  - [x] function definitions
-  - [ ] operator declaration
+  - [x] operator declaration
+  - [ ] operator definitions
+  - [x] function calls
+  - [x] function declarations
+  - [ ] function definitions
   - [ ] class definitions
 - [ ] interpreter
-  - [ ] std functions (e.g. print)
+  - [x] std functions (e.g. print)
   - [ ] user defined functions
   - [ ] std operations (e.g. adding ints)
   - [ ] user defined classes
@@ -52,7 +52,7 @@ int my_int = 5;
 ```
 
 There are two special types in the std library which can be used as an alternative.
-They are `any` and `auto`. `any` will allow a variable to hold any type. `any` requires a type to be provided when first declared and when the type is changed. `auto` is the same as any but will decide it's type based on assignment and does not require explicit type declaration. Both `any` and `auto` require an extra byte to store the current type.
+They are `any` and `auto`. `any` will allow a variable to hold any type. `any` requires a type to be provided when first declared and when the type is changed. `auto` is the same as any but will decide its type based on assignment and does not require explicit type declaration. Both `any` and `auto` require an extra byte to store the current type.
 
 e.g. of `any`
 ``` c++
@@ -115,9 +115,11 @@ or a function could take arguments in the form of a string
 
 ``` c++
 // TODO: Change this syntax
-func my_weird_func(My arguments are {auto a} and {auto b}) {
+func my_weird_func(My arguments are {int a} and {string b}) {
 	...
 }
+
+my_weird_func(My arguments are 5 and "Test")
 ```
 #### Conditionals
 A function can use the special keyword `cn` and then is a conditional which takes a function and any other arguments. 
@@ -283,7 +285,7 @@ foo_ret_int_arg_int:
     ...
     ret
 ```
-Where the value in rax is the argument passed and rsi is the return value
+Where the constant in rax is the argument passed and rsi is the return value
 
 
 ### Inline Functions
@@ -318,9 +320,9 @@ mov     rbx, 1
 add     rax, rbx
 ```
 
-### Special Replace 
+### Special Case 
 #### This might not be implemented
-a function can be defined as normal then a special case can be added to do something when a certain value is passed
+a function can be defined as normal, then a special case can be added to do something when a certain value is passed
 e.g. a function to get the digits in a number can be defined as
 ``` c++
 int digits(int num) {
@@ -329,7 +331,7 @@ int digits(int num) {
 ```
 Then a special case can be defined when zero is passed as
 ``` c++
-sc int digits(int = 0) {
+sc int digits(num = 0) {
 	return 1;
 }
 ```
