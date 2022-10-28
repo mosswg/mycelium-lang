@@ -66,11 +66,11 @@ namespace mycelium {
 
         std::shared_ptr<mycelium::parsed_token> parse_word();
 
-        std::shared_ptr<mycelium::parsed_token> parse_operator_use(const operatr& op);
-
         std::shared_ptr<mycelium::function> get_word_function(const mycelium::token& word);
 
         std::shared_ptr<mycelium::variable> get_word_variable(const mycelium::token& word);
+
+        pattern_match create_from_known_variables(int num_of_tokens);
 
         int generate_new_scope();
 

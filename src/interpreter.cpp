@@ -28,8 +28,6 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	mycelium::show_debug_lines = true;
-
 	mycelium::initialize_static_values();
 
 	mycelium::tokenizer tokenizer(program);
@@ -42,7 +40,15 @@ int main(int argc, char** argv) {
 
 	parser.parse();
 
-    std::cout << "Executing Code:\n";
+    if (mycelium::show_debug_lines) {
+        for (auto &pt: parser.parsed_tokens) {
+            if (pt.get()) {
+                std::cout << pt->to_string() << "\n";
+            }
+        }
+    }
+
+    std::cout << "Executing Code:\n\n";
 
     parser.execute();
 
