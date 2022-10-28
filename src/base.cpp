@@ -38,7 +38,6 @@ std::string mycelium::token::operator_keyword = "oper";
 std::string mycelium::token::conditional_keyword = "cond";
 std::string mycelium::token::class_keyword = "class";
 
-
 void mycelium::throw_error(const std::string& error, int code) {
 	std::cerr << "ERROR: " << error << std::endl;
 	exit(code);
@@ -46,6 +45,7 @@ void mycelium::throw_error(const std::string& error, int code) {
 
 
 void mycelium::initialize_static_values() {
+
 	for (auto& type : {mycelium::type::reference, mycelium::type::integer, mycelium::type::character, mycelium::type::string, mycelium::type::list, mycelium::type::tuple, mycelium::type::oper, mycelium::type::func, mycelium::type::array, mycelium::type::cstring, mycelium::type::token, mycelium::type::none}) {
 		type::types.push_back(type);
 	}
@@ -65,6 +65,7 @@ void mycelium::initialize_static_values() {
 	token::line_end.insert(token::line_end.end(), {","});
 	token::oper_strings.insert(token::oper_strings.end(), {"+", "-", "*", "/", "%", "=", "+=", "-=", "==", "!=", "<=", ">=",
 														   "&&", "||", "++", "--", "!", "<<", ">>", "&", "|", "~"});
+
 	token::string_lists.insert(token::string_lists.end(), {token::oper_strings, token::whitespace_strings,
 														   token::grouping_strings, token::keyword_strings, type::strings, token::line_end});
 

@@ -1,0 +1,3 @@
+oper<int><int a + int b> {
+    a + b
+}

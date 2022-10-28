@@ -601,12 +601,10 @@ void builtin_print(std::vector<std::shared_ptr<mycelium::variable>>& args) {
 }
 
 void builtin_println(std::vector<std::shared_ptr<mycelium::variable>>& args) {
-    if (args.empty()) {
-        std::cout << "\n";
-    }
-    else {
+    if (!args.empty()) {
         std::cout << args[0]->get_as_string();
     }
+    std::cout << "\n";
 }
 
 
@@ -637,6 +635,10 @@ void builtin_plus_equals_int(std::vector<std::shared_ptr<mycelium::variable>>& a
     args[0]->value = args[0]->value + args[1]->value;
 }
 
+void builtin_minus_equals_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+    args[0]->value = args[0]->value - args[1]->value;
+}
+
 std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_operators() {
     std::vector<std::shared_ptr<operatr>> out;
 
@@ -644,15 +646,21 @@ std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_op
 
     pattern_match assign_int_pattern = pattern_match::create_from_tokens({token("int"), token("a"), token("="), token("int"), token("b")});
 
-    pattern_match plus_eq_int_pattern = pattern_match::create_from_tokens({token("int"), token("a"), token("+="), token("int"), token("b")});
-
     std::shared_ptr<builtin_operator> assign_int = std::make_shared<builtin_operator>(builtin_operator("=", assign_int_pattern, "builtin_assign_int", {type::integer}, builtin_assign_int, generate_new_scope()));
 
+    pattern_match plus_eq_int_pattern = pattern_match::create_from_tokens({token("int"), token("a"), token("+="), token("int"), token("b")});
+
     std::shared_ptr<builtin_operator> plus_eq_int = std::make_shared<builtin_operator>(builtin_operator("+=", plus_eq_int_pattern, "builtin_plus_eq_int", {}, builtin_plus_equals_int, generate_new_scope()));
+
+    pattern_match minus_eq_int_pattern = pattern_match::create_from_tokens({token("int"), token("a"), token("-="), token("int"), token("b")});
+
+    std::shared_ptr<builtin_operator> minus_eq_int = std::make_shared<builtin_operator>(builtin_operator("-=", minus_eq_int_pattern, "builtin_minus_eq_int", {}, builtin_minus_equals_int, generate_new_scope()));
 
     out.push_back(assign_int);
 
     out.push_back(plus_eq_int);
+
+    out.push_back(minus_eq_int);
 
     return out;
 }

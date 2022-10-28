@@ -52,7 +52,5 @@ int main(int argc, char** argv) {
 
     parser.execute();
 
-    std::cout << "\n";
-
 	return 0;
 }
