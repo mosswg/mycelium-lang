@@ -108,11 +108,12 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token() {
                         pattern.pattern.emplace_back(tk.string);
                     }
                 }
-                tokenizer.current_token_index = pushed_pos;
                 if (op->pattern.is_match(pattern)) {
                     return std::make_shared<operator_use>(operator_use(token(""), *op, pattern.get_variables()));
                 }
+                tokenizer.current_token_index = pushed_pos;
             }
+            throw_error("Invalid operator: " + current_token.string, 62003);
 		case keyword:
             if (next_token.type == token_type::invalid) {
                 throw_error("Keyword with nothing following found", 62002);
@@ -632,6 +633,10 @@ void builtin_assign_int(std::vector<std::shared_ptr<mycelium::variable>>& args) 
     args[0]->value = args[1]->value;
 }
 
+void builtin_plus_equals_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+    args[0]->value = args[0]->value + args[1]->value;
+}
+
 std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_operators() {
     std::vector<std::shared_ptr<operatr>> out;
 
@@ -639,9 +644,15 @@ std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_op
 
     pattern_match assign_int_pattern = pattern_match::create_from_tokens({token("int"), token("a"), token("="), token("int"), token("b")});
 
+    pattern_match plus_eq_int_pattern = pattern_match::create_from_tokens({token("int"), token("a"), token("+="), token("int"), token("b")});
+
     std::shared_ptr<builtin_operator> assign_int = std::make_shared<builtin_operator>(builtin_operator("=", assign_int_pattern, "builtin_assign_int", {type::integer}, builtin_assign_int, generate_new_scope()));
 
+    std::shared_ptr<builtin_operator> plus_eq_int = std::make_shared<builtin_operator>(builtin_operator("+=", plus_eq_int_pattern, "builtin_plus_eq_int", {}, builtin_plus_equals_int, generate_new_scope()));
+
     out.push_back(assign_int);
+
+    out.push_back(plus_eq_int);
 
     return out;
 }

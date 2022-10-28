@@ -39,7 +39,7 @@ namespace mycelium {
 
 
 
-	static bool show_debug_lines = true;
+	static bool show_debug_lines = false;
 
 	void throw_error(const std::string& error, int code);
 
@@ -198,7 +198,20 @@ namespace mycelium {
 
 		int parent_scope;
 
-		variable(mycelium::token name, mycelium::type type, int parent_scope) : parsed_token(std::move(name), var), type(std::move(type)), parent_scope(parent_scope) {}
+		variable(mycelium::token name, mycelium::type type, int parent_scope) : parsed_token(std::move(name), var), type(std::move(type)), parent_scope(parent_scope) {
+            if (this->type.code == type::string.code) {
+                this->value = (long)new std::string;
+            }
+            else if (this->type.code == type::list.code) {
+                throw_error("Unsupported Creation of list", 61001);
+            }
+            else if (this->type.code == type::tuple.code) {
+                throw_error("Unsupported Creation of tuple", 61001);
+            }
+            else {
+                this->value = 0;
+            }
+        }
 
         variable(mycelium::token name, mycelium::type type, int parent_scope, long value) : parsed_token(std::move(name), var), type(std::move(type)), parent_scope(parent_scope), value(value) {}
 
@@ -241,20 +254,7 @@ namespace mycelium {
             this->parent_scope = -1;
         }
 
-        void execute() override {
-                if (type.code == type::string.code) {
-                    value = (long)new std::string;
-                }
-                else if (type.code == type::list.code) {
-                    throw_error("Unsupported Creation As String of list", 61001);
-                }
-                else if (type.code == type::tuple.code) {
-                    throw_error("Unsupported Creation As String of tuple", 61001);
-                }
-                else {
-                    this->value = 0;
-                }
-        }
+        void execute() override {}
 
         virtual void set_value(long value) {
             this->value = value;
@@ -497,6 +497,11 @@ namespace mycelium {
                         std::shared_ptr<variable> test_var = test_pattern.pattern[i].var;
                         std::shared_ptr<variable> pattern_var = pattern[i].var;
                         if (test_var->type.code != pattern_var->type.code) {
+                            return false;
+                        }
+                    }
+                    else {
+                        if (test_pattern.pattern[i].oper != pattern[i].oper) {
                             return false;
                         }
                     }
