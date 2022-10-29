@@ -34,6 +34,14 @@ int main(int argc, char** argv) {
 
 	tokenizer.tokenize();
 
+    if (mycelium::show_debug_lines) {
+        std::cout << "{";
+        for (auto &t: tokenizer.tokens) {
+            std::cout << t.string << ", ";
+        }
+        std::cout << "}\n";
+    }
+
 	mycelium::parser parser(tokenizer);
 
     std::cout << "Parsing Tokens:\n";

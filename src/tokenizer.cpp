@@ -26,17 +26,34 @@ void mycelium::tokenizer::tokenize() {
 	for (auto& line : split_lines) {
 		for (int i = 0; i < line.size(); i++) {
 			std::string token_string = line[i];
+            if (token_string.front() == '"' && token_string.back() != '"') {
+                for (int j = 1; j < i + line.size(); i++) {
+                    if (line[i + j].back() == '"') {
+                        token_string.append(line[i + j]);
+                        i += j;
+                        break;
+                    }
+                    else if (line[i + j].front() == '"') {
+                        token_string.append("\"");
+                        i += j;
+                        break;
+                    }
+                    token_string.append(line[i + j]);
+                }
+            }
 			token_type type = token::find_type(token_string);
 			if (type != whitespace) {
 				if (token_string == "<" && line[i + 1] == "<") {
 					tokens.emplace_back(op, "<<");
 					i++;
-				}
-				else if (token_string == ">" && line[i + 1] == ">") {
+				} else if (token_string == ">" && line[i + 1] == ">") {
 					tokens.emplace_back(op, ">>");
 					i++;
 				}
-				else {
+
+                if (type == string_literal) {
+                    tokens.emplace_back(type, token_string.substr(1, token_string.size() - 2));
+                } else {
 					tokens.emplace_back(type, token_string);
 				}
 			}

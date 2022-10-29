@@ -193,7 +193,9 @@ mycelium::token_type mycelium::token::find_type(const std::string &string) {
 		return num;
 	} else if (isdigit(string[0])) {
 		return invalid;
-	} else {
+	} else if (string[0] == '"' && string[string.size() - 1] == '"') {
+        return string_literal;
+    } else {
 		return word;
 	}
 }

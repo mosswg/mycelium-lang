@@ -24,9 +24,9 @@ namespace mycelium {
 
 		int global_scope = 0;
 
-        int current_finding_operator_index = -1;
-
 		int current_scope;
+
+        int last_found_operator_index = tokenizer.tokens.size();
 
         std::vector<bool> scopes = std::vector<bool>(2048);
 
@@ -79,5 +79,9 @@ namespace mycelium {
         std::shared_ptr<mycelium::variable> get_variable(const std::string& name);
 
         void execute();
+
+        std::vector<std::shared_ptr<operator_use>> find_ops();
+
+        std::shared_ptr<mycelium::expression> find_ops_in(int number_of_tokens);
     };
 }
