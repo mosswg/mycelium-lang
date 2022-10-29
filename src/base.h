@@ -224,7 +224,7 @@ namespace mycelium {
             }
         }
 
-		variable(mycelium::token name, mycelium::type type, int parent_scope) : expression(name), type(std::move(type)), parent_scope(parent_scope), str_ptr(nullptr) {
+		variable(mycelium::token name, mycelium::type type, int parent_scope) : expression(std::move(name)), type(std::move(type)), parent_scope(parent_scope) {
             if (this->type.code == type::string.code) {
                 this->str_ptr = std::make_shared<std::string>();
             }
@@ -387,6 +387,8 @@ namespace mycelium {
         virtual std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& args) {
             std::cout << "Calling function: " << this->name.string << " with " << args[0]->to_string();
             throw_error("Unimplemented Function: Function Calls", 10001);
+            /// Silencing a warning:
+            return {};
         }
     };
 
@@ -702,6 +704,8 @@ namespace mycelium {
         virtual std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& args) const {
             std::cout << "Calling operator: " << this->name.string << " with " << args[0]->to_string() << " and " << args[1]->to_string();
             throw_error("Unimplemented Function: Function Calls", 10001);
+            /// Silencing a warning:
+            return {};
         }
 	};
 
@@ -710,8 +714,8 @@ namespace mycelium {
         std::vector<mycelium::token> args;
         std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::variable>>&)> exec;
 
-        builtin_operator(const std::string& op_token, const mycelium::pattern_match& pattern_match, const std::string& name, const std::vector<mycelium::type>& ret, std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::variable>>&)> exec, int priority, int scope) :
-                operatr(mycelium::token(op_token), {}, pattern_match, name, ret, priority, scope, 0), exec(std::move(exec)) {
+        builtin_operator(const std::string& op_token, const std::vector<mycelium::token> pattern_match_tokens, const std::string& name, const std::vector<mycelium::type>& ret, std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::variable>>&)> exec, int priority, int scope) :
+                operatr(mycelium::token(op_token), {}, pattern_match::create_from_tokens(pattern_match_tokens), name, ret, priority, scope, 0), exec(std::move(exec)) {
         }
 
         std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& args) const override {

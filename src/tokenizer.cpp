@@ -26,7 +26,8 @@ void mycelium::tokenizer::tokenize() {
 	for (auto& line : split_lines) {
 		for (int i = 0; i < line.size(); i++) {
 			std::string token_string = line[i];
-            if (token_string.front() == '"' && token_string.back() != '"') {
+            // Handle string literals with spaces in them
+            if (token_string.front() == '"' && (token_string.back() != '"' || (token_string.size() == 1))) {
                 for (int j = 1; j < i + line.size(); i++) {
                     if (line[i + j].back() == '"') {
                         token_string.append(line[i + j]);

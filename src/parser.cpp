@@ -91,6 +91,8 @@ std::vector<std::shared_ptr<mycelium::operator_use>> mycelium::parser::find_ops(
                 }
             } else if (tk.type == num) {
                 pattern.pattern.emplace_back(constant::make_constant(std::stoi(tk.string)));
+            } else if (tk.type == string_literal) {
+                pattern.pattern.emplace_back(constant::make_constant(std::make_shared<std::string>(tk.string)));
             } else if (tk.type == grouping) {
                 tokenizer.current_token_index--;
                 std::vector<std::shared_ptr<operator_use>> ops = find_ops();
@@ -114,22 +116,28 @@ std::vector<std::shared_ptr<mycelium::operator_use>> mycelium::parser::find_ops(
 std::shared_ptr<mycelium::expression> mycelium::parser::find_ops_in(int number_of_tokens) {
     std::vector<std::shared_ptr<mycelium::operator_use>> operator_uses;
 
-    int start_index = tokenizer.current_token_index;
     tokenizer.current_token_index--;
+    int start_index = tokenizer.current_token_index;
     for (; tokenizer.current_token_index < start_index + number_of_tokens; tokenizer.current_token_index++) {
         std::vector<std::shared_ptr<operator_use>> found_ops = find_ops();
 
-        operator_uses.insert(operator_uses.end(), found_ops.begin(), found_ops.end());
+        if (!found_ops.empty()) {
+            operator_uses.insert(operator_uses.end(), found_ops.begin(), found_ops.end());
 
-        std::sort(operator_uses.begin(), operator_uses.end(),
-                  [](const std::shared_ptr<operator_use> &a, const std::shared_ptr<operator_use> &b) -> bool {
-                      return std::static_pointer_cast<operatr>(a->op)->priority <
-                             std::static_pointer_cast<operatr>(b->op)->priority;
-                  });
+            std::sort(operator_uses.begin(), operator_uses.end(),
+                      [](const std::shared_ptr<operator_use> &a, const std::shared_ptr<operator_use> &b) -> bool {
+                          return std::static_pointer_cast<operatr>(a->op)->priority <
+                                 std::static_pointer_cast<operatr>(b->op)->priority;
+                      });
+        }
     }
 
     for (int i = 1; i < operator_uses.size(); i++) {
         operator_uses[i]->args.back() = operator_uses[i - 1];
+    }
+
+    if (operator_uses.empty()) {
+        return {};
     }
 
     // Return the first operator which will recursively call the others
@@ -698,6 +706,11 @@ std::shared_ptr<mycelium::variable> builtin_assign_int(std::vector<std::shared_p
     return args[0];
 }
 
+std::shared_ptr<mycelium::variable> builtin_assign_string(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+    *args[0]->str_ptr = *args[1]->str_ptr;
+    return args[0];
+}
+
 std::shared_ptr<mycelium::variable> builtin_plus_equals_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
     args[0]->value = args[0]->value + args[1]->value;
     return args[0];
@@ -714,40 +727,37 @@ std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_op
 
     // const std::string& op_token, const mycelium::pattern_match& pattern_match, const std::string& name, const std::vector<mycelium::type>& ret, std::function<void(std::vector<std::shared_ptr<mycelium::variable>>&)> exec, int scope
 
-    pattern_match add_int_pattern = pattern_match::create_from_tokens({token("int"), token("a"), token("+"), token("int"), token("b")});
-
+    /// Math
     out.push_back(
-            std::make_shared<builtin_operator>(builtin_operator("+", add_int_pattern, "builtin_add_int", {type::integer}, builtin_add_int, 20, generate_new_scope()))
+            std::make_shared<builtin_operator>(builtin_operator("+", {token("int"), token("a"), token("+"), token("int"), token("b")}, "builtin_add_int", {type::integer}, builtin_add_int, 20, generate_new_scope()))
     );
 
-    pattern_match multiply_int_pattern = pattern_match::create_from_tokens({token("int"), token("a"), token("*"), token("int"), token("b")});
-
     out.push_back(
-            std::make_shared<builtin_operator>(builtin_operator("*", multiply_int_pattern, "builtin_multiply_int", {type::integer}, builtin_multiply_int, 10, generate_new_scope()))
+            std::make_shared<builtin_operator>(builtin_operator("*", {token("int"), token("a"), token("*"), token("int"), token("b")}, "builtin_multiply_int", {type::integer}, builtin_multiply_int, 10, generate_new_scope()))
     );
 
-    pattern_match append_string_pattern = pattern_match::create_from_tokens({token("string"), token("a"), token("+"), token("string"), token("b")});
-
+    /// Strings
     out.push_back(
-            std::make_shared<builtin_operator>(builtin_operator("+", append_string_pattern, "builtin_append_string", {type::string}, builtin_append_string, 20, generate_new_scope()))
+            std::make_shared<builtin_operator>(builtin_operator("+", {token("string"), token("a"), token("+"), token("string"), token("b")}, "builtin_append_string", {type::string}, builtin_append_string, 20, generate_new_scope()))
     );
 
-    pattern_match assign_int_pattern = pattern_match::create_from_tokens({token("int"), token("a"), token("="), token("int"), token("b")});
-
     out.push_back(
-            std::make_shared<builtin_operator>(builtin_operator("=", assign_int_pattern, "builtin_assign_int", {type::integer}, builtin_assign_int, 99, generate_new_scope()))
+            std::make_shared<builtin_operator>(builtin_operator("=", {token("string"), token("a"), token("="), token("string"), token("b")}, "builtin_assign_string", {type::string}, builtin_assign_string, 99, generate_new_scope()))
     );
 
-    pattern_match plus_eq_int_pattern = pattern_match::create_from_tokens({token("int"), token("a"), token("+="), token("int"), token("b")});
+
+    /// Ints
 
     out.push_back(
-            std::make_shared<builtin_operator>(builtin_operator("+=", plus_eq_int_pattern, "builtin_plus_eq_int", {type::integer}, builtin_plus_equals_int, 99, generate_new_scope()))
+            std::make_shared<builtin_operator>(builtin_operator("=", {token("int"), token("a"), token("="), token("int"), token("b")}, "builtin_assign_int", {type::integer}, builtin_assign_int, 99, generate_new_scope()))
     );
 
-    pattern_match minus_eq_int_pattern = pattern_match::create_from_tokens({token("int"), token("a"), token("-="), token("int"), token("b")});
+    out.push_back(
+            std::make_shared<builtin_operator>(builtin_operator("+=", {token("int"), token("a"), token("+="), token("int"), token("b")}, "builtin_plus_eq_int", {type::integer}, builtin_plus_equals_int, 99, generate_new_scope()))
+    );
 
     out.push_back(
-            std::make_shared<builtin_operator>(builtin_operator("-=", minus_eq_int_pattern, "builtin_minus_eq_int", {type::integer}, builtin_minus_equals_int, 99, generate_new_scope()))
+            std::make_shared<builtin_operator>(builtin_operator("-=", {token("int"), token("a"), token("-="), token("int"), token("b")}, "builtin_minus_eq_int", {type::integer}, builtin_minus_equals_int, 99, generate_new_scope()))
     );
 
     return out;
