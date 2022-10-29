@@ -1,1 +1,5 @@
-func<int> print(int a) {}
+func custom_print() {
+    println("custom print")
+}
+
+custom_print()

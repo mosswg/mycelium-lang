@@ -434,6 +434,14 @@ namespace mycelium {
         void execute() override {
             throw_error("Unimplemented Function: Function execute", 10001);
         }
+
+        virtual std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& call_args) {
+            for (auto& pt : body) {
+                pt->execute();
+            }
+            /// TODO: Handle user function returns
+            return {};
+        }
 	};
 
 

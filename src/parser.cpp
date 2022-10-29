@@ -101,11 +101,13 @@ std::vector<std::shared_ptr<mycelium::operator_use>> mycelium::parser::find_ops(
             } else if (tk.type == string_literal) {
                 pattern.pattern.emplace_back(constant::make_constant(std::make_shared<std::string>(tk.string)));
             } else if (tk.type == grouping) {
-                tokenizer.current_token_index--;
-                std::vector<std::shared_ptr<operator_use>> ops = find_ops();
-                for (auto& new_op : ops) {
-                    pattern.pattern.emplace_back(new_op);
-                }
+                /// FIXME: Handle Parentheses In Operator
+//                tokenizer.current_token_index--;
+//                std::vector<std::shared_ptr<operator_use>> ops = find_ops();
+//                for (auto& new_op : ops) {
+//                    pattern.pattern.emplace_back(new_op);
+//                }
+                pattern.pattern.emplace_back(tk.string);
             } else {
                 pattern.pattern.emplace_back(tk.string);
             }
@@ -226,7 +228,11 @@ std::vector<std::shared_ptr<mycelium::parsed_token>> mycelium::parser::parse_tok
         if (show_debug_lines) {
             std::cout << "parsing token: " << tokenizer.current_token_index << ": " << tokenizer.get_next_token_without_increment().string << std::endl;
         }
-        ptokens.push_back(parse_token());
+        std::shared_ptr<mycelium::parsed_token> token = parse_token();
+        // Don't save null tokens
+        if (token) {
+            ptokens.push_back(token);
+        }
     }
 
     tokenizer.current_token_index = starting_token_index;
@@ -311,7 +317,8 @@ std::shared_ptr<mycelium::function> mycelium::parser::parse_function(bool get_bo
             int starting_body_location = tokenizer.current_token_index;
             int ending_body_location = tokenizer.get_ending_grouping_token_index();
 
-            out->body = parse_tokens(starting_body_location, ending_body_location);
+            out->body = parse_tokens(starting_body_location + 1, ending_body_location - 1);
+            tokenizer.current_token_index = ending_body_location + 1;
         }
         else {
             tokenizer.skip_tokens_inside_grouping();
@@ -442,7 +449,7 @@ void mycelium::parser::find_function_declarations() {
 		if (current_token.type == keyword) {
 			if (current_token.string == token::function_keyword) {
                 tokenizer.current_token_index = i;
-                std::shared_ptr<mycelium::function> out = parse_function(false);
+                std::shared_ptr<mycelium::function> out = parse_function(true);
 
                 functions.push_back(out);
 
@@ -557,7 +564,6 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
     tokenizer.current_token_index--;
     mycelium::token next_token = tokenizer.get_next_token();
 
-
     if (tokenizer.get_next_token_without_increment().string != "(") {
         auto var = get_word_variable(next_token);
         if (!var) {
@@ -607,7 +613,14 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
         return std::make_shared<function_call>(function_call(fn, fn_arguments));
     }
     else {
-        throw_error("Unknown function \"" + next_token.string + "\"", 70002);
+        std::string types_string;
+        for (auto& type : fn_types) {
+            types_string += type.name;
+            if (&type != &fn_types.back()) {
+                types_string += ", ";
+            }
+        }
+        throw_error("Unknown function \"" + next_token.string + "(" + types_string + ")\"", 70002);
         return {};
     }
 
