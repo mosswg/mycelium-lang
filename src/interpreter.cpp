@@ -44,7 +44,9 @@ int main(int argc, char** argv) {
 
 	mycelium::parser parser(tokenizer);
 
-    std::cout << "Parsing Tokens:\n";
+    if (mycelium::show_debug_lines) {
+        std::cout << "Parsing Tokens:\n";
+    }
 
 	parser.parse();
 
@@ -56,7 +58,9 @@ int main(int argc, char** argv) {
         }
     }
 
-    std::cout << "Executing Code:\n\n";
+    if (mycelium::show_debug_lines) {
+        std::cout << "Executing Code:\n\n";
+    }
 
     parser.execute();
 

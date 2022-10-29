@@ -39,10 +39,9 @@ namespace mycelium {
 
 
 
-	static bool show_debug_lines = true;
+	static bool show_debug_lines = false;
 
 	void throw_error(const std::string& error, int code);
-
 
 	void initialize_static_values();
 

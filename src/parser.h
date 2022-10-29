@@ -64,11 +64,13 @@ namespace mycelium {
 
 		std::shared_ptr<mycelium::variable> parse_variable(int variable_type);
 
-        std::shared_ptr<mycelium::parsed_token> parse_word();
+        std::shared_ptr<mycelium::expression> parse_expression();
 
-        std::shared_ptr<mycelium::function> get_word_function(const mycelium::token& word);
+        std::shared_ptr<mycelium::function> get_word_function(const mycelium::token& word, const std::vector<type>& args_types);
 
         std::shared_ptr<mycelium::variable> get_word_variable(const mycelium::token& word);
+
+        std::shared_ptr<mycelium::constant> get_constant(const mycelium::token& word);
 
         pattern_match create_from_known_variables(int num_of_tokens);
 
