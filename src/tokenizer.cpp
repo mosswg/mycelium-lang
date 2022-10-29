@@ -26,6 +26,11 @@ void mycelium::tokenizer::tokenize() {
 	for (auto& line : split_lines) {
 		for (int i = 0; i < line.size(); i++) {
 			std::string token_string = line[i];
+            // Check for comments
+            if (token_string.size() == 2 && token_string[0] == '/' && token_string[1] == '/') {
+                // Skip the rest of this line
+                break;
+            }
             // Handle string literals with spaces in them
             if (token_string.front() == '"' && (token_string.back() != '"' || (token_string.size() == 1))) {
                 for (int j = 1; j < i + line.size(); i++) {
@@ -59,9 +64,7 @@ void mycelium::tokenizer::tokenize() {
 				}
 			}
 		}
-		if (tokens.back().type != newline) {
-			tokens.emplace_back(newline, "");
-		}
+        tokens.emplace_back(newline, "");
 	}
 }
 
