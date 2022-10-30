@@ -22,12 +22,12 @@ Mycelium is going to be completely rewritten in C++. The reason for this change 
   - [ ] operator definitions
   - [x] function calls
   - [x] function declarations
-  - [ ] function definitions
+  - [x] function definitions
   - [ ] class definitions
 - [ ] interpreter
   - [x] std functions (e.g. print)
-  - [ ] user defined functions
-  - [ ] std operations (e.g. adding ints)
+  - [x] user defined functions
+  - [x] std operations (e.g. adding ints)
   - [ ] user defined classes
   - [ ] user defined operations
 - [ ] type checker
@@ -43,7 +43,7 @@ Mycelium is going to be completely rewritten in C++. The reason for this change 
 ## Syntax
 Note: This is a work in progress and is completely subject to change.
 ### Variables
-Variables are decalred with a [type](Types) which define how they function. 
+Variables are decalred with a [type](#Types) which define how they function. 
 e.g.
 
 ``` c++
