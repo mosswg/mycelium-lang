@@ -760,6 +760,7 @@ namespace mycelium {
             for (auto& tk : pattern.pattern) {
                 if (tk.is_expression) {
                     number_of_args++;
+                    this->scope->variables.push_back(tk.expr->get_value());
                 }
                 else {
                     found_op = true;
@@ -811,10 +812,14 @@ namespace mycelium {
             throw_error("Unimplemented Function", 10001);
         }
 
-        virtual std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& args) const {
-            std::cout << "Calling operator: " << this->name.string << " with " << args[0]->to_string() << " and " << args[1]->to_string();
-            throw_error("Unimplemented Function: Function Calls", 10001);
-            /// Silencing a warning:
+        virtual std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& call_args) const {
+            for (int i = 0; i < call_args.size(); i++) {
+                this->scope->variables[i]->set_value(call_args[i]);
+            }
+            for (auto& pt : body) {
+                pt->execute();
+            }
+            /// TODO: Handle user operator returns
             return {};
         }
 	};

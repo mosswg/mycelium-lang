@@ -128,10 +128,10 @@ std::vector<std::shared_ptr<mycelium::operator_use>> mycelium::parser::find_ops(
     std::vector<std::shared_ptr<operator_use>> out;
     int pushed_pos;
     for (auto &op: operators) {
-        if (tokenizer.current_token_index + op->pattern.pattern.size() >= tokenizer.tokens.size()) {
+        if ((tokenizer.current_token_index + op->pattern.pattern.size() - op->operator_offset) >= tokenizer.tokens.size()) {
             continue;
         }
-        int pushed_pos = tokenizer.current_token_index;
+        pushed_pos = tokenizer.current_token_index;
         tokenizer.current_token_index = tokenizer.current_token_index - op->operator_offset;
 
         pattern_match pattern = get_pattern_from_tokens(op->pattern.pattern.size());
@@ -366,6 +366,8 @@ std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_bod
         throw_error(token::operator_keyword + " keyword must be followed by \'<\'", 41001);
     }
 
+    // Ignore the oper keyword
+    tokenizer.current_token_index++;
     std::string name;
     std::vector<mycelium::token> ret = {};
     std::vector<mycelium::token> context = {};
@@ -373,13 +375,9 @@ std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_bod
     std::shared_ptr<mycelium::scope> scope = generate_new_scope();
     token name_token;
 
-    token next_token;
-
-    // Ignore whitespace
-    for (; (next_token = tokenizer.get_next_token()).type == whitespace;);
+    token next_token = tokenizer.get_next_non_whitespace_token();
 
     if (next_token.string == "<") {
-        tokenizer.current_token_index++;
         for (auto& token : find_in_grouping(tokenizer.current_token_index, "<", ">")) {
             if (show_debug_lines) {
                 std::cout << "ret: " << token.string << std::endl;
@@ -392,10 +390,9 @@ std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_bod
     }
 
     // Ignore whitespace
-    for (; (next_token = tokenizer.get_next_token()).type == whitespace;);
+    next_token = tokenizer.get_next_non_whitespace_token();
 
     if (next_token.string == "<") {
-        tokenizer.current_token_index++;
         for (auto& token : find_in_grouping(tokenizer.current_token_index, "<", ">")) {
             if (show_debug_lines) {
                 std::cout << "context: " << token.string << std::endl;
@@ -413,15 +410,10 @@ std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_bod
         ret.clear();
     }
 
-    // Ignore whitespace
-    for (; (next_token = tokenizer.get_next_token()).type == whitespace;);
-
-    pattern_match pattern;
-
-    name = operatr::generate_name_from_context(context);
+    pattern_match context_pattern = pattern_match::create_from_tokens(context);
 
     /// TODO: Get priority
-    std::shared_ptr<operatr> out = std::make_shared<mycelium::operatr>(token(), context, pattern, name, type::convert_tokens_to_types(ret), 1, scope);
+    std::shared_ptr<operatr> out = std::make_shared<mycelium::operatr>(token(), context, context_pattern, name, type::convert_tokens_to_types(ret), 1, scope);
 
     if (this->tokenizer.get_next_token_without_increment().string == "{") {
         int starting_body_location = tokenizer.current_token_index;
@@ -443,6 +435,8 @@ std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_bod
     if (show_debug_lines) {
         std::cout << "\n";
     }
+
+    std::cout << "Parsed Operator: " << out->to_string() << std::endl;
 
     return out;
 }
@@ -466,6 +460,8 @@ std::vector<mycelium::token> mycelium::parser::find_in_grouping(int& index, cons
 		}
 		index++;
 	}
+    // Skip all found tokens along with the closing grouping token
+    tokenizer.current_token_index = index + 1;
 	return out;
 }
 
@@ -576,10 +572,10 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
         std::string types_string;
         for (auto& arg : fn_arguments.pattern) {
             if (arg.is_expression) {
-                types_string += arg.expr->get_type().name;
+                types_string += arg.expr->get_type().name + ' ';
             }
             else {
-                types_string += arg.oper;
+                types_string += arg.oper + ' ';
             }
         }
         throw_error("Unknown function \"" + next_token.string + "(" + types_string + ")\"", 70002);

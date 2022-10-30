@@ -1,7 +1,7 @@
-func custom_print(string a, string b) {
+func custom_print(string a and string b) {
     print(a)
     print(" and ")
     println(b)
 }
 
-custom_print("hello", "world")
+custom_print("hello" and "world")
