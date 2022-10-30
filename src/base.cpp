@@ -25,7 +25,7 @@ std::vector<std::string> mycelium::token::whitespace_strings = {};
 std::vector<std::string> mycelium::token::grouping_strings = {};
 std::vector<std::string> mycelium::token::keyword_strings = {};
 std::vector<std::string> mycelium::token::line_end = {};
-std::vector<std::string> mycelium::token::seperator_strings = {};
+std::vector<std::string> mycelium::token::separator_strings = {};
 std::vector<std::string> mycelium::token::oper_strings = {};
 std::vector<std::vector<std::string>> mycelium::token::string_lists = {};
 std::vector<std::string> mycelium::token::strings = {};
@@ -61,8 +61,8 @@ void mycelium::initialize_static_values() {
 	token::whitespace_strings.insert(token::whitespace_strings.end(), {" ", "	"});
 	token::grouping_strings.insert(token::grouping_strings.end(), {"(", ")", "{", "}", "[", "]", "<", ">"});
 	token::keyword_strings.insert(token::keyword_strings.end(), {token::function_keyword, token::operator_keyword, token::conditional_keyword, token::class_keyword, "this"});
-	token::line_end.insert(token::line_end.end(), {"\n", ";"});
-	token::line_end.insert(token::line_end.end(), {","});
+	token::line_end.insert(token::line_end.end(), {"\n"});
+    token::separator_strings.insert(token::separator_strings.end(), {";", ","});
 	token::oper_strings.insert(token::oper_strings.end(), {"+", "-", "*", "/", "%", "=", "+=", "-=", "==", "!=", "<=", ">=",
 														   "&&", "||", "++", "--", "!", "<<", ">>", "&", "|", "~"});
 

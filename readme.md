@@ -17,7 +17,7 @@ Mycelium is going to be completely rewritten in C++. The reason for this change 
   - [ ] condition calls
   - [ ] condition definitions
   - [ ] condition declaration
-  - [ ] operator calls
+  - [x] operator calls
   - [x] operator declaration
   - [ ] operator definitions
   - [x] function calls

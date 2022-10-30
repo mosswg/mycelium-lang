@@ -63,13 +63,11 @@ namespace mycelium {
 
         std::shared_ptr<mycelium::expression> parse_expression();
 
-        std::shared_ptr<mycelium::function> get_word_function(const mycelium::token& word, const std::vector<type>& args_types);
+        std::shared_ptr<mycelium::function> get_word_function(const mycelium::token& word, const pattern_match& args);
 
         std::shared_ptr<mycelium::variable> get_word_variable(const mycelium::token& word);
 
         std::shared_ptr<mycelium::constant> get_constant(const mycelium::token& word);
-
-        pattern_match create_from_known_variables(int num_of_tokens);
 
         std::shared_ptr<mycelium::scope> generate_new_scope();
 
@@ -82,5 +80,11 @@ namespace mycelium {
         std::vector<std::shared_ptr<operator_use>> find_ops();
 
         std::shared_ptr<mycelium::expression> find_ops_in(int number_of_tokens);
+
+        pattern_match get_pattern_from_tokens(int number_of_tokens);
+
+        pattern_token get_pattern_token(const token &tk, token &current_type);
+
+        pattern_match get_pattern_from_tokens(int start_index, int end_index);
     };
 }
