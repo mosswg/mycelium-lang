@@ -35,7 +35,7 @@ namespace mycelium {
 
 	static bool show_debug_lines = true;
 
-	void throw_error(const std::string& error, int code);
+	void throw_error(const std::string& error);
 
 	void initialize_static_values();
 
@@ -60,6 +60,7 @@ namespace mycelium {
 	public:
 		token_type type;
 		std::string string;
+        int line;
 
 		static std::vector<std::string> whitespace_strings;
 		static std::vector<std::string> grouping_strings;
@@ -76,25 +77,34 @@ namespace mycelium {
 		static std::string function_keyword;
 		static std::string operator_keyword;
 		static std::string conditional_keyword;
+        static std::string pattern_keyword;
+        static std::string override_keyword;
 		static std::string class_keyword;
+        static std::string this_keyword;
 
 
 
 	public:
-		token(token_type type, std::string str) : type(type), string(std::move(str)) {}
+		token(token_type type, std::string str, int line) : type(type), string(std::move(str)), line(line) {}
 
-		token() : type(invalid) {}
+        token(token_type type, std::string str) : type(type), string(std::move(str)), line(-1) {}
 
-		explicit token(const std::string& str) : string(str) {
+		token() : type(invalid), line(-1) {}
+
+		token(const std::string& str, int line) : string(str) {
 			this->type = find_type(str);
 		}
+
+        explicit token(const std::string& str) : string(str), line(-1) {
+            this->type = find_type(str);
+        }
 
 		static token_type find_type(const std::string &string);
 
         static std::string get_closing_grouping(const std::string& opening_grouping);
 
 		bool operator==(const token& tk) const {
-			return this->type == tk.type;
+			return this->type == tk.type && this->string == tk.string;
 		}
 	};
 
@@ -131,7 +141,7 @@ namespace mycelium {
                     return i;
                 }
             }
-            mycelium::throw_error("unknown type \"" + type.string + "\"", 50001);
+            mycelium::throw_error("unknown type \"" + type.string + "\"");
             return -1;
         }
 
@@ -173,7 +183,7 @@ namespace mycelium {
 
 		mycelium::parsed_token_type type;
 
-		parsed_token() : token(invalid, ""), type(bad) {}
+		parsed_token() : token(), type(bad) {}
 
 		explicit parsed_token(mycelium::token token, parsed_token_type type) : token(std::move(token)), type(type) {}
 
@@ -220,10 +230,10 @@ namespace mycelium {
                 this->str_ptr = std::make_shared<std::string>();
             }
             else if (this->type.code == type::list.code) {
-                throw_error("Unsupported Creation of list", 61001);
+                throw_error("Unsupported Creation of list");
             }
             else if (this->type.code == type::tuple.code) {
-                throw_error("Unsupported Creation of tuple", 61001);
+                throw_error("Unsupported Creation of tuple");
             }
             else {
                 this->value = 0;
@@ -298,7 +308,7 @@ namespace mycelium {
                 delete ((std::vector<variable>*)value);
             }
             else if (type.code == type::tuple.code) {
-                throw_error("Unsupported Destroy of tuple", 61001);
+                throw_error("Unsupported Destroy of tuple");
             }
 
             this->type = type::none;
@@ -313,7 +323,7 @@ namespace mycelium {
                     *this->str_ptr = *other.str_ptr;
                 }
                 else if (this->type == type::integer) {
-                    throw_error("Cannot convert string to int", 62001);
+                    throw_error("Cannot convert string to int");
                 }
             }
             else if (other.type == type::integer) {
@@ -332,7 +342,7 @@ namespace mycelium {
                     *this->str_ptr = *other->str_ptr;
                 }
                 else if (this->type == type::integer) {
-                    throw_error("Cannot convert string to int", 62001);
+                    throw_error("Cannot convert string to int");
                 }
             }
             else if (other->type == type::integer) {
@@ -358,10 +368,10 @@ namespace mycelium {
                 return *((std::string*)value);
             }
             else if (type.code == type::list.code) {
-                throw_error("Unsupported Get As String of list", 61001);
+                throw_error("Unsupported Get As String of list");
             }
             else if (type.code == type::tuple.code) {
-                throw_error("Unsupported Get As String of tuple", 61001);
+                throw_error("Unsupported Get As String of tuple");
             }
             else {
                 return std::to_string(this->value);
@@ -393,12 +403,12 @@ namespace mycelium {
 
 
         void set_value(const mycelium::variable&) override {
-            throw_error("Cannot Set Value of Constant", 61001);
+            throw_error("Cannot Set Value of Constant");
         }
 
 
         void set_value(const std::shared_ptr<mycelium::variable>&) override {
-            throw_error("Cannot Set Value of Constant", 61001);
+            throw_error("Cannot Set Value of Constant");
         }
 
         std::shared_ptr<variable> get_value() override {
@@ -490,7 +500,7 @@ namespace mycelium {
                 token tk = tks[i];
                 if (tk.type == ttype) {
                     if (current_type.type != token_type::invalid) {
-                        throw_error("Two type name in a row in operator definition", 30004);
+                        throw_error("Two type names in a row in operator definition");
                     }
                     current_type = tk;
                 }
@@ -593,17 +603,26 @@ namespace mycelium {
 		std::vector<std::shared_ptr<mycelium::parsed_token>> body;
         std::shared_ptr<mycelium::scope> scope;
 
-		function_base(mycelium::token token, mycelium::token name, std::vector<mycelium::type> ret, parsed_token_type type, std::shared_ptr<mycelium::scope> scope) : parsed_token(std::move(token), type),
-																										name(std::move(name)), ret(std::move(ret)), scope(std::move(scope)) {}
+        bool is_pattern_match;
+        pattern_match args;
+        std::vector<std::shared_ptr<variable>> arg_vars;
+
+
+        function_base(mycelium::token token, mycelium::token name, std::vector<mycelium::type> ret, pattern_match args, parsed_token_type type, std::shared_ptr<mycelium::scope> scope) : parsed_token(std::move(token), type),
+																										name(std::move(name)), ret(std::move(ret)), args(std::move(args)), is_pattern_match(true), scope(std::move(scope)) {}
+
+
+        function_base(mycelium::token token, mycelium::token name, std::vector<mycelium::type> ret, std::vector<std::shared_ptr<variable>> arg_vars, parsed_token_type type, std::shared_ptr<mycelium::scope> scope) : parsed_token(std::move(token), type),
+                                                                                                                                                                      name(std::move(name)), ret(std::move(ret)), arg_vars(std::move(arg_vars)), is_pattern_match(false), scope(std::move(scope)) {}
 
 
         void execute() override {
-            throw_error("Unimplemented Function", 10001);
+            throw_error("Unimplemented Function");
         }
 
         virtual std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& args) {
             std::cout << "Calling function: " << this->name.string << " with " << args[0]->to_string();
-            throw_error("Unimplemented Function: Function Calls", 10001);
+            throw_error("Unimplemented Function: Function Calls");
             /// Silencing a warning:
             return {};
         }
@@ -611,11 +630,9 @@ namespace mycelium {
 
 	class function : public function_base {
 	public:
-		pattern_match args;
-
 		function(mycelium::token token, mycelium::token name, std::vector<mycelium::type> ret, pattern_match args, std::shared_ptr<mycelium::scope> scope) :
 																				function_base(std::move(token), std::move(name),
-																							  std::move(ret), func, std::move(scope)), args(std::move(args)) {
+																							  std::move(ret), std::move(args), func, std::move(scope)) {
             for (auto& var : this->args.pattern) {
                 if (var.is_expression) {
                     this->scope->variables.push_back(var.expr->get_value());
@@ -623,6 +640,13 @@ namespace mycelium {
             }
         }
 
+        function(mycelium::token token, mycelium::token name, std::vector<mycelium::type> ret, std::vector<std::shared_ptr<variable>> args, std::shared_ptr<mycelium::scope> scope) :
+                function_base(std::move(token), std::move(name),
+                              std::move(ret), std::move(args), func, std::move(scope)) {
+            for (auto& var : this->arg_vars) {
+                this->scope->variables.push_back(var);
+            }
+        }
 
 		bool is_similar(std::shared_ptr<parsed_token> compare) override {
 			if (compare->type == func) {
@@ -658,7 +682,7 @@ namespace mycelium {
 		}
 
         void execute() override {
-            throw_error("Unimplemented Function: Function execute", 10001);
+            throw_error("Unimplemented Function: Function execute");
         }
 
         virtual std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& call_args) {
@@ -677,9 +701,9 @@ namespace mycelium {
     public:
         std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::variable>>&)> exec;
 
-        builtin_function(const std::string& name, std::vector<mycelium::type> ret, const std::vector<mycelium::token>& args, std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::variable>>&)> exec, std::shared_ptr<mycelium::scope> scope) :
+        builtin_function(const std::string& name, std::vector<mycelium::type> ret, const std::vector<mycelium::type>& args, std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::variable>>&)> exec, std::shared_ptr<mycelium::scope> scope) :
         function(mycelium::token(name), mycelium::token(name),
-                std::move(ret), pattern_match::create_from_tokens(args), std::move(scope)), exec(std::move(exec)) {
+                std::move(ret), variable::convert_types_to_variables(args), std::move(scope)), exec(std::move(exec)) {
         }
 
         std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& args) override {
@@ -739,34 +763,18 @@ namespace mycelium {
 
     class operatr : public function_base {
 	public:
-		pattern_match pattern;
-
-        int operator_offset = 0;
         int number_of_args;
         int priority;
 
 		std::vector<mycelium::token> context;
 
-		operatr(mycelium::token token, std::vector<mycelium::token> context, mycelium::pattern_match pattern_match, std::string name, std::vector<mycelium::type> ret, int priority, std::shared_ptr<mycelium::scope> scope) : function_base(std::move(token),
-                         mycelium::token(word,std::move(name)),
-                         std::move(ret), parsed_token_type::oper,
-                             std::move(scope)),
-                             context(std::move(context)),
-                             pattern(std::move(pattern_match)),
-                             priority(priority) {
+		operatr(mycelium::token token, std::vector<mycelium::token> context, mycelium::pattern_match args, std::string name, std::vector<mycelium::type> ret, int priority, std::shared_ptr<mycelium::scope> scope) : function_base(std::move(token), mycelium::token(word,std::move(name)), std::move(ret), std::move(args), parsed_token_type::oper, std::move(scope)), context(std::move(context)), priority(priority) {
             number_of_args = 0;
 
-            bool found_op = false;
-            for (auto& tk : pattern.pattern) {
+            for (auto& tk : this->args.pattern) {
                 if (tk.is_expression) {
                     number_of_args++;
                     this->scope->variables.push_back(tk.expr->get_value());
-                }
-                else {
-                    found_op = true;
-                }
-                if (!found_op) {
-                    operator_offset++;
                 }
             }
         }
@@ -809,7 +817,7 @@ namespace mycelium {
 
 
         void execute() override {
-            throw_error("Unimplemented Function", 10001);
+            throw_error("Unimplemented Function");
         }
 
         virtual std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& call_args) const {
@@ -885,7 +893,7 @@ namespace mycelium {
 
         static std::shared_ptr<parsed_token> create_operator_call(std::shared_ptr<operatr>& op, std::vector<std::shared_ptr<parsed_token>> pts, int operator_index, int index) {
             std::vector<std::shared_ptr<expression>> args;
-            for (int i = index; i < index + op->pattern.pattern.size(); i++) {
+            for (int i = index; i < index + op->args.pattern.size(); i++) {
                 if (pts[i]->type == var) {
                     auto* var = (variable*)pts[i].get();
                     args.push_back(static_cast<const std::shared_ptr<variable>>(var));
@@ -897,50 +905,49 @@ namespace mycelium {
 
 	class conditional : public function_base {
 	public:
-		std::vector<mycelium::token> args;
-
-		conditional(mycelium::token token, mycelium::token name, std::vector<mycelium::token> args, std::shared_ptr<mycelium::scope> scope) : function_base(std::move(token), std::move(name),
-																																				   {{}}, parsed_token_type::cond, std::move(scope)),
-																																				   args(std::move(args)) {}
+		conditional(mycelium::token token, mycelium::token name, pattern_match args, std::shared_ptr<mycelium::scope> scope) : function_base(std::move(token), std::move(name),
+																																				   {{}}, args, parsed_token_type::cond, std::move(scope)) {}
 
 		bool is_similar(std::shared_ptr<parsed_token> compare) override {
 			if (compare->type == func) {
 				auto* compfunc = (conditional*)compare.get();
 
-				return (compfunc->ret == this->ret) && (compfunc->args == this->args);
+				return (compfunc->ret == this->ret) && (compfunc->args.is_match(this->args));
 			}
 			return false;
 		}
 
 		std::string to_string() const override {
-			std::string out = "function ";
-			out += name.string;
-			out += '(';
-			for (int i = 0; i < args.size(); i++) {
-				out += args[i].string;
-				if (i < args.size()-1) {
-					out += ", ";
-				}
-			}
-			out += ')';
-			out += ": ";
-			for (int i = 0; i < ret.size(); i++) {
-				out += ret[i].name;
-				if (i < ret.size()-1) {
-					out += ", ";
-				}
-			}
-
-			return out;
+            return "Conditional: To String Not Implemented";
+//			std::string out = "conditional ";
+//			out += name.string;
+//			out += '(';
+//			for (int i = 0; i < args.pattern.size(); i++) {
+//                if ()
+//				out += args.pattern[i].;
+//				if (i < args.size()-1) {
+//					out += ", ";
+//				}
+//			}
+//			out += ')';
+//			out += ": ";
+//			for (int i = 0; i < ret.size(); i++) {
+//				out += ret[i].name;
+//				if (i < ret.size()-1) {
+//					out += ", ";
+//				}
+//			}
+//
+//			return out;
 		}
 
         void execute() override {
-            throw_error("Unimplemented Function", 10001);
+            throw_error("Unimplemented Function");
         }
 
         void call(std::vector<mycelium::variable>& vars) {
             std::cout << "Calling conditional: " << this->name.string << " with " << vars[0].to_string();
-            throw_error("Unimplemented Function: Function Calls", 10001);
+            throw_error("Unimplemented Function: Function Calls");
         }
 	};
 

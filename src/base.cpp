@@ -36,11 +36,14 @@ std::string mycelium::token::close_block_comment = "*/";
 std::string mycelium::token::function_keyword = "func";
 std::string mycelium::token::operator_keyword = "oper";
 std::string mycelium::token::conditional_keyword = "cond";
+std::string mycelium::token::pattern_keyword = "pattern";
+std::string mycelium::token::override_keyword = "override";
 std::string mycelium::token::class_keyword = "class";
+std::string mycelium::token::this_keyword = "this";
 
-void mycelium::throw_error(const std::string& error, int code) {
+void mycelium::throw_error(const std::string& error) {
 	std::cerr << "ERROR: " << error << std::endl;
-	exit(code);
+	exit(1);
 }
 
 
@@ -60,14 +63,14 @@ void mycelium::initialize_static_values() {
 
 	token::whitespace_strings.insert(token::whitespace_strings.end(), {" ", "	"});
 	token::grouping_strings.insert(token::grouping_strings.end(), {"(", ")", "{", "}", "[", "]", "<", ">"});
-	token::keyword_strings.insert(token::keyword_strings.end(), {token::function_keyword, token::operator_keyword, token::conditional_keyword, token::class_keyword, "this"});
+	token::keyword_strings.insert(token::keyword_strings.end(), {token::function_keyword, token::operator_keyword, token::conditional_keyword, token::class_keyword, token::pattern_keyword, token::override_keyword, token::this_keyword});
 	token::line_end.insert(token::line_end.end(), {"\n"});
     token::separator_strings.insert(token::separator_strings.end(), {";", ","});
 	token::oper_strings.insert(token::oper_strings.end(), {"+", "-", "*", "/", "%", "=", "+=", "-=", "==", "!=", "<=", ">=",
 														   "&&", "||", "++", "--", "!", "<<", ">>", "&", "|", "~"});
 
 	token::string_lists.insert(token::string_lists.end(), {token::oper_strings, token::whitespace_strings,
-														   token::grouping_strings, token::keyword_strings, type::strings, token::line_end});
+														   token::grouping_strings, token::keyword_strings, type::strings, token::line_end, token::separator_strings});
 
 	token::type_names.insert(mycelium::token::type_names.end(), {"operator", "whitespace", "grouping", "keyword", "type", "endline", "word", "num",
 													 "invalid", "newline"});
@@ -207,7 +210,7 @@ std::string mycelium::token::get_closing_grouping(const std::string &opening_gro
         }
     }
 
-    mycelium::throw_error("invalid grouping symbol " + opening_grouping, 30001);
+    mycelium::throw_error("invalid grouping symbol " + opening_grouping);
     // This return statement is here to silence warning. We exit in throw_error.
     return {};
 }
@@ -235,7 +238,7 @@ std::string mycelium::operatr::generate_name_from_context(std::vector<mycelium::
 		}
 		else {
 			if (op_found) {
-				throw_error("operator definitions can only contain one operator", 42001);
+				throw_error("operator definitions can only contain one operator");
 			}
 
 			if (show_debug_lines) {
@@ -258,7 +261,7 @@ std::string mycelium::operatr::generate_name_from_context(std::vector<mycelium::
 	}
 
 	if (!op_found) {
-		throw_error("no operator found in op definition", 41002);
+		throw_error("no operator found in op definition");
 	}
 
 	return out;

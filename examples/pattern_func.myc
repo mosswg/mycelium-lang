@@ -1,4 +1,4 @@
-func print_addition(int a, int b) {
+pattern func print_expr(int a + int b) {
     print(a)
     print(" + ")
     print(b)
@@ -6,4 +6,4 @@ func print_addition(int a, int b) {
     println(a + b)
 }
 
-print_addition(3, 5)
+print_expr(4 + 6)

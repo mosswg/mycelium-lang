@@ -24,6 +24,7 @@ void mycelium::tokenizer::tokenize() {
 		split_lines.push_back(string_split(line, split_groups));
 	}
 
+    int line_index = 1;
 	for (auto& line : split_lines) {
 		for (int i = 0; i < line.size(); i++) {
 			std::string token_string = line[i];
@@ -51,21 +52,21 @@ void mycelium::tokenizer::tokenize() {
 			token_type type = token::find_type(token_string);
 			if (type != whitespace) {
 				if (token_string == "<" && line[i + 1] == "<") {
-					tokens.emplace_back(op, "<<");
+					tokens.emplace_back(op, "<<", line_index);
 					i++;
 				} else if (token_string == ">" && line[i + 1] == ">") {
-					tokens.emplace_back(op, ">>");
+					tokens.emplace_back(op, ">>", line_index);
 					i++;
 				}
 
                 if (type == string_literal) {
-                    tokens.emplace_back(type, token_string.substr(1, token_string.size() - 2));
+                    tokens.emplace_back(type, token_string.substr(1, token_string.size() - 2), line_index);
                 } else {
-					tokens.emplace_back(type, token_string);
+					tokens.emplace_back(type, token_string, line_index);
 				}
 			}
 		}
-        tokens.emplace_back(newline, "");
+        line_index++;
 	}
 }
 
@@ -79,7 +80,7 @@ mycelium::token mycelium::tokenizer::get_next_token() {
 
 mycelium::token mycelium::tokenizer::get_next_token_without_increment() {
     if (current_token_index >= this->tokens.size()) {
-        std::cerr << "Next token is out of bounds\n";
+        throw_error("Next token is out of bounds");
         return {};
     }
 
@@ -170,4 +171,12 @@ void mycelium::tokenizer::skip_tokens_inside_grouping() {
 
 bool mycelium::tokenizer::has_next_token() const {
     return current_token_index < tokens.size();
+}
+
+int mycelium::tokenizer::tokens_until_newline() {
+    int pushed_index = this->current_token_index;
+    int count, current_line = this->tokens[current_token_index - 1].line;
+    for (count = 0; this->get_next_token().line == current_line; count++);
+    this->current_token_index = pushed_index;
+    return count;
 }

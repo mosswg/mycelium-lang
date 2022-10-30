@@ -1,7 +1,7 @@
-oper<int><int a ++ int b> {
-    print(a)
+oper<int><int a int b +> {
+    print(b)
     print(" and ")
-    println(b)
+    println(a)
 }
 
-1 ++ 2
+1 2 +

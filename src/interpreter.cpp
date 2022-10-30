@@ -11,7 +11,7 @@
 int main(int argc, char** argv) {
 
 	if (argc == 1) {
-		mycelium::throw_error("No File Given", 1);
+		mycelium::throw_error("No File Given");
 	}
 
 	std::ifstream in_file(argv[1]);

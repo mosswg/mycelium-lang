@@ -17,10 +17,6 @@ namespace mycelium {
 
 			explicit tokenizer(std::vector<std::string> lines) : lines(std::move(lines)) {}
 
-            explicit tokenizer(std::vector<mycelium::token> tks) : tokens(tks) {
-                std::cout << "tks\n";
-            }
-
 			void tokenize();
 
             token get_next_token();
@@ -34,6 +30,8 @@ namespace mycelium {
             std::vector<mycelium::token> get_tokens_inside_grouping();
 
             int get_ending_grouping_token_index();
+
+            int tokens_until_newline();
 
             void skip_tokens_inside_grouping();
 
