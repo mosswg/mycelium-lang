@@ -1,7 +1,5 @@
-int a = 10
+int a = 17
 
-int b = 17
+int b = 10 + a * 4
 
-a += 10 + b * 4
-
-println(a)
+println(b)

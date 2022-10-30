@@ -20,15 +20,11 @@ namespace mycelium {
 		std::vector<std::shared_ptr<mycelium::function>> functions;
 		std::vector<std::shared_ptr<mycelium::operatr>> operators;
 		std::vector<std::shared_ptr<mycelium::conditional>> conditionals = {};
-        std::vector<std::shared_ptr<mycelium::variable>> variables = {};
+        std::vector<std::shared_ptr<mycelium::scope>> scopes = {};
 
-		int global_scope = 0;
+		std::shared_ptr<scope> global_scope;
 
-		int current_scope;
-
-        int last_found_operator_index = tokenizer.tokens.size();
-
-        std::vector<bool> scopes = std::vector<bool>(2048);
+		std::shared_ptr<scope> current_scope;
 
 		mycelium::tokenizer tokenizer;
 		mycelium::token search_type;
@@ -43,6 +39,7 @@ namespace mycelium {
         std::vector<std::shared_ptr<mycelium::operatr>> create_base_operators();
 
         explicit parser(mycelium::tokenizer tokenizer) : tokenizer(std::move(tokenizer)), search_type() {
+            global_scope = std::make_shared<scope>(nullptr);
 			current_scope = global_scope;
             functions = this->create_base_functions();
             operators = this->create_base_operators();
@@ -74,9 +71,9 @@ namespace mycelium {
 
         pattern_match create_from_known_variables(int num_of_tokens);
 
-        int generate_new_scope();
+        std::shared_ptr<mycelium::scope> generate_new_scope();
 
-        void change_scope(int new_scope, bool delete_previous_scope = true);
+        void change_scope(const std::shared_ptr<scope>& new_scope, bool delete_previous_scope = true);
 
         std::shared_ptr<mycelium::variable> get_variable(const std::string& name);
 

@@ -1,5 +1,5 @@
-func custom_print() {
-    println("custom print")
+func custom_print(string a) {
+    println(a)
 }
 
-custom_print()
+custom_print("hello")
