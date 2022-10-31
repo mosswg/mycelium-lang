@@ -148,7 +148,7 @@ Note: infinite recursion will not result in a stack overflow but will cause erro
 e.g. A loop that runs n number of times
 ```c++
 cond loop_n_times(func func, int counter) {
-	if (n != 0) {
+	if (counter != 0) {
 		func.run();
 		loop_n_times(func, counter - 1);
 	}
@@ -165,6 +165,70 @@ loop_n_times(5) {
 
 
 ### Types
+
+### Pattern Match
+Using the tokens make from the tokenizer a pattern match can be made for example:
+```
+{token("int"), token("a"), token("++")}
+```
+Can be turned into:
+```
+{variable(int), string("++")}
+```
+Then when a variable is already defined it can be used like so:
+```c++
+int value = 1
+
+value++
+```
+Which turns into
+```
+{variable(int), string("++")}
+```
+This is exactly the same so we can say they match. This does pose an issue. Let's say we have the pattern:
+```
+{variable(int), string("+"), variable(int))}
+```
+If we then have the program:
+```c++
+int value = 1
+
+value + value - 1
+```
+We want to say this matches because ``value - 1`` can be turned into an integer however, if we use our primitive pattern matching we get:
+```
+{variable(int), string("+"), variable(int), string("-"), variable(int)}
+```
+The solution to this is instead of creating two independent patterns we can use one to create the other.
+By useing expressions rather than variables and finding landmark of the first pattern we can check not only if the current state of the program match but also if any other lossless conversion could match.
+For Example with the same pattern:
+```
+{variable(int), string("+"), variable(int))}
+```
+And the same program:
+```c++
+int value = 1
+
+value + value - 1
+```
+We can find landmarks in the pattern which in this case would just be the "+":
+```
+{string("+")}
+```
+Then we can look for everything before the landmark in the program:
+```
+{variable(int)}
+```
+Then we can look for everything after the landmark:
+```
+{variable(int), string("-"), variable(int)}
+```
+We can then check if the proceeding part can be turning into an expression that results in an integer. In this case subtracting two intergers gives an integer so we can convert that to an expression:
+```
+{expression(int - int, returns: int)}
+```
+Then our final pattern from the program is:
+{variable(int), string("+"), expression(int - int, returns: int)}
 
 
 ## Planned Features
