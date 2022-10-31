@@ -107,26 +107,25 @@ A function can also use custom argument syntax
 e.g. a function that uses semi-colons instead of commas
 
 ``` c++
-func my_semi_colon_func(int a; int b) {
+pattern func my_semi_colon_func(int a; int b) {
 	...
 }
 ```
 or a function could take arguments in the form of a string
 
 ``` c++
-// TODO: Change this syntax
-func my_weird_func(My arguments are {int a} and {string b}) {
+pattern func my_patterned_func(My arguments are int a and string b) {
 	...
 }
 
-my_weird_func(My arguments are 5 and "Test")
+my_patterned_func(My arguments are 5 and "Test")
 ```
 #### Conditionals
 A function can use the special keyword `cn` and then is a conditional which takes a function and any other arguments. 
 It should return a boolean to indicate that the condition was true. This can be used to define custom if statements
 e.g. a conditional that takes a string and executes the code if the string is empty
 ``` c++
-cn if_empty_string(func func, string str) {
+cond if_empty_string(func func, string str) {
 	if (str.is_empty()) {
 		func.run();
 		return true;
@@ -148,7 +147,7 @@ Note: infinite recursion will not result in a stack overflow but will cause erro
 
 e.g. A loop that runs n number of times
 ```c++
-cn loop_n_times(func func, int counter) {
+cond loop_n_times(func func, int counter) {
 	if (n != 0) {
 		func.run();
 		loop_n_times(func, counter - 1);
@@ -161,7 +160,6 @@ loop_n_times(5) {
 	println("loop");
 }
 ```
-
 
 ### Classes
 
