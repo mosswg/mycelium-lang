@@ -33,7 +33,7 @@ namespace mycelium {
 		static const char *BOLDWHITE = "\033[1m\033[37m";      /* Bold White */
 	}
 
-	static bool show_debug_lines = true;
+	static bool show_debug_lines = false;
 
 	void throw_error(const std::string& error);
 
@@ -78,7 +78,6 @@ namespace mycelium {
 		static std::string function_keyword;
 		static std::string operator_keyword;
 		static std::string conditional_keyword;
-        static std::string pattern_keyword;
         static std::string override_keyword;
 		static std::string class_keyword;
         static std::string this_keyword;
@@ -92,7 +91,7 @@ namespace mycelium {
 
 		token() : type(invalid), line(-1) {}
 
-		token(const std::string& str, int line) : string(str) {
+		token(const std::string& str, int line) : string(str), line(line) {
 			this->type = find_type(str);
 		}
 
@@ -207,44 +206,32 @@ namespace mycelium {
         virtual std::shared_ptr<variable> get_value() = 0;
 
         virtual mycelium::type get_type() = 0;
+
+        std::string to_string() const override {
+            return "expr";
+        }
     };
 
     class function;
 
-    std::shared_ptr<mycelium::function> create_empty_function();
-
     class variable : public expression, public std::enable_shared_from_this<variable> {
 	public:
-		mycelium::type type;
-        union {
-            long value = 0;
-            std::shared_ptr<std::string> str_ptr;
-            std::shared_ptr<mycelium::function> fn_ptr;
-        };
+        mycelium::type type;
+        long value;
+        std::shared_ptr<std::string> str;
+        std::shared_ptr<mycelium::function> fn_ptr;
 
-        variable(const variable& other) : expression(other.token), type(other.type) {
-            if (type.code == type::string.code) {
-                str_ptr = other.str_ptr;
+		variable(mycelium::token name, const mycelium::type& type) : expression(std::move(name)), type(type) {
+            if (type == type::string) {
+                this->str = std::make_shared<std::string>();
             }
-            else if (type.code == type::func.code) {
-                fn_ptr = other.fn_ptr;
-            }
-            else {
-                value = other.value;
-            }
-        }
-
-		variable(mycelium::token name, mycelium::type type) : expression(std::move(name)), type(std::move(type)) {
-            if (this->type.code == type::string.code) {
-                this->str_ptr = std::make_shared<std::string>();
-            }
-            else if (this->type.code == type::func.code) {
+            if (type == type::func) {
                 // Do nothing
             }
-            else if (this->type.code == type::list.code) {
+            else if (type == type::list) {
                 throw_error("Unsupported Creation of list");
             }
-            else if (this->type.code == type::tuple.code) {
+            else if (type == type::tuple) {
                 throw_error("Unsupported Creation of tuple");
             }
             else {
@@ -254,7 +241,7 @@ namespace mycelium {
 
         variable(mycelium::token name, long value) : expression(std::move(name)), type(type::integer), value(value) {}
 
-        variable(mycelium::token name, std::shared_ptr<std::string> str_ptr) : expression(std::move(name)), type(type::string), str_ptr(std::move(str_ptr)) {}
+        variable(mycelium::token name, std::string str) : expression(std::move(name)), type(type::string), str(std::make_shared<std::string>(str)) {}
 
         variable(mycelium::token name, std::shared_ptr<mycelium::function> fn_ptr) : expression(std::move(name)), type(type::func), fn_ptr(std::move(fn_ptr)) {}
 
@@ -262,18 +249,13 @@ namespace mycelium {
             this->destroy();
         }
 
-        static std::shared_ptr<variable> make_variable_without_scope(const mycelium::token& name, const mycelium::type& type) {
-            std::shared_ptr<variable> out = std::make_shared<variable>(name, type);
-            return out;
-        }
-
         static std::shared_ptr<variable> make_variable_without_scope(const mycelium::token& name, long value) {
             std::shared_ptr<variable> out = std::make_shared<variable>(name, value);
             return out;
         }
 
-        static std::shared_ptr<variable> make_variable_without_scope(const mycelium::token& name, const std::shared_ptr<std::string>& str_ptr) {
-            std::shared_ptr<variable> out = std::make_shared<variable>(name, str_ptr);
+        static std::shared_ptr<variable> make_variable_without_scope(const mycelium::token& name, const std::string& str) {
+            std::shared_ptr<variable> out = std::make_shared<variable>(name, str);
             return out;
         }
 
@@ -290,7 +272,7 @@ namespace mycelium {
                 if (tks[i].type == ttype) {
                     int type_code = type::validate_type(tks[i]);
                     const mycelium::token& name = tks[i + 1];
-                    out.push_back(make_variable_without_scope(name, type::types[type_code]));
+                    out.push_back(std::make_shared<variable>(name, type::types[type_code]));
                     i++;
                 }
             }
@@ -302,7 +284,7 @@ namespace mycelium {
             /// Might want to change this later.
             std::vector<std::shared_ptr<variable>> out;
             for (auto& type : types) {
-                out.push_back(make_variable_without_scope(mycelium::token(word, type.name + std::to_string(out.size())), type));
+                out.push_back(std::make_shared<variable>(mycelium::token(word, type.name + std::to_string(out.size())), type));
             }
             return out;
         }
@@ -318,10 +300,10 @@ namespace mycelium {
 
         void destroy() {
             if (type.code == type::string.code) {
-                str_ptr->clear();
+                str->clear();
             }
             else if (type.code == type::func.code) {
-                std::cout << "destroyed func\n";
+                // explicitly do nothing
             }
             else if (type.code == type::list.code) {
                 throw_error("Unsupported Destroy of list");
@@ -339,7 +321,7 @@ namespace mycelium {
         virtual void set_value(const mycelium::variable& other) {
             if (other.type == type::string) {
                 if (this->type == type::string) {
-                    *this->str_ptr = *other.str_ptr;
+                    this->str = other.str;
                 }
                 else if (this->type == type::integer) {
                     throw_error("Cannot convert string to int");
@@ -350,7 +332,7 @@ namespace mycelium {
             }
             else if (other.type == type::integer) {
                 if (this->type == type::string) {
-                    *this->str_ptr = std::to_string(other.value);
+                    this->str = std::make_shared<std::string>(std::to_string(other.value));
                 }
                 else if (this->type == type::integer) {
                     this->value = other.value;
@@ -361,7 +343,7 @@ namespace mycelium {
         virtual void set_value(const std::shared_ptr<mycelium::variable>& other) {
             if (other->type == type::string) {
                 if (this->type == type::string) {
-                    *this->str_ptr = *other->str_ptr;
+                    this->str = other->str;
                 }
                 else if (this->type == type::integer) {
                     throw_error("Cannot convert string to int");
@@ -369,7 +351,7 @@ namespace mycelium {
             }
             else if (other->type == type::integer) {
                 if (this->type == type::string) {
-                    *this->str_ptr = std::to_string(other->value);
+                    this->str = std::make_shared<std::string>(std::to_string(other->value));
                 }
                 else if (this->type == type::integer) {
                     this->value = other->value;
@@ -421,7 +403,7 @@ namespace mycelium {
             }
         }
 
-        explicit constant(std::shared_ptr<std::string> value) : variable({}, std::move(value)) {}
+        explicit constant(std::string value) : variable({}, std::move(value)) {}
 
 
         void set_value(const mycelium::variable&) override {
@@ -441,7 +423,7 @@ namespace mycelium {
             return std::make_shared<constant>(value);
         }
 
-        static std::shared_ptr<constant> make_constant(const std::shared_ptr<std::string>& value) {
+        static std::shared_ptr<constant> make_constant(const std::string& value) {
             return std::make_shared<constant>(value);
         }
     };
@@ -469,8 +451,8 @@ namespace mycelium {
             return make_variable(std::make_shared<variable>(name, value));
         }
 
-        std::shared_ptr<variable> make_variable(const mycelium::token& name, const std::shared_ptr<std::string>& str_ptr) {
-            return make_variable(std::make_shared<variable>(name, str_ptr));
+        std::shared_ptr<variable> make_variable(const mycelium::token& name, const std::string& str) {
+            return make_variable(std::make_shared<variable>(name, str));
         }
 
         std::shared_ptr<variable> make_variable(const mycelium::token& name, const std::shared_ptr<mycelium::function>& fn_ptr) {
@@ -508,6 +490,12 @@ namespace mycelium {
         explicit pattern_token(std::shared_ptr<expression> expr) : expr(std::move(expr)), is_expression(true) {}
 
         explicit pattern_token(std::string oper) : oper(std::move(oper)), is_expression(false) {}
+
+        std::string to_string() const {
+            if (is_expression) {
+                return expr->to_string();
+            }
+        }
     };
 
     class pattern_match {
@@ -536,7 +524,7 @@ namespace mycelium {
                 }
                 else if (tk.type == word) {
                     if (current_type.type != token_type::invalid) {
-                        out.pattern.emplace_back(variable::make_variable_without_scope(tk, type::types[type::validate_type(current_type)]));
+                        out.pattern.emplace_back(std::make_shared<variable>(tk, type::types[type::validate_type(current_type)]));
 
                         current_type.type = token_type::invalid;
                         if (!found_op) {
@@ -557,7 +545,7 @@ namespace mycelium {
         }
 
         static pattern_match create_from_tokens(const std::vector<token>& tks) {
-            return create_from_tokens(tks, 0, tks.size());
+            return create_from_tokens(tks, 0, (int)tks.size());
         }
 
         std::vector<std::shared_ptr<expression>> get_expressions() {
@@ -571,11 +559,9 @@ namespace mycelium {
         }
 
         bool is_match(const pattern_match& test_pattern) {
-            long test_size = test_pattern.pattern.size();
+            long test_size = (long)test_pattern.pattern.size();
 
             if (test_size != pattern.size()) {
-                std::cout << "not long enough :(\n";
-                std::cout << test_size << '\n' << pattern.size() << std::endl;
                 return false;
             }
 
@@ -633,26 +619,13 @@ namespace mycelium {
 		std::vector<std::shared_ptr<mycelium::parsed_token>> body;
         std::shared_ptr<mycelium::scope> scope;
 
-        bool is_pattern_match;
         pattern_match args;
-        std::vector<std::shared_ptr<variable>> arg_vars;
 
         function_base(mycelium::token token, mycelium::token name, std::vector<mycelium::type> ret, pattern_match args, parsed_token_type type, std::shared_ptr<mycelium::scope> scope) : parsed_token(std::move(token), type),
-																										name(std::move(name)), ret(std::move(ret)), args(std::move(args)), is_pattern_match(true), scope(std::move(scope)) {}
-
-
-        function_base(mycelium::token token, mycelium::token name, std::vector<mycelium::type> ret, std::vector<std::shared_ptr<variable>> arg_vars, parsed_token_type type, std::shared_ptr<mycelium::scope> scope) : parsed_token(std::move(token), type),
-                                                                                                                                                                      name(std::move(name)), ret(std::move(ret)), arg_vars(std::move(arg_vars)), is_pattern_match(false), scope(std::move(scope)) {}
+																										name(std::move(name)), ret(std::move(ret)), args(std::move(args)), scope(std::move(scope)), body_start_index(0), body_end_index(0) {}
 
         void execute() override {
             throw_error("Unimplemented Function");
-        }
-
-        virtual std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& args) {
-            std::cout << "Calling function: " << this->name.string << " with " << args[0]->to_string();
-            throw_error("Unimplemented Function: Function Calls");
-            /// Silencing a warning:
-            return {};
         }
     };
 
@@ -668,16 +641,23 @@ namespace mycelium {
             }
         }
 
-        function(mycelium::token token, mycelium::token name, std::vector<mycelium::type> ret, std::vector<std::shared_ptr<variable>> args, std::shared_ptr<mycelium::scope> scope) :
-                function_base(std::move(token), std::move(name),
-                              std::move(ret), std::move(args), func, std::move(scope)) {
-            for (auto& var : this->arg_vars) {
-                this->scope->variables.push_back(var);
+
+        static pattern_match generate_arguments_pattern_match_from_variables(const std::vector<std::shared_ptr<variable>>& args) {
+            pattern_match out;
+
+            for (auto& arg : args) {
+                out.pattern.emplace_back(arg);
+                if (&arg != &args.back()) {
+                    out.pattern.emplace_back(",");
+                }
             }
+
+            return out;
         }
 
         static std::shared_ptr<variable> make_anonymous_function(std::vector<std::shared_ptr<parsed_token>> body, const std::vector<mycelium::type>& ret, const std::vector<std::shared_ptr<variable>>& args, std::shared_ptr<mycelium::scope>& scope) {
-            std::shared_ptr<function> out = std::make_shared<function>(mycelium::token(""), mycelium::token(""), ret, args, scope);
+            std::shared_ptr<function> out = std::make_shared<function>(mycelium::token(""), mycelium::token(""), ret,
+                                                                       generate_arguments_pattern_match_from_variables(args), scope);
             out->body = std::move(body);
             return variable::make_variable_without_scope(mycelium::token(), out);
         }
@@ -695,12 +675,12 @@ namespace mycelium {
 			std::string out = "function ";
 			out += name.string;
 			out += '(';
-			for (int i = 0; i < args.pattern.size(); i++) {
-                if (args.pattern[i].is_expression) {
-                    out += args.pattern[i].expr->to_string();
+			for (const auto & arg : args.pattern) {
+                if (arg.is_expression) {
+                    out += arg.expr->to_string();
                 }
                 else {
-                    out += args.pattern[i].oper;
+                    out += arg.oper;
                 }
 			}
 			out += ')';
@@ -737,7 +717,7 @@ namespace mycelium {
 
         builtin_function(const std::string& name, std::vector<mycelium::type> ret, const std::vector<mycelium::type>& args, std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::variable>>&)> exec, std::shared_ptr<mycelium::scope> scope) :
         function(mycelium::token(name), mycelium::token(name),
-                std::move(ret), variable::convert_types_to_variables(args), std::move(scope)), exec(std::move(exec)) {
+                std::move(ret), generate_arguments_pattern_match_from_variables(variable::convert_types_to_variables(args)), std::move(scope)), exec(std::move(exec)) {
             this->body_start_index = 0;
             this->body_end_index = 0;
         }
@@ -754,7 +734,7 @@ namespace mycelium {
         std::vector<std::shared_ptr<expression>> args;
 
 
-        function_call(std::shared_ptr<function> fn, std::vector<std::shared_ptr<expression>> args) : fn(fn), args(std::move(args)), expression(fn->name) {}
+        function_call(const std::shared_ptr<function>& fn, std::vector<std::shared_ptr<expression>> args) : fn(fn), args(std::move(args)), expression(fn->name) {}
 
         std::string to_string() const override {
             std::string out = "Call to " + fn->to_string() + " with ";
@@ -870,16 +850,14 @@ namespace mycelium {
 
     class builtin_operator : public operatr {
     public:
-
-        std::vector<mycelium::token> args;
         std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::variable>>&)> exec;
 
-        builtin_operator(const std::string& op_token, const std::vector<mycelium::token> pattern_match_tokens, const std::string& name, const std::vector<mycelium::type>& ret, std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::variable>>&)> exec, int priority, std::shared_ptr<mycelium::scope> scope) :
-                operatr(mycelium::token(op_token), {}, pattern_match::create_from_tokens(pattern_match_tokens), name, ret, priority, scope), exec(std::move(exec)) {
+        builtin_operator(const std::string& op_token, const std::vector<mycelium::token>& pattern_match_tokens, const std::string& name, const std::vector<mycelium::type>& ret, std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::variable>>&)> exec, int priority, std::shared_ptr<mycelium::scope> scope) :
+                operatr(mycelium::token(op_token), {}, pattern_match::create_from_tokens(pattern_match_tokens), name, ret, priority, std::move(scope)), exec(std::move(exec)) {
         }
 
-        std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& args) const override {
-            return exec(args);
+        std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& call_args) const override {
+            return exec(call_args);
         }
     };
 
@@ -927,7 +905,7 @@ namespace mycelium {
         }
 
 
-        static std::shared_ptr<parsed_token> create_operator_call(std::shared_ptr<operatr>& op, std::vector<std::shared_ptr<parsed_token>> pts, int operator_index, int index) {
+        static std::shared_ptr<parsed_token> create_operator_call(std::shared_ptr<operatr>& op, std::vector<std::shared_ptr<parsed_token>> pts, int index) {
             std::vector<std::shared_ptr<expression>> args;
             for (int i = index; i < index + op->args.pattern.size(); i++) {
                 if (pts[i]->type == var) {
@@ -943,7 +921,7 @@ namespace mycelium {
 	public:
         conditional(mycelium::token token, mycelium::token name, pattern_match args, std::shared_ptr<mycelium::scope> scope) :
         function_base(std::move(token), std::move(name),
-                      {type::boolean}, std::move(args), func, std::move(scope)) {
+                      {type::boolean}, std::move(args), cond, std::move(scope)) {
             for (auto& var : this->args.pattern) {
                 if (var.is_expression) {
                     this->scope->variables.push_back(var.expr->get_value());
@@ -951,16 +929,8 @@ namespace mycelium {
             }
         }
 
-        conditional(mycelium::token token, mycelium::token name, std::vector<std::shared_ptr<variable>> args, std::shared_ptr<mycelium::scope> scope) :
-        function_base(std::move(token), std::move(name),
-                      {type::boolean}, std::move(args), func, std::move(scope)) {
-            for (auto& var : this->arg_vars) {
-                this->scope->variables.push_back(var);
-            }
-        }
-
 		bool is_similar(std::shared_ptr<parsed_token> compare) override {
-			if (compare->type == func) {
+			if (compare->type == cond) {
 				auto* compfunc = (conditional*)compare.get();
 
 				return (compfunc->ret == this->ret) && (compfunc->args.is_match(this->args));
@@ -998,6 +968,7 @@ namespace mycelium {
 
         virtual std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::expression>>& call_args) const {
             throw_error("Unimplemented: User Defined Conditional Calls");
+            return {};
         }
 	};
 
@@ -1008,7 +979,7 @@ namespace mycelium {
         std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::expression>>&)> exec;
 
         builtin_conditional(const std::string& name, const std::vector<mycelium::type>& args, std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::expression>>&)> exec, std::shared_ptr<mycelium::scope> scope) :
-                conditional(mycelium::token(name), mycelium::token(name), variable::convert_types_to_variables(args), std::move(scope)), exec(std::move(exec)) {
+                conditional(mycelium::token(name), mycelium::token(name), function::generate_arguments_pattern_match_from_variables(variable::convert_types_to_variables(args)), std::move(scope)), exec(std::move(exec)) {
         }
 
         std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::expression>>& call_args) const override {

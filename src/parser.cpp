@@ -80,32 +80,22 @@ void mycelium::parser::parse() {
 	}
 }
 
-mycelium::pattern_token mycelium::parser::get_pattern_token(const mycelium::token& tk, mycelium::token& current_type) {
+mycelium::pattern_token mycelium::parser::get_pattern_token(const mycelium::token& tk) {
     if (tk.type == ttype) {
-        current_type = tk;
-        return pattern_token("");
+        /// Still not sure what the right thing to do about types is but
+        /// I think we should just treat them like string in this case
+           return pattern_token(tk.string);
     } else if (tk.type == word) {
-        /// TODO: This allows the creation of variables in operator call chains
-        ///         Should we allow this?
-        if (current_type.type != token_type::invalid) {
-            std::shared_ptr<mycelium::variable> var = current_scope->get_variable(tk.string);
-            // Prevent Creation of Multiple Duplicate Variables
-            if (!var) {
-                var = current_scope->make_variable(tk, type::types[type::validate_type(current_type)]);
-            }
+        std::shared_ptr<variable> var = get_word_variable(tk);
+        if (var.get()) {
             return pattern_token(var);
         } else {
-            std::shared_ptr<variable> var = get_word_variable(tk);
-            if (var.get()) {
-                return pattern_token(var);
-            } else {
-                return pattern_token(tk.string);
-            }
+            return pattern_token(tk.string);
         }
     } else if (tk.type == num) {
         return pattern_token(constant::make_constant(std::stoi(tk.string)));
     } else if (tk.type == string_literal) {
-        return pattern_token(constant::make_constant(std::make_shared<std::string>(tk.string)));
+        return pattern_token(constant::make_constant(tk.string));
     } else if (tk.type == grouping) {
         /// FIXME: Handle Parentheses In Operator
 //    tokenizer.current_token_index--;
@@ -123,10 +113,10 @@ mycelium::pattern_match mycelium::parser::get_pattern_from_tokens(int number_of_
     pattern_match pattern;
     token current_type;
     while (pattern.pattern.size() < number_of_tokens) {
-        pattern_token new_token = get_pattern_token(tokenizer.get_next_token(), current_type);
+        pattern_token new_token = get_pattern_token(tokenizer.get_next_token());
         if (!new_token.is_expression && new_token.oper.empty()) {
-            // Ignore empty tokens because they signify a type has been declared
-            continue;
+            // Return when we have an empty token because that means we have an invalid token e.g. a type
+            return {};
         }
         pattern.pattern.emplace_back(new_token);
     }
@@ -137,9 +127,17 @@ mycelium::pattern_match mycelium::parser::get_pattern_from_tokens(int number_of_
 
 mycelium::pattern_match mycelium::parser::get_pattern_from_tokens(int start_index, int end_index) {
     pattern_match pattern;
-    token current_type;
     for (int current_token_index = start_index; current_token_index < end_index; current_token_index++) {
-        pattern.pattern.push_back(get_pattern_token(tokenizer.tokens[current_token_index], current_type));
+        pattern.pattern.push_back(get_pattern_token(tokenizer.tokens[current_token_index]));
+    }
+
+    return pattern;
+}
+
+mycelium::pattern_match mycelium::parser::get_pattern_from_tokens(const std::vector<token>& tks) {
+    pattern_match pattern;
+    for (auto& tk : tks) {
+        pattern.pattern.push_back(get_pattern_token(tk));
     }
 
     return pattern;
@@ -171,7 +169,6 @@ std::shared_ptr<mycelium::expression> mycelium::parser::find_ops_in(int number_o
 
     int start_index = tokenizer.current_token_index;
     int last_found_operator_index = tokenizer.current_token_index;
-    tokenizer.current_token_index--;
     bool found_op = false;
     for (; tokenizer.current_token_index < start_index + number_of_tokens; tokenizer.current_token_index++) {
         std::vector<std::shared_ptr<operator_use>> found_ops = find_ops();
@@ -215,6 +212,36 @@ std::shared_ptr<mycelium::expression> mycelium::parser::find_ops_in(int number_o
     return operator_uses.front();
 }
 
+std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_tokens(const std::vector<token>& tks) {
+    pattern_match op_use_pattern;
+
+    for (const token& tk : tks) {
+        op_use_pattern.pattern.emplace_back(get_pattern_token(tk));
+    }
+
+
+    if (op_use_pattern.pattern.size() == 1) {
+        /// This is only the case if we have a variable and only a variable
+        /// If that's the case we just want to return the variable.
+        if (op_use_pattern.pattern[0].is_expression) {
+            return op_use_pattern.pattern[0].expr;
+        }
+        /// This is only the case if we have a string and only a string
+        else {
+            return {};
+        }
+    }
+
+    for (auto& op : operators) {
+        if (op->args.is_match(op_use_pattern)) {
+            return std::make_shared<operator_use>(op, op_use_pattern.get_expressions());
+        }
+    }
+
+    /// If no matching operators are found we return an empty expression.
+    return {};
+}
+
 std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token() {
 	mycelium::token current_token = tokenizer.get_next_token();
 
@@ -243,25 +270,32 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token() {
 		case word:
         case num:
         case string_literal:
-            if (next_is_pattern) {
-                throw_error("Pattern keyword before value (values cannot be patterns)", current_token);
-            }
-            /// TODO: Handle operators inside of function calls
             return parse_expression();
 		case ttype: {
-            /// Ignore ttype because we should have already created it when searching for operators
-//			int type = type::validate_type(current_token);
-//
-//            if (next_token.type != token_type::word) {
-//                throw_error("Type with no following variable name found", current_token);
-//            }
-//
-//			std::shared_ptr<variable> var = parse_variable(type);
-//			if (show_debug_lines) {
-//				std::cout << "Got variable: " << var->type.name << ": " << var->token.string << "\n";
-//			}
-//            // Don't return the variable declaration token because we already created it.
-			return {};
+			int type = type::validate_type(current_token);
+
+            if (next_token.type != token_type::word) {
+                throw_error("Type with no following variable name found", current_token);
+            }
+
+			std::shared_ptr<variable> var = parse_variable(type);
+			if (show_debug_lines) {
+				std::cout << "Got variable: " << var->type.name << ": " << var->token.string << "\n";
+			}
+
+            /// Check again for operators
+            count = tokenizer.tokens_until_newline();
+            op = find_ops_in(count);
+
+            if (op) {
+                return op;
+            }
+
+            /// If we don't find an operator after the variable declaration skip checking the name of the variable
+            tokenizer.current_token_index++;
+
+            /// Don't return the variable declaration token because we already created the variable.
+            return {};
 		}
 		case invalid:
             throw_error("invalid token: \"" + current_token.string + '"', current_token);
@@ -361,16 +395,9 @@ std::shared_ptr<mycelium::function> mycelium::parser::parse_function(bool get_bo
             tokenizer.current_token_index--;
         }
     }
-    std::shared_ptr<function> out;
-    if (next_is_pattern) {
-        out = std::make_shared<mycelium::function>(token, name, type::convert_tokens_to_types(ret),
+
+    std::shared_ptr<function> out = std::make_shared<mycelium::function>(token, name, type::convert_tokens_to_types(ret),
                                                    mycelium::pattern_match::create_from_tokens(args), scope);
-    }
-    else {
-        out = std::make_shared<mycelium::function>(token, name, type::convert_tokens_to_types(ret),
-                                                   mycelium::variable::convert_tokens_to_variables(args), scope);
-    }
-    next_is_pattern = false;
 
     if (show_debug_lines) {
         std::cout << "Parsed function: " << out->to_string() << std::endl;
@@ -449,11 +476,6 @@ std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_bod
     /// TODO: Get priority
     std::shared_ptr<operatr> out = std::make_shared<mycelium::operatr>(token(), context, context_pattern, name, type::convert_tokens_to_types(ret), 1, scope);
 
-    if (next_is_pattern) {
-        warn("Operator with preceding pattern keyword (Operators are always pattern matched)", next_token);
-    }
-    next_is_pattern = false;
-
     if (this->tokenizer.get_next_token_without_increment().string == "{") {
         int starting_body_location = tokenizer.current_token_index;
         int ending_body_location = tokenizer.get_ending_grouping_token_index();
@@ -528,9 +550,6 @@ void mycelium::parser::find_function_declarations() {
             else if (current_token.string == token::conditional_keyword) {
 
 			}
-            else if (current_token.string == token::pattern_keyword) {
-                next_is_pattern = true;
-            }
 		}
 	}
 
@@ -564,7 +583,85 @@ std::shared_ptr<mycelium::variable> mycelium::parser::parse_variable(int variabl
 		//std::cout << "parsing variable: type: " << tokenizer.get_next_token_without_increment().string << "\tname: " << tokenizer.tokens[tokenizer.current_token_index+1].string << std::endl;
 	}
 
-	return current_scope->make_variable(tokenizer.get_next_token(), type::types[variable_type]);
+	return current_scope->make_variable(tokenizer.get_next_token_without_increment(), type::types[variable_type]);
+}
+
+mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const std::shared_ptr<mycelium::function_base>& fn, const std::vector<mycelium::token>& tks) {
+    if (fn->args.pattern.empty()) {
+        if (tks.empty()) {
+            return {};
+        }
+        else {
+            /// Create a pattern with something in it so that when we try to match against nothing it fails
+            pattern_match out;
+            out.pattern.emplace_back("Invalid Pattern");
+            return out;
+        }
+    }
+
+    std::vector<std::vector<token>> landmark_chunks;
+    std::vector<token> landmarks;
+
+    int landmark_chunk_index = 0;
+    for (auto & arg : fn->args.pattern) {
+        if (!arg.is_expression) {
+            landmarks.emplace_back(arg.oper);
+            landmark_chunks.emplace_back();
+            for (; tks[landmark_chunk_index].string != arg.oper && landmark_chunk_index < tks.size(); landmark_chunk_index++) {
+                landmark_chunks.back().push_back(tks[landmark_chunk_index]);
+            }
+
+            /// If we don't find the landmark this pattern is invalid.
+            if (landmark_chunk_index >= tks.size()) {
+                return {};
+            }
+        }
+    }
+
+    /// If there are no landmark use all the tokens to create one expression
+    if (landmarks.empty()) {
+        landmark_chunks.emplace_back();
+        pattern_match out;
+        std::shared_ptr<expression> expr = get_expression_from_tokens(tks);
+        if (expr) {
+            out.pattern.emplace_back(expr);
+        }
+        return out;
+    }
+
+    /// Get the last tokens into a chunk
+    landmark_chunks.emplace_back();
+    for (int i = landmark_chunk_index + 1; i < tks.size(); i++) {
+        landmark_chunks.back().push_back(tks[i]);
+    }
+
+
+    std::vector<std::shared_ptr<expression>> landmark_chunk_expressions;
+
+    for (auto& landmark_chunk : landmark_chunks) {
+        std::shared_ptr<expression> expr = get_expression_from_tokens(landmark_chunk);
+        if (!expr) {
+            /// If we get an invalid expression then the pattern is not valid
+            return {};
+        }
+
+        landmark_chunk_expressions.push_back(expr);
+    }
+
+    if ((landmark_chunk_expressions.size() - 1) != landmarks.size()) {
+        throw_error("Landmark chunks size does not match landmarks size", tks[0]);
+    }
+
+    pattern_match out;
+
+    for (int i = 0; i < landmark_chunk_expressions.size(); i++) {
+        out.pattern.emplace_back(landmark_chunk_expressions[i]);
+        if (i < landmarks.size()) {
+            out.pattern.emplace_back(landmarks[i].string);
+        }
+    }
+
+    return out;
 }
 
 std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
@@ -601,45 +698,21 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
     ///     just call more operators. I think the current system works fine for now
     int close_grouping_index = tokenizer.get_ending_grouping_token_index();
 
-    pattern_match fn_call_pattern = this->get_pattern_from_tokens(tokenizer.current_token_index, close_grouping_index);
+    std::vector<token> inside_grouping;
 
-    std::vector<std::shared_ptr<parsed_token>> ptokens = this->parse_tokens(tokenizer.current_token_index, close_grouping_index);
-
-    std::vector<std::shared_ptr<expression>> fn_expression_arguments;
-    std::vector<std::shared_ptr<expression>> cn_expression_arguments = {mycelium::variable::make_variable_without_scope(token(""), type::func)};
-
-    for (const auto& token : ptokens) {
-        if (token->type != parsed_token_type::expr) {
-            throw_error("Non-expression passed to function call", next_token);
-        }
-
-        fn_expression_arguments.push_back(std::static_pointer_cast<expression>(token));
-        cn_expression_arguments.push_back(std::static_pointer_cast<expression>(token));
+    for (int i = tokenizer.current_token_index; i < close_grouping_index; i++) {
+        inside_grouping.push_back(tokenizer.tokens[i]);
     }
 
     std::vector<std::shared_ptr<function>> funcs;
+    std::vector<pattern_match> func_call_patterns;
 
     for (auto& fn : functions) {
         if (fn->name == next_token) {
-            if (fn->is_pattern_match) {
-                if (fn->args.is_match(fn_call_pattern)) {
-                    funcs.push_back(fn);
-                }
-            } else {
-                if (fn->arg_vars.size() != fn_expression_arguments.size()) {
-                    continue;
-                }
-
-                bool has_same_args = true;
-                for (int i = 0; i < fn_expression_arguments.size(); i++) {
-                    if (fn->arg_vars[i]->type.code != fn_expression_arguments[i]->get_type().code) {
-                        has_same_args = false;
-                        break;
-                    }
-                }
-                if (has_same_args) {
-                    funcs.push_back(fn);
-                }
+            pattern_match fn_call_pattern = this->generate_pattern_from_function(fn, inside_grouping);
+            if (fn->args.is_match(fn_call_pattern)) {
+                funcs.push_back(fn);
+                func_call_patterns.push_back(fn_call_pattern);
             }
         }
     }
@@ -648,27 +721,13 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
     tokenizer.current_token_index = close_grouping_index + 1;
     if (funcs.empty()) {
         std::vector<std::shared_ptr<conditional>> conds;
+        std::vector<pattern_match> cond_call_patterns;
         for (auto& cn : conditionals) {
+            pattern_match cn_call_pattern = this->generate_pattern_from_function(cn, inside_grouping);
             if (cn->name == next_token) {
-                if (cn->is_pattern_match) {
-                    if (cn->args.is_match(fn_call_pattern)) {
-                        conds.push_back(cn);
-                    }
-                } else {
-                    if (cn->arg_vars.size() != cn_expression_arguments.size()) {
-                        continue;
-                    }
-
-                    bool has_same_args = true;
-                    for (int i = 1; i < cn_expression_arguments.size(); i++) {
-                        if (cn->arg_vars[i]->type.code != cn_expression_arguments[i]->get_type().code) {
-                            has_same_args = false;
-                            break;
-                        }
-                    }
-                    if (has_same_args) {
-                        conds.push_back(cn);
-                    }
+                if (cn->args.is_match(cn_call_pattern)) {
+                    conds.push_back(cn);
+                    cond_call_patterns.push_back(cn_call_pattern);
                 }
             }
         }
@@ -690,22 +749,20 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
                 change_scope(pushed_scope);
                 tokenizer.current_token_index = ending_body_location + 1;
 
-                cn_expression_arguments[0] = function::make_anonymous_function(call_body, {}, {}, body_scope), std::vector<std::shared_ptr<expression>>({});
+                std::vector<std::shared_ptr<expression>> cn_call_expressions({function::make_anonymous_function(call_body, {}, {}, body_scope)});
 
-                return std::make_shared<conditional_call>(cn, cn_expression_arguments, body_scope);
+                std::vector<std::shared_ptr<expression>> cn_pattern_expressions = cond_call_patterns[0].get_expressions();
+
+                cn_call_expressions.insert(cn_call_expressions.end(), cn_pattern_expressions.begin(), cn_pattern_expressions.end());
+
+                return std::make_shared<conditional_call>(cn, cn_call_expressions, body_scope);
             }
             else {
                 throw_error("Conditional Call Must Have Body", next_token);
             }
         }
         else {
-            std::string argument_types_string;
-            for (auto &var: fn_expression_arguments) {
-                argument_types_string += var->get_type().name;
-                if (&var != &fn_expression_arguments.back()) {
-                    argument_types_string += ", ";
-                }
-            }
+            pattern_match fn_call_pattern = get_pattern_from_tokens(inside_grouping);
             std::string pattern_string;
             for (auto &arg: fn_call_pattern.pattern) {
                 if (arg.is_expression) {
@@ -714,42 +771,29 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
                     pattern_string += arg.oper + ' ';
                 }
             }
-            throw_error("Unknown function or conditional \"" + next_token.string + "(" + argument_types_string + ")\" or \"" +
-                        next_token.string + "(" + pattern_string + ")", next_token);
+            throw_error("Unknown function or conditional \"" + next_token.string + "(" + pattern_string + ")", next_token);
         }
     }
     else if (funcs.size() == 1) {
-        if (funcs[0]->is_pattern_match) {
-            return std::make_shared<function_call>(function_call(funcs[0], fn_call_pattern.get_expressions()));
-        }
-        else {
-            return std::make_shared<function_call>(function_call(funcs[0], fn_expression_arguments));
-        }
+        return std::make_shared<function_call>(function_call(funcs[0], func_call_patterns[0].get_expressions()));
     }
     else {
         /// TODO: Decide if this should be an error
         ///         Having it just assume that you want the pattern match version could be very confusing.
         ///         It would probably be best to make it an error to declare an ambiguous functions and
         ///         then we won't have to deal with it here.
-        std::shared_ptr<function> longest_call = funcs[0];
-        for (auto& fn : funcs) {
-            if (fn->is_pattern_match) {
-                if (!longest_call->is_pattern_match || (longest_call->args.pattern.size() < fn->args.pattern.size())) {
-                    longest_call = fn;
-                    continue;
-                }
+        int longest_call_index = 0;
+        for (int i = 0; i < funcs.size(); i++) {
+            if ((funcs[longest_call_index]->args.pattern.size() < funcs[i]->args.pattern.size())) {
+                longest_call_index = i;
+                continue;
+            }
 
-                if (longest_call->args.pattern.size() == fn->args.pattern.size()) {
-                    throw_error("Ambiguous Function Call Between " + longest_call->to_string() + " and " + fn->to_string(), next_token);
-                }
+            if (funcs[longest_call_index]->args.pattern.size() == funcs[i]->args.pattern.size()) {
+                throw_error("Ambiguous Function Call Between " + funcs[longest_call_index]->to_string() + " and " + funcs[i]->to_string(), next_token);
             }
         }
-        if (longest_call->is_pattern_match) {
-            return std::make_shared<function_call>(function_call(longest_call, fn_call_pattern.get_expressions()));
-        }
-        else {
-            return std::make_shared<function_call>(function_call(longest_call, fn_expression_arguments));
-        }
+        return std::make_shared<function_call>(function_call(funcs[longest_call_index], func_call_patterns[longest_call_index].get_expressions()));
     }
 
     return {};
@@ -783,7 +827,7 @@ std::shared_ptr<mycelium::constant> mycelium::parser::get_constant(const myceliu
         return constant::make_constant(std::stoi(word.string));
     }
     if (word.type == string_literal) {
-        return constant::make_constant(std::make_shared<std::string>(std::string(word.string)));
+        return constant::make_constant(word.string);
     }
     else {
         return {};
@@ -815,7 +859,7 @@ void mycelium::parser::execute() {
     std::shared_ptr<function> main;
     for (auto& fn : this->functions) {
         if (fn->name.string == "main") {
-            if (!fn->is_pattern_match && fn->arg_vars.empty()) {
+            if (fn->args.pattern.empty()) {
                 main = fn;
                 break;
             }
@@ -835,15 +879,25 @@ void mycelium::parser::execute() {
             pt->execute();
         }
     }
-    std::vector<std::shared_ptr<variable>> args;
-    if (mycelium::show_debug_lines) {
-        std::cout << "Calling main function:\n";
+
+    if (main) {
+        std::vector<std::shared_ptr<variable>> args;
+        if (mycelium::show_debug_lines) {
+            std::cout << "Calling main function:\n";
+        }
+        main->call(args);
     }
-    main->call(args);
 }
 
 std::shared_ptr<mycelium::variable> builtin_print(std::vector<std::shared_ptr<mycelium::variable>>& args) {
-    std::cout << args[0]->get_as_string();
+    if (!args.empty()) {
+        for (auto& arg : args) {
+            std::cout << arg->get_as_string();
+            if (&arg != &args.back()) {
+                std::cout << ' ';
+            }
+        }
+    }
 
     return mycelium::constant::make_constant(0);
 }
@@ -876,6 +930,10 @@ std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_f
 
     out.push_back(
             std::make_shared<builtin_function>("println", std::vector<type>({}), std::vector<type>({type::integer}), builtin_println, generate_new_scope())
+    );
+
+    out.push_back(
+            std::make_shared<builtin_function>("println", std::vector<type>({}), std::vector<type>({type::integer, type::integer}), builtin_println, generate_new_scope())
     );
 
     out.push_back(
@@ -928,7 +986,7 @@ std::shared_ptr<mycelium::variable> builtin_modulo_int(std::vector<std::shared_p
 }
 
 std::shared_ptr<mycelium::variable> builtin_append_string(std::vector<std::shared_ptr<mycelium::variable>>& args) {
-    return mycelium::constant::make_constant(std::make_shared<std::string>(*args[0]->str_ptr + *args[1]->str_ptr));
+    return mycelium::constant::make_constant(*args[0]->str + *args[1]->str);
 }
 
 std::shared_ptr<mycelium::variable> builtin_assign_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
@@ -948,7 +1006,7 @@ std::shared_ptr<mycelium::variable> builtin_dec_int(std::vector<std::shared_ptr<
 }
 
 std::shared_ptr<mycelium::variable> builtin_assign_string(std::vector<std::shared_ptr<mycelium::variable>>& args) {
-    *args[0]->str_ptr = *args[1]->str_ptr;
+    args[0]->str = args[1]->str;
     return args[0];
 }
 

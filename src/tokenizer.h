@@ -21,7 +21,7 @@ namespace mycelium {
 
             token get_next_token();
 
-            token get_next_token_without_increment();
+            token get_next_token_without_increment() const;
 
             token get_next_non_whitespace_token();
 

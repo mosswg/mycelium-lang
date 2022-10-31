@@ -80,7 +80,7 @@ mycelium::token mycelium::tokenizer::get_next_token() {
     return this->tokens[current_token_index++];
 }
 
-mycelium::token mycelium::tokenizer::get_next_token_without_increment() {
+mycelium::token mycelium::tokenizer::get_next_token_without_increment() const {
     if (current_token_index >= this->tokens.size()) {
         throw_error("Next token is out of bounds");
         return {};

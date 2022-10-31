@@ -32,8 +32,6 @@ namespace mycelium {
 		std::vector<std::shared_ptr<mycelium::parsed_token>> temp = {};
 		std::vector<std::shared_ptr<mycelium::parsed_token>> parsed_tokens = {};
 
-        bool next_is_pattern = false;
-
 		void parse();
 
         std::vector<std::shared_ptr<mycelium::function>> create_base_functions();
@@ -84,7 +82,7 @@ namespace mycelium {
 
         pattern_match get_pattern_from_tokens(int number_of_tokens);
 
-        pattern_token get_pattern_token(const token &tk, token &current_type);
+        pattern_token get_pattern_token(const token &tk);
 
         pattern_match get_pattern_from_tokens(int start_index, int end_index);
 
@@ -95,5 +93,13 @@ namespace mycelium {
         static void warn(const std::string &warning, const token &tk);
 
         std::vector<std::shared_ptr<mycelium::conditional>> create_base_conditionals();
+
+        pattern_match
+        generate_pattern_from_function(const std::shared_ptr<mycelium::function_base> &fn,
+                                       const std::vector<mycelium::token> &tks);
+
+        std::shared_ptr<expression> get_expression_from_tokens(const std::vector<token> &tks);
+
+        pattern_match get_pattern_from_tokens(const std::vector<token> &tks);
     };
 }
