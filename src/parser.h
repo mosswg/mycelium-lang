@@ -19,7 +19,7 @@ namespace mycelium {
 
 		std::vector<std::shared_ptr<mycelium::function>> functions;
 		std::vector<std::shared_ptr<mycelium::operatr>> operators;
-		std::vector<std::shared_ptr<mycelium::conditional>> conditionals = {};
+		std::vector<std::shared_ptr<mycelium::conditional>> conditionals;
         std::vector<std::shared_ptr<mycelium::scope>> scopes = {};
 
 		std::shared_ptr<scope> global_scope;
@@ -45,6 +45,7 @@ namespace mycelium {
 			current_scope = global_scope;
             functions = this->create_base_functions();
             operators = this->create_base_operators();
+            conditionals = this->create_base_conditionals();
 		}
 
 		std::shared_ptr<parsed_token> parse_token();
@@ -64,8 +65,6 @@ namespace mycelium {
 		std::shared_ptr<mycelium::variable> parse_variable(int variable_type);
 
         std::shared_ptr<mycelium::expression> parse_expression();
-
-        std::shared_ptr<mycelium::function> get_word_function(const mycelium::token& word, const pattern_match& args);
 
         std::shared_ptr<mycelium::variable> get_word_variable(const mycelium::token& word);
 
@@ -94,5 +93,7 @@ namespace mycelium {
         bool can_match_pattern(const pattern_match& match, const pattern_match& other);
 
         static void warn(const std::string &warning, const token &tk);
+
+        std::vector<std::shared_ptr<mycelium::conditional>> create_base_conditionals();
     };
 }

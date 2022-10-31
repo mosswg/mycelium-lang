@@ -599,6 +599,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
     std::vector<std::shared_ptr<parsed_token>> ptokens = this->parse_tokens(tokenizer.current_token_index, close_grouping_index);
 
     std::vector<std::shared_ptr<expression>> fn_expression_arguments;
+    std::vector<std::shared_ptr<expression>> cn_expression_arguments = {mycelium::variable::make_variable_without_scope(token(""), type::func)};
 
     for (const auto& token : ptokens) {
         if (token->type != parsed_token_type::expr) {
@@ -606,6 +607,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
         }
 
         fn_expression_arguments.push_back(std::static_pointer_cast<expression>(token));
+        cn_expression_arguments.push_back(std::static_pointer_cast<expression>(token));
     }
 
     std::vector<std::shared_ptr<function>> funcs;
@@ -635,25 +637,78 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
         }
     }
 
+
     tokenizer.current_token_index = close_grouping_index + 1;
     if (funcs.empty()) {
-        std::string argument_types_string;
-        for (auto& var : fn_expression_arguments) {
-            argument_types_string += var->get_type().name;
-            if (&var != &fn_expression_arguments.back()) {
-                argument_types_string += ", ";
+        std::vector<std::shared_ptr<conditional>> conds;
+        for (auto& cn : conditionals) {
+            if (cn->name == next_token) {
+                if (cn->is_pattern_match) {
+                    if (cn->args.is_match(fn_call_pattern)) {
+                        conds.push_back(cn);
+                    }
+                } else {
+                    if (cn->arg_vars.size() != cn_expression_arguments.size()) {
+                        continue;
+                    }
+
+                    bool has_same_args = true;
+                    for (int i = 1; i < cn_expression_arguments.size(); i++) {
+                        if (cn->arg_vars[i]->type.code != cn_expression_arguments[i]->get_type().code) {
+                            has_same_args = false;
+                            break;
+                        }
+                    }
+                    if (has_same_args) {
+                        conds.push_back(cn);
+                    }
+                }
             }
         }
-        std::string pattern_string;
-        for (auto& arg : fn_call_pattern.pattern) {
-            if (arg.is_expression) {
-                pattern_string += arg.expr->get_type().name + ' ';
+
+        if (!conds.empty()) {
+            // Assume there is only one match for conditionals
+            if (conds.size() != 1) {
+                // Only output the first two because
+                throw_error("Ambiguous Function Call Between " + conds[0]->to_string() + " and " + conds[1]->to_string(), next_token);
+            }
+            std::shared_ptr<conditional> cn = conds[0];
+            if (this->tokenizer.get_next_token_without_increment().string == "{") {
+                int starting_body_location = tokenizer.current_token_index;
+                int ending_body_location = tokenizer.get_ending_grouping_token_index();
+                std::shared_ptr<mycelium::scope> pushed_scope = current_scope;
+                change_scope(cn->body_scope);
+                std::vector<std::shared_ptr<parsed_token>> call_body = parse_tokens(starting_body_location + 1, ending_body_location - 1);
+                change_scope(pushed_scope);
+                tokenizer.current_token_index = ending_body_location + 1;
+
+                cn_expression_arguments[0] = function::make_anonymous_function(call_body, {}, {}, cn->body_scope), std::vector<std::shared_ptr<expression>>({});
+
+                return std::make_shared<conditional_call>(cn, cn_expression_arguments);
             }
             else {
-                pattern_string += arg.oper + ' ';
+                throw_error("Conditional Call Must Have Body", next_token);
             }
         }
-        throw_error("Unknown function \"" + next_token.string + "(" + argument_types_string + ")\" or \"" + next_token.string + "(" + pattern_string + ")", next_token);
+        else {
+            std::string argument_types_string;
+            for (auto &var: fn_expression_arguments) {
+                argument_types_string += var->get_type().name;
+                if (&var != &fn_expression_arguments.back()) {
+                    argument_types_string += ", ";
+                }
+            }
+            std::string pattern_string;
+            for (auto &arg: fn_call_pattern.pattern) {
+                if (arg.is_expression) {
+                    pattern_string += arg.expr->get_type().name + ' ';
+                } else {
+                    pattern_string += arg.oper + ' ';
+                }
+            }
+            throw_error("Unknown function or conditional \"" + next_token.string + "(" + argument_types_string + ")\" or \"" +
+                        next_token.string + "(" + pattern_string + ")", next_token);
+        }
     }
     else if (funcs.size() == 1) {
         if (funcs[0]->is_pattern_match) {
@@ -749,11 +804,34 @@ std::shared_ptr<mycelium::variable> mycelium::parser::get_variable(const std::st
 }
 
 void mycelium::parser::execute() {
+    std::shared_ptr<function> main;
+    for (auto& fn : this->functions) {
+        if (fn->name.string == "main") {
+            if (!fn->is_pattern_match && fn->arg_vars.empty()) {
+                main = fn;
+                break;
+            }
+        }
+    }
+    if (mycelium::show_debug_lines) {
+        if (!main) {
+            std::cout << "Could not find main function" << std::endl;
+        }
+        else {
+            std::cout << "Found main function" << std::endl;
+        }
+        std::cout << "Executing global statements:\n";
+    }
     for (auto& pt : this->parsed_tokens) {
         if (pt) {
             pt->execute();
         }
     }
+    std::vector<std::shared_ptr<variable>> args;
+    if (mycelium::show_debug_lines) {
+        std::cout << "Calling main function:\n";
+    }
+    main->call(args);
 }
 
 std::shared_ptr<mycelium::variable> builtin_print(std::vector<std::shared_ptr<mycelium::variable>>& args) {
@@ -805,6 +883,9 @@ std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_f
     return out;
 }
 
+std::shared_ptr<mycelium::variable> builtin_eq_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+    return mycelium::constant::make_constant(args[0]->value == args[1]->value);
+}
 
 std::shared_ptr<mycelium::variable> builtin_add_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
     return mycelium::constant::make_constant(args[0]->value + args[1]->value);
@@ -850,8 +931,6 @@ std::shared_ptr<mycelium::variable> builtin_minus_equals_int(std::vector<std::sh
 std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_operators() {
     std::vector<std::shared_ptr<operatr>> out;
 
-    // const std::string& op_token, const mycelium::pattern_match& pattern_match, const std::string& name, const std::vector<mycelium::type>& ret, std::function<void(std::vector<std::shared_ptr<mycelium::variable>>&)> exec, int scope
-
     std::shared_ptr<mycelium::scope> builtin_scope = generate_new_scope();
 
     /// Math
@@ -893,6 +972,44 @@ std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_op
 
     out.push_back(
             std::make_shared<builtin_operator>("-=", std::vector<token>({token("int"), token("a"), token("-="), token("int"), token("b")}), "builtin_minus_eq_int", std::vector<type>({type::integer}), builtin_minus_equals_int, 99, builtin_scope)
+    );
+
+    out.push_back(
+            std::make_shared<builtin_operator>("=", std::vector<token>({token("int"), token("a"), token("=="), token("int"), token("b")}), "builtin_eq_int", std::vector<type>({type::boolean}),
+                                               builtin_eq_int, 99, builtin_scope)
+    );
+
+    /// Bools
+
+    out.push_back(
+            std::make_shared<builtin_operator>("=", std::vector<token>({token("bool"), token("a"), token("="), token("int"), token("b")}), "builtin_assign_bool", std::vector<type>({type::boolean}),
+                                               builtin_assign_int, 99, builtin_scope)
+    );
+
+
+    return out;
+}
+
+
+std::shared_ptr<mycelium::variable> builtin_if_conditional(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+    if (args[1]->get_value()->value) {
+        std::vector<std::shared_ptr<mycelium::variable>> inside_args({});
+        args[0]->fn_ptr->call(inside_args);
+        return mycelium::constant::make_constant(true);
+    }
+    return mycelium::constant::make_constant(false);
+}
+
+std::vector<std::shared_ptr<mycelium::conditional>> mycelium::parser::create_base_conditionals() {
+    std::vector<std::shared_ptr<conditional>> out;
+
+    // const std::string& op_token, const mycelium::pattern_match& pattern_match, const std::string& name, const std::vector<mycelium::type>& ret, std::function<void(std::vector<std::shared_ptr<mycelium::variable>>&)> exec, int scope
+
+    std::shared_ptr<mycelium::scope> builtin_scope = generate_new_scope();
+
+    out.push_back(
+        std::make_shared<mycelium::builtin_conditional>("if", std::vector<mycelium::type>({type::func, type::boolean}),
+                                                        builtin_if_conditional, builtin_scope)
     );
 
     return out;

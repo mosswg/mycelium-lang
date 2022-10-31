@@ -7,15 +7,16 @@
 const mycelium::type mycelium::type::reference(0, "reference", 8);
 const mycelium::type mycelium::type::integer(1, "int", 8);
 const mycelium::type mycelium::type::character(2, "character", 1);
-const mycelium::type mycelium::type::string(3, "string", 8);
-const mycelium::type mycelium::type::list(4, "list", 8);
-const mycelium::type mycelium::type::tuple(5, "tuple", 8);
-const mycelium::type mycelium::type::oper(6, "operator", 8);
-const mycelium::type mycelium::type::func(7, "function", 8);
-const mycelium::type mycelium::type::array(8, "array", 8);
-const mycelium::type mycelium::type::cstring(9, "twine", 8);
-const mycelium::type mycelium::type::token(10, "token", 8);
-const mycelium::type mycelium::type::none(11, "none", 0);
+const mycelium::type mycelium::type::boolean(3, "bool", 1);
+const mycelium::type mycelium::type::string(4, "string", 8);
+const mycelium::type mycelium::type::list(5, "list", 8);
+const mycelium::type mycelium::type::tuple(6, "tuple", 8);
+const mycelium::type mycelium::type::oper(7, "operator", 8);
+const mycelium::type mycelium::type::func(8, "function", 8);
+const mycelium::type mycelium::type::array(9, "array", 8);
+const mycelium::type mycelium::type::cstring(10, "twine", 8);
+const mycelium::type mycelium::type::token(11, "token", 8);
+const mycelium::type mycelium::type::none(12, "none", 0);
 
 std::vector<mycelium::type> mycelium::type::types = {};
 
@@ -49,7 +50,7 @@ void mycelium::throw_error(const std::string& error) {
 
 void mycelium::initialize_static_values() {
 
-	for (auto& type : {mycelium::type::reference, mycelium::type::integer, mycelium::type::character, mycelium::type::string, mycelium::type::list, mycelium::type::tuple, mycelium::type::oper, mycelium::type::func, mycelium::type::array, mycelium::type::cstring, mycelium::type::token, mycelium::type::none}) {
+	for (auto& type : {mycelium::type::reference, mycelium::type::integer, mycelium::type::character, mycelium::type::boolean, mycelium::type::string, mycelium::type::list, mycelium::type::tuple, mycelium::type::oper, mycelium::type::func, mycelium::type::array, mycelium::type::cstring, mycelium::type::token, mycelium::type::none}) {
 		type::types.push_back(type);
 	}
 

@@ -1,3 +1,5 @@
+int a
+
 func print_addition(int a, int b) {
     print(a)
     print(" + ")
@@ -6,4 +8,7 @@ func print_addition(int a, int b) {
     println(a + b)
 }
 
-print_addition(3, 5)
+
+func main {
+    print_addition(3, 5)
+}
