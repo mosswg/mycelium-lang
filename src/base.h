@@ -68,6 +68,7 @@ namespace mycelium {
 		static std::vector<std::string> oper_strings;
 		static std::vector<std::string> line_end;
 		static std::vector<std::string> separator_strings;
+        static std::vector<std::string> comment_strings;
 		static std::vector<std::vector<std::string>> string_lists;
 		static std::vector<std::string> strings;
 		static std::vector<std::string> type_names;
@@ -212,10 +213,9 @@ namespace mycelium {
 
     std::shared_ptr<mycelium::function> create_empty_function();
 
-    class variable : public expression {
+    class variable : public expression, public std::enable_shared_from_this<variable> {
 	public:
 		mycelium::type type;
-        std::shared_ptr<variable> self;
         union {
             long value = 0;
             std::shared_ptr<std::string> str_ptr;
@@ -264,25 +264,21 @@ namespace mycelium {
 
         static std::shared_ptr<variable> make_variable_without_scope(const mycelium::token& name, const mycelium::type& type) {
             std::shared_ptr<variable> out = std::make_shared<variable>(name, type);
-            out->self = out;
             return out;
         }
 
         static std::shared_ptr<variable> make_variable_without_scope(const mycelium::token& name, long value) {
             std::shared_ptr<variable> out = std::make_shared<variable>(name, value);
-            out->self = out;
             return out;
         }
 
         static std::shared_ptr<variable> make_variable_without_scope(const mycelium::token& name, const std::shared_ptr<std::string>& str_ptr) {
             std::shared_ptr<variable> out = std::make_shared<variable>(name, str_ptr);
-            out->self = out;
             return out;
         }
 
         static std::shared_ptr<variable> make_variable_without_scope(const mycelium::token& name, const std::shared_ptr<function>& fn_ptr) {
             std::shared_ptr<variable> out = std::make_shared<variable>(name, fn_ptr);
-            out->self = out;
             return out;
         }
 
@@ -386,7 +382,7 @@ namespace mycelium {
         }
 
         std::shared_ptr<variable> get_value() override {
-            return self;
+            return shared_from_this();
         }
 
         virtual std::string get_as_string() const {
@@ -438,19 +434,15 @@ namespace mycelium {
         }
 
         std::shared_ptr<variable> get_value() override {
-            return self;
+            return shared_from_this();
         }
 
         static std::shared_ptr<constant> make_constant(long value) {
-            std::shared_ptr<constant> out = std::make_shared<constant>(value);
-            out->self = out;
-            return out;
+            return std::make_shared<constant>(value);
         }
 
         static std::shared_ptr<constant> make_constant(const std::shared_ptr<std::string>& value) {
-            std::shared_ptr<constant> out = std::make_shared<constant>(value);
-            out->self = out;
-            return out;
+            return std::make_shared<constant>(value);
         }
     };
 
@@ -466,7 +458,6 @@ namespace mycelium {
             if (get_variable_in_current_scope_only(out->token.string)) {
                 throw_error("Cannot create variable with name \"" + out->token.string + "\" because a variable with that name already exists");
             }
-            out->self = out;
             this->variables.push_back(out);
             return out;
         }
@@ -747,6 +738,8 @@ namespace mycelium {
         builtin_function(const std::string& name, std::vector<mycelium::type> ret, const std::vector<mycelium::type>& args, std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::variable>>&)> exec, std::shared_ptr<mycelium::scope> scope) :
         function(mycelium::token(name), mycelium::token(name),
                 std::move(ret), variable::convert_types_to_variables(args), std::move(scope)), exec(std::move(exec)) {
+            this->body_start_index = 0;
+            this->body_end_index = 0;
         }
 
         std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& args) override {
