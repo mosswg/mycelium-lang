@@ -31,10 +31,14 @@ namespace mycelium {
 
             int get_ending_grouping_token_index();
 
-            int tokens_until_newline();
+            int num_tokens_until_newline();
 
             void skip_tokens_inside_grouping();
 
             bool has_next_token() const;
-	};
+
+        std::vector<token> tokens_until_newline();
+
+        void skip_to_newline();
+    };
 }

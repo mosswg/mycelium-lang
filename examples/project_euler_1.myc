@@ -5,7 +5,6 @@ func main {
     while (i < 1000) {
         sum += i
         i += 3
-        println(i)
     }
 
     // Add all the multiples of 5 from 5 to 999 to sum
@@ -16,7 +15,6 @@ func main {
             sum += i
         }
         i += 5
-        println(i)
     }
     println(sum);
 }

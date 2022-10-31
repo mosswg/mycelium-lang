@@ -213,26 +213,17 @@ std::shared_ptr<mycelium::expression> mycelium::parser::find_ops_in(int number_o
 }
 
 std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_tokens(const std::vector<token>& tks) {
-    pattern_match op_use_pattern;
 
-    for (const token& tk : tks) {
-        op_use_pattern.pattern.emplace_back(get_pattern_token(tk));
-    }
-
-
-    if (op_use_pattern.pattern.size() == 1) {
-        /// This is only the case if we have a variable and only a variable
-        /// If that's the case we just want to return the variable.
-        if (op_use_pattern.pattern[0].is_expression) {
-            return op_use_pattern.pattern[0].expr;
+    if (tks.size() == 1) {
+        auto pt = get_pattern_token(tks[0]);
+        if (pt.is_expression) {
+            return pt.expr;
         }
-        /// This is only the case if we have a string and only a string
-        else {
-            return {};
-        }
+        return {};
     }
 
     for (auto& op : operators) {
+        pattern_match op_use_pattern = this->generate_pattern_from_function(op, tks);
         if (op->args.is_match(op_use_pattern)) {
             return std::make_shared<operator_use>(op, op_use_pattern.get_expressions());
         }
@@ -252,10 +243,11 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token() {
 
 
     // Check for operator on every token.
-    int count = tokenizer.tokens_until_newline();
-    std::shared_ptr<expression> op = find_ops_in(count);
+    std::vector<token> remaining_line_tokens = tokenizer.tokens_until_newline();
+    std::shared_ptr<expression> op = get_expression_from_tokens(remaining_line_tokens);
 
     if (op) {
+        tokenizer.skip_to_newline();
         return op;
     }
 
@@ -284,10 +276,11 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token() {
 			}
 
             /// Check again for operators
-            count = tokenizer.tokens_until_newline();
-            op = find_ops_in(count);
+            remaining_line_tokens = tokenizer.tokens_until_newline();
+            op = get_expression_from_tokens(remaining_line_tokens);
 
             if (op) {
+                tokenizer.skip_to_newline();
                 return op;
             }
 
@@ -583,7 +576,7 @@ std::shared_ptr<mycelium::variable> mycelium::parser::parse_variable(int variabl
 		//std::cout << "parsing variable: type: " << tokenizer.get_next_token_without_increment().string << "\tname: " << tokenizer.tokens[tokenizer.current_token_index+1].string << std::endl;
 	}
 
-	return current_scope->make_variable(tokenizer.get_next_token_without_increment(), type::types[variable_type]);
+	return current_scope->make_variable(tokenizer.get_next_token(), type::types[variable_type]);
 }
 
 mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const std::shared_ptr<mycelium::function_base>& fn, const std::vector<mycelium::token>& tks) {
@@ -677,7 +670,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
                 throw_error("Unknown word \"" + next_token.string + "\"", next_token);
             }
         }
-        std::shared_ptr<expression> op = find_ops_in(tokenizer.tokens_until_newline());
+        std::shared_ptr<expression> op = find_ops_in(tokenizer.num_tokens_until_newline());
         if (op) {
             return op;
         }
@@ -723,8 +716,8 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
         std::vector<std::shared_ptr<conditional>> conds;
         std::vector<pattern_match> cond_call_patterns;
         for (auto& cn : conditionals) {
-            pattern_match cn_call_pattern = this->generate_pattern_from_function(cn, inside_grouping);
             if (cn->name == next_token) {
+                pattern_match cn_call_pattern = this->generate_pattern_from_function(cn, inside_grouping);
                 if (cn->args.is_match(cn_call_pattern)) {
                     conds.push_back(cn);
                     cond_call_patterns.push_back(cn_call_pattern);
@@ -749,10 +742,9 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
                 change_scope(pushed_scope);
                 tokenizer.current_token_index = ending_body_location + 1;
 
+                /// Create an anonymous function with body of the conditional statement and pass that as the first argument
                 std::vector<std::shared_ptr<expression>> cn_call_expressions({function::make_anonymous_function(call_body, {}, {}, body_scope)});
-
                 std::vector<std::shared_ptr<expression>> cn_pattern_expressions = cond_call_patterns[0].get_expressions();
-
                 cn_call_expressions.insert(cn_call_expressions.end(), cn_pattern_expressions.begin(), cn_pattern_expressions.end());
 
                 return std::make_shared<conditional_call>(cn, cn_call_expressions, body_scope);
@@ -1137,12 +1129,12 @@ std::vector<std::shared_ptr<mycelium::conditional>> mycelium::parser::create_bas
     std::shared_ptr<mycelium::scope> builtin_scope = generate_new_scope();
 
     out.push_back(
-        std::make_shared<mycelium::builtin_conditional>("if", std::vector<mycelium::type>({type::func, type::boolean}),
+        std::make_shared<mycelium::builtin_conditional>("if", std::vector<mycelium::type>({type::boolean}),
                                                         builtin_if_conditional, builtin_scope)
     );
 
     out.push_back(
-            std::make_shared<mycelium::builtin_conditional>("while", std::vector<mycelium::type>({type::func, type::boolean}),
+            std::make_shared<mycelium::builtin_conditional>("while", std::vector<mycelium::type>({type::boolean}),
                                                             builtin_while_conditional, builtin_scope)
     );
 

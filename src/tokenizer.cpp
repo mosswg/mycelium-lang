@@ -175,10 +175,31 @@ bool mycelium::tokenizer::has_next_token() const {
     return current_token_index < tokens.size();
 }
 
-int mycelium::tokenizer::tokens_until_newline() {
+int mycelium::tokenizer::num_tokens_until_newline() {
     int pushed_index = this->current_token_index;
     int count, current_line = this->tokens[current_token_index - 1].line;
     for (count = 0; this->get_next_token().line == current_line; count++);
     this->current_token_index = pushed_index;
     return count;
+}
+
+
+std::vector<mycelium::token> mycelium::tokenizer::tokens_until_newline() {
+    int pushed_index = this->current_token_index;
+    std::vector<token> out;
+    /// Decrementing so that we get the current token
+    int count, current_line = this->tokens[--current_token_index].line;
+    token next;
+    for (count = 0; (next = this->get_next_token()).line == current_line; count++) {
+        out.push_back(next);
+    }
+    this->current_token_index = pushed_index;
+    return out;
+}
+
+
+void mycelium::tokenizer::skip_to_newline() {
+    int current_line = this->tokens[current_token_index - 1].line;
+    for (; this->get_next_token().line == current_line;);
+    this->current_token_index--;
 }
