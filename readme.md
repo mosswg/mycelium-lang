@@ -228,8 +228,9 @@ We can then check if the proceeding part can be turning into an expression that 
 {expression(int - int, returns: int)}
 ```
 Then our final pattern from the program is:
+```
 {variable(int), string("+"), expression(int - int, returns: int)}
-
+```
 
 ## Planned Features
 ### Note
