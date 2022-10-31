@@ -461,35 +461,29 @@ namespace mycelium {
 
         explicit scope(std::shared_ptr<scope> parent_scope) : parent_scope(std::move(parent_scope)) {}
 
-        std::shared_ptr<variable> make_variable(const mycelium::token& name, const mycelium::type& type) {
-            if (get_variable(name.string)) {
-                throw_error("Cannot create variable with name \"" + name.string + "\" because a variable with that name already exists");
+
+        std::shared_ptr<variable> make_variable(std::shared_ptr<variable> out) {
+            if (get_variable_in_current_scope_only(out->token.string)) {
+                throw_error("Cannot create variable with name \"" + out->token.string + "\" because a variable with that name already exists");
             }
-            std::shared_ptr<variable> out = std::make_shared<variable>(name, type);
             out->self = out;
             this->variables.push_back(out);
             return out;
+        }
+        std::shared_ptr<variable> make_variable(const mycelium::token& name, const mycelium::type& type) {
+            return make_variable(std::make_shared<variable>(name, type));
         }
 
         std::shared_ptr<variable> make_variable(const mycelium::token& name, long value) {
-            std::shared_ptr<variable> out = std::make_shared<variable>(name, value);
-            out->self = out;
-            this->variables.push_back(out);
-            return out;
+            return make_variable(std::make_shared<variable>(name, value));
         }
 
         std::shared_ptr<variable> make_variable(const mycelium::token& name, const std::shared_ptr<std::string>& str_ptr) {
-            std::shared_ptr<variable> out = std::make_shared<variable>(name, str_ptr);
-            out->self = out;
-            this->variables.push_back(out);
-            return out;
+            return make_variable(std::make_shared<variable>(name, str_ptr));
         }
 
         std::shared_ptr<variable> make_variable(const mycelium::token& name, const std::shared_ptr<mycelium::function>& fn_ptr) {
-            std::shared_ptr<variable> out = std::make_shared<variable>(name, fn_ptr);
-            out->self = out;
-            this->variables.push_back(out);
-            return out;
+            return make_variable(std::make_shared<variable>(name, fn_ptr));
         }
 
         std::shared_ptr<variable> get_variable(const std::string& name) {
@@ -500,6 +494,15 @@ namespace mycelium {
             }
             if (parent_scope) {
                 return parent_scope->get_variable(name);
+            }
+            return {};
+        }
+
+        std::shared_ptr<variable> get_variable_in_current_scope_only(const std::string& name) {
+            for (auto& var : variables) {
+                if (var->token.string == name) {
+                    return var;
+                }
             }
             return {};
         }
