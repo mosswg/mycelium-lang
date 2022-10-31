@@ -457,11 +457,14 @@ namespace mycelium {
     class scope {
     public:
         std::shared_ptr<scope> parent_scope;
-        std::vector<std::shared_ptr<variable>> variables;
+        std::vector<std::shared_ptr<variable>> variables = {};
 
         explicit scope(std::shared_ptr<scope> parent_scope) : parent_scope(std::move(parent_scope)) {}
 
-        std::shared_ptr<variable> make_variable(const mycelium::token& name, mycelium::type type) {
+        std::shared_ptr<variable> make_variable(const mycelium::token& name, const mycelium::type& type) {
+            if (get_variable(name.string)) {
+                throw_error("Cannot create variable with name \"" + name.string + "\" because a variable with that name already exists");
+            }
             std::shared_ptr<variable> out = std::make_shared<variable>(name, type);
             out->self = out;
             this->variables.push_back(out);
@@ -942,11 +945,9 @@ namespace mycelium {
 
 	class conditional : public function_base {
 	public:
-        std::shared_ptr<mycelium::scope> body_scope;
-
         conditional(mycelium::token token, mycelium::token name, pattern_match args, std::shared_ptr<mycelium::scope> scope) :
         function_base(std::move(token), std::move(name),
-                      {type::boolean}, std::move(args), func, std::move(scope)), body_scope(std::make_shared<mycelium::scope>(this->scope->parent_scope)) {
+                      {type::boolean}, std::move(args), func, std::move(scope)) {
             for (auto& var : this->args.pattern) {
                 if (var.is_expression) {
                     this->scope->variables.push_back(var.expr->get_value());
@@ -956,7 +957,7 @@ namespace mycelium {
 
         conditional(mycelium::token token, mycelium::token name, std::vector<std::shared_ptr<variable>> args, std::shared_ptr<mycelium::scope> scope) :
         function_base(std::move(token), std::move(name),
-                      {type::boolean}, std::move(args), func, std::move(scope)), body_scope(std::make_shared<mycelium::scope>(this->scope->parent_scope)) {
+                      {type::boolean}, std::move(args), func, std::move(scope)) {
             for (auto& var : this->arg_vars) {
                 this->scope->variables.push_back(var);
             }
@@ -999,7 +1000,7 @@ namespace mycelium {
             throw_error("Unimplemented Function");
         }
 
-        virtual std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& call_args) const {
+        virtual std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::expression>>& call_args) const {
             throw_error("Unimplemented: User Defined Conditional Calls");
         }
 	};
@@ -1008,17 +1009,17 @@ namespace mycelium {
     public:
 
         std::vector<mycelium::token> args;
-        std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::variable>>&)> exec;
+        std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::expression>>&)> exec;
 
-        builtin_conditional(const std::string& name, const std::vector<mycelium::type>& args, std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::variable>>&)> exec, std::shared_ptr<mycelium::scope> scope) :
+        builtin_conditional(const std::string& name, const std::vector<mycelium::type>& args, std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::expression>>&)> exec, std::shared_ptr<mycelium::scope> scope) :
                 conditional(mycelium::token(name), mycelium::token(name), variable::convert_types_to_variables(args), std::move(scope)), exec(std::move(exec)) {
         }
 
-        std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& args) const override {
-            if (args[0]->type.code != type::func.code) {
+        std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::expression>>& call_args) const override {
+            if (call_args[0]->get_type().code != type::func.code) {
                 throw_error("Calling builtin conditional without function body");
             }
-            return exec(args);
+            return exec(call_args);
         }
     };
 
@@ -1026,9 +1027,11 @@ namespace mycelium {
     public:
         std::shared_ptr<conditional> cn;
         std::vector<std::shared_ptr<expression>> args;
+        std::shared_ptr<mycelium::scope> body_scope;
 
 
-        conditional_call(std::shared_ptr<conditional> cn, std::vector<std::shared_ptr<expression>> args) : cn(std::move(cn)), args(std::move(args)), expression(cn->name) {}
+        conditional_call(std::shared_ptr<conditional> cn, std::vector<std::shared_ptr<expression>> args,
+                         std::shared_ptr<mycelium::scope> body_scope) : cn(std::move(cn)), args(std::move(args)), expression(cn->name), body_scope(std::move(body_scope)) {}
 
         std::string to_string() const override {
             std::string out = "Call to " + cn->to_string() + " with ";
@@ -1039,12 +1042,7 @@ namespace mycelium {
         }
 
         void execute() override {
-            // Add the body as a variable so that it can be called rather than finding its return value which is what get_value would do
-            std::vector<std::shared_ptr<variable>> var_args = {std::static_pointer_cast<variable>(args[0])};
-            for (int i = 1; i < args.size(); i++) {
-                var_args.push_back(args[i]->get_value());
-            }
-            cn->call(var_args);
+            cn->call(args);
         }
 
         bool is_similar(std::shared_ptr<parsed_token> compare) override {
@@ -1052,11 +1050,7 @@ namespace mycelium {
         }
 
         std::shared_ptr<variable> get_value() override {
-            std::vector<std::shared_ptr<variable>> var_args;
-            for (auto& arg : args) {
-                var_args.push_back(arg->get_value());
-            }
-            return cn->call(var_args);
+            return cn->call(args);
         }
 
         mycelium::type get_type() override {

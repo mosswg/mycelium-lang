@@ -88,7 +88,11 @@ mycelium::pattern_token mycelium::parser::get_pattern_token(const mycelium::toke
         /// TODO: This allows the creation of variables in operator call chains
         ///         Should we allow this?
         if (current_type.type != token_type::invalid) {
-            std::shared_ptr<mycelium::variable> var = current_scope->make_variable(tk, type::types[type::validate_type(current_type)]);
+            std::shared_ptr<mycelium::variable> var = current_scope->get_variable(tk.string);
+            // Prevent Creation of Multiple Duplicate Variables
+            if (!var) {
+                var = current_scope->make_variable(tk, type::types[type::validate_type(current_type)]);
+            }
             return pattern_token(var);
         } else {
             std::shared_ptr<variable> var = get_word_variable(tk);
@@ -104,11 +108,11 @@ mycelium::pattern_token mycelium::parser::get_pattern_token(const mycelium::toke
         return pattern_token(constant::make_constant(std::make_shared<std::string>(tk.string)));
     } else if (tk.type == grouping) {
         /// FIXME: Handle Parentheses In Operator
-//            tokenizer.current_token_index--;
-//            std::vector<std::shared_ptr<operator_use>> ops = find_ops();
-//            for (auto& new_op : ops) {
-//                pattern.pattern.emplace_back(new_op);
-//            }
+//    tokenizer.current_token_index--;
+//    std::vector<std::shared_ptr<operator_use>> ops = find_ops();
+//    for (auto& new_op : ops) {
+//        pattern.pattern.emplace_back(new_op);
+//    }
         return pattern_token(tk.string);
     } else {
         return pattern_token(tk.string);
@@ -149,7 +153,6 @@ std::vector<std::shared_ptr<mycelium::operator_use>> mycelium::parser::find_ops(
             continue;
         }
         pushed_pos = tokenizer.current_token_index;
-        tokenizer.current_token_index = tokenizer.current_token_index;
 
         pattern_match pattern = get_pattern_from_tokens(op->args.pattern.size());
 
@@ -246,17 +249,18 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token() {
             /// TODO: Handle operators inside of function calls
             return parse_expression();
 		case ttype: {
-			int type = type::validate_type(current_token);
-
-            if (next_token.type != token_type::word) {
-                throw_error("Type with no following variable name found", current_token);
-            }
-
-			std::shared_ptr<variable> var = parse_variable(type);
-			if (show_debug_lines) {
-				std::cout << "Got variable: " << var->type.name << ": " << var->token.string << "\n";
-			}
-            // Don't return the variable declaration token because we already created it.
+            /// Ignore ttype because we should have already created it when searching for operators
+//			int type = type::validate_type(current_token);
+//
+//            if (next_token.type != token_type::word) {
+//                throw_error("Type with no following variable name found", current_token);
+//            }
+//
+//			std::shared_ptr<variable> var = parse_variable(type);
+//			if (show_debug_lines) {
+//				std::cout << "Got variable: " << var->type.name << ": " << var->token.string << "\n";
+//			}
+//            // Don't return the variable declaration token because we already created it.
 			return {};
 		}
 		case invalid:
@@ -592,6 +596,9 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
     /// TODO: Change this to work like operators:
     ///     Loop through all the functions and check if this could be a match
     ///     Using this we can handle things like expression inside of patterns
+    ///     ...
+    ///     Although expression inside of patterns don't work for operators they
+    ///     just call more operators. I think the current system works fine for now
     int close_grouping_index = tokenizer.get_ending_grouping_token_index();
 
     pattern_match fn_call_pattern = this->get_pattern_from_tokens(tokenizer.current_token_index, close_grouping_index);
@@ -677,14 +684,15 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
                 int starting_body_location = tokenizer.current_token_index;
                 int ending_body_location = tokenizer.get_ending_grouping_token_index();
                 std::shared_ptr<mycelium::scope> pushed_scope = current_scope;
-                change_scope(cn->body_scope);
+                std::shared_ptr<mycelium::scope> body_scope = generate_new_scope();
+                change_scope(body_scope);
                 std::vector<std::shared_ptr<parsed_token>> call_body = parse_tokens(starting_body_location + 1, ending_body_location - 1);
                 change_scope(pushed_scope);
                 tokenizer.current_token_index = ending_body_location + 1;
 
-                cn_expression_arguments[0] = function::make_anonymous_function(call_body, {}, {}, cn->body_scope), std::vector<std::shared_ptr<expression>>({});
+                cn_expression_arguments[0] = function::make_anonymous_function(call_body, {}, {}, body_scope), std::vector<std::shared_ptr<expression>>({});
 
-                return std::make_shared<conditional_call>(cn, cn_expression_arguments);
+                return std::make_shared<conditional_call>(cn, cn_expression_arguments, body_scope);
             }
             else {
                 throw_error("Conditional Call Must Have Body", next_token);
@@ -883,8 +891,18 @@ std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_f
     return out;
 }
 
+
+/// TODO: Move this to another file
 std::shared_ptr<mycelium::variable> builtin_eq_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
     return mycelium::constant::make_constant(args[0]->value == args[1]->value);
+}
+
+std::shared_ptr<mycelium::variable> builtin_lt_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+    return mycelium::constant::make_constant(args[0]->value < args[1]->value);
+}
+
+std::shared_ptr<mycelium::variable> builtin_gt_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+    return mycelium::constant::make_constant(args[0]->value > args[1]->value);
 }
 
 std::shared_ptr<mycelium::variable> builtin_add_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
@@ -912,6 +930,17 @@ std::shared_ptr<mycelium::variable> builtin_assign_int(std::vector<std::shared_p
     return args[0];
 }
 
+
+std::shared_ptr<mycelium::variable> builtin_inc_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+    args[0]->value++;
+    return mycelium::constant::make_constant(args[0]->value - 1);
+}
+
+std::shared_ptr<mycelium::variable> builtin_dec_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+    args[0]->value--;
+    return mycelium::constant::make_constant(args[0]->value + 1);
+}
+
 std::shared_ptr<mycelium::variable> builtin_assign_string(std::vector<std::shared_ptr<mycelium::variable>>& args) {
     *args[0]->str_ptr = *args[1]->str_ptr;
     return args[0];
@@ -931,59 +960,75 @@ std::shared_ptr<mycelium::variable> builtin_minus_equals_int(std::vector<std::sh
 std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_operators() {
     std::vector<std::shared_ptr<operatr>> out;
 
-    std::shared_ptr<mycelium::scope> builtin_scope = generate_new_scope();
-
     /// Math
     out.push_back(
-            std::make_shared<builtin_operator>("+", std::vector<token>({token("int"), token("a"), token("+"), token("int"), token("b")}), "builtin_add_int", std::vector<type>({type::integer}), builtin_add_int, 20, builtin_scope)
+            std::make_shared<builtin_operator>("+", std::vector<token>({token("int"), token("a"), token("+"), token("int"), token("b")}), "builtin_add_int", std::vector<type>({type::integer}), builtin_add_int, 20, generate_new_scope())
     );
 
     out.push_back(
-            std::make_shared<builtin_operator>("+", std::vector<token>({token("int"), token("a"), token("-"), token("int"), token("b")}), "builtin_subtract_int", std::vector<type>({type::integer}), builtin_subtract_int, 20, builtin_scope)
+            std::make_shared<builtin_operator>("+", std::vector<token>({token("int"), token("a"), token("-"), token("int"), token("b")}), "builtin_subtract_int", std::vector<type>({type::integer}), builtin_subtract_int, 20, generate_new_scope())
     );
 
     out.push_back(
-            std::make_shared<builtin_operator>("*", std::vector<token>({token("int"), token("a"), token("*"), token("int"), token("b")}), "builtin_multiply_int", std::vector<type>({type::integer}), builtin_multiply_int, 10, builtin_scope)
+            std::make_shared<builtin_operator>("*", std::vector<token>({token("int"), token("a"), token("*"), token("int"), token("b")}), "builtin_multiply_int", std::vector<type>({type::integer}), builtin_multiply_int, 10, generate_new_scope())
     );
 
     out.push_back(
-            std::make_shared<builtin_operator>("*", std::vector<token>({token("int"), token("a"), token("/"), token("int"), token("b")}), "builtin_multiply_int", std::vector<type>({type::integer}), builtin_divide_int, 10, builtin_scope)
+            std::make_shared<builtin_operator>("*", std::vector<token>({token("int"), token("a"), token("/"), token("int"), token("b")}), "builtin_multiply_int", std::vector<type>({type::integer}), builtin_divide_int, 10, generate_new_scope())
     );
 
     /// Strings
     out.push_back(
-            std::make_shared<builtin_operator>("+", std::vector<token>({token("string"), token("a"), token("+"), token("string"), token("b")}), "builtin_append_string", std::vector<type>({type::string}), builtin_append_string, 20, builtin_scope)
+            std::make_shared<builtin_operator>("+", std::vector<token>({token("string"), token("a"), token("+"), token("string"), token("b")}), "builtin_append_string", std::vector<type>({type::string}), builtin_append_string, 20, generate_new_scope())
     );
 
     out.push_back(
-            std::make_shared<builtin_operator>("=", std::vector<token>({token("string"), token("a"), token("="), token("string"), token("b")}), "builtin_assign_string", std::vector<type>({type::string}), builtin_assign_string, 99, builtin_scope)
+            std::make_shared<builtin_operator>("=", std::vector<token>({token("string"), token("a"), token("="), token("string"), token("b")}), "builtin_assign_string", std::vector<type>({type::string}), builtin_assign_string, 99, generate_new_scope())
     );
 
 
     /// Ints
 
     out.push_back(
-            std::make_shared<builtin_operator>("=", std::vector<token>({token("int"), token("a"), token("="), token("int"), token("b")}), "builtin_assign_int", std::vector<type>({type::integer}), builtin_assign_int, 99, builtin_scope)
+            std::make_shared<builtin_operator>("=", std::vector<token>({token("int"), token("a"), token("="), token("int"), token("b")}), "builtin_assign_int", std::vector<type>({type::integer}), builtin_assign_int, 99, generate_new_scope())
     );
 
     out.push_back(
-            std::make_shared<builtin_operator>("+=", std::vector<token>({token("int"), token("a"), token("+="), token("int"), token("b")}), "builtin_plus_eq_int", std::vector<type>({type::integer}), builtin_plus_equals_int, 99, builtin_scope)
+            std::make_shared<builtin_operator>("+=", std::vector<token>({token("int"), token("a"), token("+="), token("int"), token("b")}), "builtin_plus_eq_int", std::vector<type>({type::integer}), builtin_plus_equals_int, 99, generate_new_scope())
     );
 
     out.push_back(
-            std::make_shared<builtin_operator>("-=", std::vector<token>({token("int"), token("a"), token("-="), token("int"), token("b")}), "builtin_minus_eq_int", std::vector<type>({type::integer}), builtin_minus_equals_int, 99, builtin_scope)
+            std::make_shared<builtin_operator>("-=", std::vector<token>({token("int"), token("a"), token("-="), token("int"), token("b")}), "builtin_minus_eq_int", std::vector<type>({type::integer}), builtin_minus_equals_int, 99, generate_new_scope())
     );
 
     out.push_back(
-            std::make_shared<builtin_operator>("=", std::vector<token>({token("int"), token("a"), token("=="), token("int"), token("b")}), "builtin_eq_int", std::vector<type>({type::boolean}),
-                                               builtin_eq_int, 99, builtin_scope)
+            std::make_shared<builtin_operator>("++", std::vector<token>({token("int"), token("a"), token("++")}), "builtin_inc_int", std::vector<type>({type::integer}), builtin_inc_int, 5, generate_new_scope())
+    );
+
+    out.push_back(
+            std::make_shared<builtin_operator>("--", std::vector<token>({token("int"), token("a"), token("--")}), "builtin_dec_int", std::vector<type>({type::integer}), builtin_dec_int, 5, generate_new_scope())
+    );
+
+    out.push_back(
+            std::make_shared<builtin_operator>("==", std::vector<token>({token("int"), token("a"), token("=="), token("int"), token("b")}), "builtin_eq_int", std::vector<type>({type::boolean}),
+                                               builtin_eq_int, 99, generate_new_scope())
+    );
+
+    out.push_back(
+            std::make_shared<builtin_operator>("<", std::vector<token>({token("int"), token("a"), token("<"), token("int"), token("b")}), "builtin_lt_int", std::vector<type>({type::boolean}),
+                                               builtin_lt_int, 99, generate_new_scope())
+    );
+
+    out.push_back(
+            std::make_shared<builtin_operator>("<", std::vector<token>({token("int"), token("a"), token(">"), token("int"), token("b")}), "builtin_gt_int", std::vector<type>({type::boolean}),
+                                               builtin_gt_int, 99, generate_new_scope())
     );
 
     /// Bools
 
     out.push_back(
             std::make_shared<builtin_operator>("=", std::vector<token>({token("bool"), token("a"), token("="), token("int"), token("b")}), "builtin_assign_bool", std::vector<type>({type::boolean}),
-                                               builtin_assign_int, 99, builtin_scope)
+                                               builtin_assign_int, 99, generate_new_scope())
     );
 
 
@@ -991,13 +1036,22 @@ std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_op
 }
 
 
-std::shared_ptr<mycelium::variable> builtin_if_conditional(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+std::shared_ptr<mycelium::variable> builtin_if_conditional(std::vector<std::shared_ptr<mycelium::expression>>& args) {
     if (args[1]->get_value()->value) {
         std::vector<std::shared_ptr<mycelium::variable>> inside_args({});
-        args[0]->fn_ptr->call(inside_args);
+        args[0]->get_value()->fn_ptr->call(inside_args);
         return mycelium::constant::make_constant(true);
     }
     return mycelium::constant::make_constant(false);
+}
+
+std::shared_ptr<mycelium::variable> builtin_while_conditional(std::vector<std::shared_ptr<mycelium::expression>>& args) {
+    bool out = (args[1]->get_value()->value);
+    std::vector<std::shared_ptr<mycelium::variable>> inside_args({});
+    while (args[1]->get_value()->value) {
+        args[0]->get_value()->fn_ptr->call(inside_args);
+    }
+    return mycelium::constant::make_constant(out);
 }
 
 std::vector<std::shared_ptr<mycelium::conditional>> mycelium::parser::create_base_conditionals() {
@@ -1010,6 +1064,11 @@ std::vector<std::shared_ptr<mycelium::conditional>> mycelium::parser::create_bas
     out.push_back(
         std::make_shared<mycelium::builtin_conditional>("if", std::vector<mycelium::type>({type::func, type::boolean}),
                                                         builtin_if_conditional, builtin_scope)
+    );
+
+    out.push_back(
+            std::make_shared<mycelium::builtin_conditional>("while", std::vector<mycelium::type>({type::func, type::boolean}),
+                                                            builtin_while_conditional, builtin_scope)
     );
 
     return out;

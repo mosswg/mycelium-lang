@@ -67,8 +67,8 @@ void mycelium::initialize_static_values() {
 	token::keyword_strings.insert(token::keyword_strings.end(), {token::function_keyword, token::operator_keyword, token::conditional_keyword, token::class_keyword, token::pattern_keyword, token::override_keyword, token::this_keyword});
 	token::line_end.insert(token::line_end.end(), {"\n"});
     token::separator_strings.insert(token::separator_strings.end(), {";", ","});
-	token::oper_strings.insert(token::oper_strings.end(), {"+", "-", "*", "/", "%", "=", "+=", "-=", "==", "!=", "<=", ">=",
-														   "&&", "||", "++", "--", "!", "<<", ">>", "&", "|", "~"});
+	token::oper_strings.insert(token::oper_strings.end(), {"++", "--", "+", "-", "*", "/", "%", "==", "=", "+=", "-=", "!=", "<=", ">=",
+														   "&&", "||", "!", "<<", ">>", "&", "|", "~"});
 
 	token::string_lists.insert(token::string_lists.end(), {token::oper_strings, token::whitespace_strings,
 														   token::grouping_strings, token::keyword_strings, type::strings, token::line_end, token::separator_strings});
@@ -181,15 +181,7 @@ mycelium::token_type mycelium::token::find_type(const std::string &string) {
 
 	for (char c: string) {
 		if (!isdigit(c)) {
-			if (show_debug_lines) {
-				std::cout << c << " is not a digit" << std::endl;
-			}
 			is_num = false;
-		}
-		else {
-			if (show_debug_lines) {
-				std::cout << c << " is a digit" << std::endl;
-			}
 		}
 	}
 
