@@ -33,7 +33,7 @@ namespace mycelium {
 		static const char *BOLDWHITE = "\033[1m\033[37m";      /* Bold White */
 	}
 
-	static bool show_debug_lines = false;
+	static bool show_debug_lines = true;
 
 	void throw_error(const std::string& error);
 

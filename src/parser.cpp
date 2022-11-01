@@ -228,8 +228,29 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 		return {};
 	}
 
-	for (auto& op : operators) {
-		pattern_match op_use_pattern = this->generate_pattern_from_function(op, tks);
+	if (tks.front().string == "(" && tks.back().string == ")") {
+		int search_depth = 0;
+std::string opening_grouping = "(";
+std::string closing_grouping = ")";
+
+std::vector<token> out;
+int current_token_index = 1;
+while (!(search_depth == 0 && tks[current_token_index].string == closing_grouping) && current_token_index < tks.size()) {
+if (tks[current_token_index].string == opening_grouping) {
+search_depth++;
+}
+else if (tks[current_token_index].string == closing_grouping) {
+search_depth--;
+}
+out.push_back(tks[current_token_index]);
+current_token_index++;
+}
+
+return get_expression_from_tokens(out);
+}
+
+for (auto& op : operators) {
+pattern_match op_use_pattern = this->generate_pattern_from_function(op, tks);
 		if (op->args.is_match(op_use_pattern)) {
 			return std::make_shared<operator_use>(op, op_use_pattern.get_expressions());
 		}
@@ -298,7 +319,27 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token() {
 			/// Don't return the variable declaration token because we already created the variable.
 			return {};
 		}
-		case invalid:
+		case grouping: {
+			tokenizer.current_token_index--;
+			std::vector<token> tokens_inside_grouping = tokenizer.get_tokens_inside_grouping();
+			std::shared_ptr<expression> op = get_expression_from_tokens(tokens_inside_grouping);
+
+			for (auto& tk : tokens_inside_grouping) {
+				std::cout << "\"" << tk.string << "\" ";
+			}
+
+			std::cout << op->to_string();
+
+			if (op) {
+				std::cout << " = " << op->get_value()->get_as_string() << "\n";
+				tokenizer.skip_to_newline();
+				return op;
+			}
+			else {
+				throw_error("Unknown Value Inside Grouping", current_token);
+			}
+		}
+	case invalid:
 			throw_error("invalid token: \"" + current_token.string + '"', current_token);
 			break;
 		default:
@@ -634,7 +675,11 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 	if (landmarks.empty()) {
 		landmark_chunks.emplace_back();
 		pattern_match out;
+		for (auto& tk : tks) {
+			std::cout << "\"" << tk.string << "\" ";
+		}
 		std::shared_ptr<expression> expr = get_expression_from_tokens(tks);
+		std::cout << expr->to_string();
 		if (expr) {
 			out.pattern.emplace_back(expr);
 		}
@@ -811,7 +856,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
 		}
 	}
 	else if (funcs.size() == 1) {
-		return std::make_shared<function_call>(function_call(funcs[0], func_call_patterns[0].get_expressions()));
+		return std::make_shared<function_call>(funcs[0], func_call_patterns[0].get_expressions());
 	}
 	else {
 		/// TODO: Decide if this should be an error
