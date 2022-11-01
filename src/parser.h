@@ -20,7 +20,7 @@ namespace mycelium {
 		std::vector<std::shared_ptr<mycelium::function>> functions;
 		std::vector<std::shared_ptr<mycelium::operatr>> operators;
 		std::vector<std::shared_ptr<mycelium::conditional>> conditionals;
-        std::vector<std::shared_ptr<mycelium::scope>> scopes = {};
+		std::vector<std::shared_ptr<mycelium::scope>> scopes = {};
 
 		std::shared_ptr<scope> global_scope;
 
@@ -34,21 +34,21 @@ namespace mycelium {
 
 		void parse();
 
-        std::vector<std::shared_ptr<mycelium::function>> create_base_functions();
+		std::vector<std::shared_ptr<mycelium::function>> create_base_functions();
 
-        std::vector<std::shared_ptr<mycelium::operatr>> create_base_operators();
+		std::vector<std::shared_ptr<mycelium::operatr>> create_base_operators();
 
-        explicit parser(mycelium::tokenizer tokenizer) : tokenizer(std::move(tokenizer)), search_type() {
-            global_scope = std::make_shared<scope>(nullptr);
+		explicit parser(mycelium::tokenizer tokenizer) : tokenizer(std::move(tokenizer)), search_type() {
+			global_scope = std::make_shared<scope>(nullptr);
 			current_scope = global_scope;
-            functions = this->create_base_functions();
-            operators = this->create_base_operators();
-            conditionals = this->create_base_conditionals();
+			functions = this->create_base_functions();
+			operators = this->create_base_operators();
+			conditionals = this->create_base_conditionals();
 		}
 
 		std::shared_ptr<parsed_token> parse_token();
 
-        std::vector<std::shared_ptr<mycelium::parsed_token>> parse_tokens(int start, int end);
+		std::vector<std::shared_ptr<mycelium::parsed_token>> parse_tokens(int start, int end);
 
 		void find_function_declarations();
 
@@ -62,44 +62,44 @@ namespace mycelium {
 
 		std::shared_ptr<mycelium::variable> parse_variable(int variable_type);
 
-        std::shared_ptr<mycelium::expression> parse_expression();
+		std::shared_ptr<mycelium::expression> parse_expression();
 
-        std::shared_ptr<mycelium::variable> get_word_variable(const mycelium::token& word);
+		std::shared_ptr<mycelium::variable> get_word_variable(const mycelium::token& word);
 
-        std::shared_ptr<mycelium::constant> get_constant(const mycelium::token& word);
+		std::shared_ptr<mycelium::constant> get_constant(const mycelium::token& word);
 
-        std::shared_ptr<mycelium::scope> generate_new_scope();
+		std::shared_ptr<mycelium::scope> generate_new_scope();
 
-        void change_scope(const std::shared_ptr<scope>& new_scope, bool delete_previous_scope = true);
+		void change_scope(const std::shared_ptr<scope>& new_scope, bool delete_previous_scope = true);
 
-        std::shared_ptr<mycelium::variable> get_variable(const std::string& name);
+		std::shared_ptr<mycelium::variable> get_variable(const std::string& name);
 
-        void execute();
+		void execute();
 
-        std::vector<std::shared_ptr<operator_use>> find_ops();
+		std::vector<std::shared_ptr<operator_use>> find_ops();
 
-        std::shared_ptr<mycelium::expression> find_ops_in(int number_of_tokens);
+		std::shared_ptr<mycelium::expression> find_ops_in(int number_of_tokens);
 
-        pattern_match get_pattern_from_tokens(int number_of_tokens);
+		pattern_match get_pattern_from_tokens(int number_of_tokens);
 
-        pattern_token get_pattern_token(const token &tk);
+		pattern_token get_pattern_token(const token &tk);
 
-        pattern_match get_pattern_from_tokens(int start_index, int end_index);
+		pattern_match get_pattern_from_tokens(int start_index, int end_index);
 
-        static void throw_error(const std::string& error, const token& token);
+		static void throw_error(const std::string& error, const token& token);
 
-        bool can_match_pattern(const pattern_match& match, const pattern_match& other);
+		bool can_match_pattern(const pattern_match& match, const pattern_match& other);
 
-        static void warn(const std::string &warning, const token &tk);
+		static void warn(const std::string &warning, const token &tk);
 
-        std::vector<std::shared_ptr<mycelium::conditional>> create_base_conditionals();
+		std::vector<std::shared_ptr<mycelium::conditional>> create_base_conditionals();
 
-        pattern_match
-        generate_pattern_from_function(const std::shared_ptr<mycelium::function_base> &fn,
-                                       const std::vector<mycelium::token> &tks);
+		pattern_match
+		generate_pattern_from_function(const std::shared_ptr<mycelium::function_base> &fn,
+					       const std::vector<mycelium::token> &tks);
 
-        std::shared_ptr<expression> get_expression_from_tokens(const std::vector<token> &tks);
+		std::shared_ptr<expression> get_expression_from_tokens(const std::vector<token> &tks);
 
-        pattern_match get_pattern_from_tokens(const std::vector<token> &tks);
-    };
+		pattern_match get_pattern_from_tokens(const std::vector<token> &tks);
+	};
 }

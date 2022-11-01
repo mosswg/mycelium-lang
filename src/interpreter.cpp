@@ -16,6 +16,10 @@ int main(int argc, char** argv) {
 
 	std::ifstream in_file(argv[1]);
 
+	if (!in_file.is_open()) {
+		mycelium::throw_error("Could not open " + std::string(argv[1]));
+	}
+
 	std::string line;
 
 	std::vector<std::string> program;
@@ -34,35 +38,35 @@ int main(int argc, char** argv) {
 
 	tokenizer.tokenize();
 
-    if (mycelium::show_debug_lines) {
-        std::cout << "{";
-        for (auto &t: tokenizer.tokens) {
-            std::cout << t.string << ", ";
-        }
-        std::cout << "}\n";
-    }
+	if (mycelium::show_debug_lines) {
+		std::cout << "{";
+		for (auto &t: tokenizer.tokens) {
+			std::cout << t.string << ", ";
+		}
+		std::cout << "}\n";
+	}
 
 	mycelium::parser parser(tokenizer);
 
-    if (mycelium::show_debug_lines) {
-        std::cout << "Parsing Tokens:\n";
-    }
+	if (mycelium::show_debug_lines) {
+		std::cout << "Parsing Tokens:\n";
+	}
 
 	parser.parse();
 
-    if (mycelium::show_debug_lines) {
-        for (auto &pt: parser.parsed_tokens) {
-            if (pt.get()) {
-                std::cout << pt->to_string() << "\n";
-            }
-        }
-    }
+	if (mycelium::show_debug_lines) {
+		for (auto &pt: parser.parsed_tokens) {
+			if (pt.get()) {
+				std::cout << pt->to_string() << "\n";
+			}
+		}
+	}
 
-    if (mycelium::show_debug_lines) {
-        std::cout << "Executing Code:\n\n";
-    }
+	if (mycelium::show_debug_lines) {
+		std::cout << "Executing Code:\n\n";
+	}
 
-    parser.execute();
+	parser.execute();
 
 	return 0;
 }

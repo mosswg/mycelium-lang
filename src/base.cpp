@@ -66,8 +66,8 @@ void mycelium::initialize_static_values() {
 	token::grouping_strings.insert(token::grouping_strings.end(), {"(", ")", "{", "}", "[", "]", "<", ">"});
 	token::keyword_strings.insert(token::keyword_strings.end(), {token::function_keyword, token::operator_keyword, token::conditional_keyword, token::class_keyword, token::override_keyword, token::this_keyword});
 	token::line_end.insert(token::line_end.end(), {"\n"});
-    token::separator_strings.insert(token::separator_strings.end(), {";", ","});
-    token::comment_strings.insert(token::comment_strings.end(), {token::line_comment, token::open_block_comment, token::close_block_comment});
+	token::separator_strings.insert(token::separator_strings.end(), {";", ","});
+	token::comment_strings.insert(token::comment_strings.end(), {token::line_comment, token::open_block_comment, token::close_block_comment});
 	token::oper_strings.insert(token::oper_strings.end(), {"++", "--", "+=", "-=", "+", "-", "*", "/", "%", "==", "=", "!=", "<=", ">=",
 														   "&&", "||", "!", "<<", ">>", "&", "|", "~"});
 
@@ -75,7 +75,7 @@ void mycelium::initialize_static_values() {
 														   token::grouping_strings, token::keyword_strings, type::strings, token::line_end, token::separator_strings});
 
 	token::type_names.insert(mycelium::token::type_names.end(), {"operator", "whitespace", "grouping", "keyword", "type", "endline", "word", "num",
-													 "invalid", "newline"});
+																 "invalid", "newline"});
 
 	if (show_debug_lines) {
 		std::cout << token::string_lists << std::endl;
@@ -191,22 +191,22 @@ mycelium::token_type mycelium::token::find_type(const std::string &string) {
 	} else if (isdigit(string[0])) {
 		return invalid;
 	} else if (string[0] == '"' && string[string.size() - 1] == '"') {
-        return string_literal;
-    } else {
+		return string_literal;
+	} else {
 		return word;
 	}
 }
 
 std::string mycelium::token::get_closing_grouping(const std::string &opening_grouping) {
-    for (int i = 0; i < token::grouping_strings.size(); i++) {
-        if (token::grouping_strings[i] == opening_grouping) {
-            return token::grouping_strings[i + 1];
-        }
-    }
+	for (int i = 0; i < token::grouping_strings.size(); i++) {
+		if (token::grouping_strings[i] == opening_grouping) {
+			return token::grouping_strings[i + 1];
+		}
+	}
 
-    mycelium::throw_error("invalid grouping symbol " + opening_grouping);
-    // This return statement is here to silence warning. We exit in throw_error.
-    return {};
+	mycelium::throw_error("invalid grouping symbol " + opening_grouping);
+	// This return statement is here to silence warning. We exit in throw_error.
+	return {};
 }
 
 std::string mycelium::operatr::generate_name_from_context(std::vector<mycelium::token> &context) {
@@ -262,23 +262,23 @@ std::string mycelium::operatr::generate_name_from_context(std::vector<mycelium::
 }
 
 std::string mycelium::operatr::encode_operator(const std::string &oper) {
-    std::string out;
+	std::string out;
 
-    if (show_debug_lines) {
-        std::cout << oper << std::endl;
-    }
+	if (show_debug_lines) {
+		std::cout << oper << std::endl;
+	}
 
-    for (char c: oper) {
-        out.append(int_to_hex_string(c));
-    }
+	for (char c: oper) {
+		out.append(int_to_hex_string(c));
+	}
 
-    if (show_debug_lines) {
-        std::cout << out << std::endl;
-    }
+	if (show_debug_lines) {
+		std::cout << out << std::endl;
+	}
 
-    return out;
+	return out;
 }
 
 std::string mycelium::function_to_string(const std::shared_ptr<mycelium::function>& fn) {
-    return fn->to_string();
+	return fn->to_string();
 }
