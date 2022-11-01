@@ -262,6 +262,8 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token() {
     }
 
 	switch (current_token.type) {
+        case token_type::op:
+            throw_error("Unknown Operator: " + tokenizer.lines[current_token.line - 1], current_token);
 		case keyword:
             if (next_token.type == token_type::invalid) {
                 throw_error("Keyword with nothing following found", current_token);
@@ -603,12 +605,15 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
     }
 
     std::vector<std::vector<token>> landmark_chunks;
+    std::vector<int> desired_chunk_sizes = {0};
+    int current_desired_chunk_size;
     int number_of_chunks = 1;
     std::vector<token> landmarks;
 
     int landmark_chunk_index = 0;
     for (auto & arg : fn->args.pattern) {
         if (!arg.is_expression) {
+            desired_chunk_sizes.push_back(0);
             landmarks.emplace_back(arg.oper);
             landmark_chunks.emplace_back();
             for (; tks[landmark_chunk_index].string != arg.oper && landmark_chunk_index < tks.size(); landmark_chunk_index++) {
@@ -623,6 +628,9 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
             if (&arg != &fn->args.pattern.back()) {
                 number_of_chunks++;
             }
+        }
+        else {
+            desired_chunk_sizes.back()++;
         }
     }
 
@@ -653,8 +661,20 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 
     std::vector<std::shared_ptr<expression>> landmark_chunk_expressions;
 
-    for (auto& landmark_chunk : landmark_chunks) {
-        std::shared_ptr<expression> expr = get_expression_from_tokens(landmark_chunk);
+    for (int i = 0; i < landmark_chunks.size(); i++) {
+        if (desired_chunk_sizes[i] == landmark_chunks[i].size()) {
+            for (auto& tk : landmark_chunks[i]) {
+                auto pt = get_pattern_token(tk);
+                if (pt.is_expression) {
+                    landmark_chunk_expressions.push_back(pt.expr);
+                }
+                else {
+                    /// If we get an invalid expression then the pattern is not valid
+                    return {};
+                }
+            }
+        }
+        std::shared_ptr<expression> expr = get_expression_from_tokens(landmark_chunks[i]);
         if (!expr) {
             /// If we get an invalid expression then the pattern is not valid
             return {};
@@ -670,8 +690,11 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 
     pattern_match out;
 
+    int expr_index = 0;
     for (int i = 0; i < landmark_chunk_expressions.size(); i++) {
-        out.pattern.emplace_back(landmark_chunk_expressions[i]);
+        for (int j = 0; j < desired_chunk_sizes[i]; j++) {
+            out.pattern.emplace_back(landmark_chunk_expressions[expr_index++]);
+        }
         if (i < landmarks.size()) {
             out.pattern.emplace_back(landmarks[i].string);
         }

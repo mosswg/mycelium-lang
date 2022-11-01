@@ -185,8 +185,6 @@ int mycelium::tokenizer::num_tokens_until_newline() {
 
 
 std::vector<mycelium::token> mycelium::tokenizer::tokens_until_newline() {
-
-
     int pushed_index = this->current_token_index;
     std::vector<token> out;
     /// Decrementing so that we get the current token
@@ -196,6 +194,7 @@ std::vector<mycelium::token> mycelium::tokenizer::tokens_until_newline() {
         for (int i = current_token_index; i < this->tokens.size(); i++) {
             out.push_back(tokens[i]);
         }
+        this->current_token_index = pushed_index;
         return out;
     }
 

@@ -12,30 +12,32 @@ namespace mycelium {
 		public:
 
         std::vector<mycelium::token> tokens;
-			std::vector<std::string> lines;
-            int current_token_index = 0;
 
-			explicit tokenizer(std::vector<std::string> lines) : lines(std::move(lines)) {}
+        std::vector<std::string> lines;
 
-			void tokenize();
+        int current_token_index = 0;
 
-            token get_next_token();
+        explicit tokenizer(std::vector<std::string> lines) : lines(std::move(lines)) {}
 
-            token get_next_token_without_increment() const;
+        void tokenize();
 
-            token get_next_non_whitespace_token();
+        token get_next_token();
 
-            std::vector<mycelium::token> get_next_non_whitespace_tokens_until(const std::string& until);
+        token get_next_token_without_increment() const;
 
-            std::vector<mycelium::token> get_tokens_inside_grouping();
+        token get_next_non_whitespace_token();
 
-            int get_ending_grouping_token_index();
+        std::vector<mycelium::token> get_next_non_whitespace_tokens_until(const std::string& until);
 
-            int num_tokens_until_newline();
+        std::vector<mycelium::token> get_tokens_inside_grouping();
 
-            void skip_tokens_inside_grouping();
+        int get_ending_grouping_token_index();
 
-            bool has_next_token() const;
+        int num_tokens_until_newline();
+
+        void skip_tokens_inside_grouping();
+
+        bool has_next_token() const;
 
         std::vector<token> tokens_until_newline();
 
