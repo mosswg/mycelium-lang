@@ -14,12 +14,12 @@ Mycelium is going to be completely rewritten in C++. The reason for this change 
   - [x] variable creation
   - [x] constant creation
   - [ ] math evaluation
-  - [ ] condition calls
+  - [x] condition calls
   - [ ] condition definitions
   - [ ] condition declaration
   - [x] operator calls
   - [x] operator declaration
-  - [ ] operator definitions
+  - [x] operator definitions
   - [x] function calls
   - [x] function declarations
   - [x] function definitions
