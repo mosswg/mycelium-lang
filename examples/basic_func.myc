@@ -1,5 +1,3 @@
-int a
-
 func print_addition(int a, int b) {
     print(a)
     print(" + ")

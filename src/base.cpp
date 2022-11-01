@@ -278,3 +278,7 @@ std::string mycelium::operatr::encode_operator(const std::string &oper) {
 
     return out;
 }
+
+std::string mycelium::function_to_string(const std::shared_ptr<mycelium::function>& fn) {
+    return fn->to_string();
+}

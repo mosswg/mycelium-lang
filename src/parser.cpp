@@ -124,7 +124,6 @@ mycelium::pattern_match mycelium::parser::get_pattern_from_tokens(int number_of_
     return pattern;
 }
 
-
 mycelium::pattern_match mycelium::parser::get_pattern_from_tokens(int start_index, int end_index) {
     pattern_match pattern;
     for (int current_token_index = start_index; current_token_index < end_index; current_token_index++) {
@@ -214,7 +213,14 @@ std::shared_ptr<mycelium::expression> mycelium::parser::find_ops_in(int number_o
 
 std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_tokens(const std::vector<token>& tks) {
 
+    if (tks.empty()) {
+        /// If we have no token then warn and return nothing indicating the expression is invalid
+        warn("No tokens passed to get_expression", token());
+        return {};
+    }
+
     if (tks.size() == 1) {
+        /// If all we have is a single token we want to return that as either a variable or nothing
         auto pt = get_pattern_token(tks[0]);
         if (pt.is_expression) {
             return pt.expr;
@@ -223,6 +229,10 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
     }
 
     for (auto& op : operators) {
+        std::cout << op->to_string() << '\n';
+        for (auto& tk : tks) {
+            std::cout << tk.string << " ";
+        }
         pattern_match op_use_pattern = this->generate_pattern_from_function(op, tks);
         if (op->args.is_match(op_use_pattern)) {
             return std::make_shared<operator_use>(op, op_use_pattern.get_expressions());
@@ -593,6 +603,7 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
     }
 
     std::vector<std::vector<token>> landmark_chunks;
+    int number_of_chunks = 1;
     std::vector<token> landmarks;
 
     int landmark_chunk_index = 0;
@@ -605,8 +616,12 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
             }
 
             /// If we don't find the landmark this pattern is invalid.
-            if (landmark_chunk_index >= tks.size()) {
+            if (tks[landmark_chunk_index].string != arg.oper) {
                 return {};
+            }
+
+            if (&arg != &fn->args.pattern.back()) {
+                number_of_chunks++;
             }
         }
     }
@@ -622,12 +637,19 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
         return out;
     }
 
-    /// Get the last tokens into a chunk
-    landmark_chunks.emplace_back();
-    for (int i = landmark_chunk_index + 1; i < tks.size(); i++) {
-        landmark_chunks.back().push_back(tks[i]);
+    /// If the last pattern token is a land mark then we don't want get the last chunk as there isn't one
+    if (landmark_chunk_index + 1 < tks.size()) {
+        /// Get the last tokens into a chunk if there is one
+        landmark_chunks.emplace_back();
+        for (int i = landmark_chunk_index + 1; i < tks.size(); i++) {
+            landmark_chunks.back().push_back(tks[i]);
+        }
     }
 
+
+    if (number_of_chunks != landmark_chunks.size()) {
+        return {};
+    }
 
     std::vector<std::shared_ptr<expression>> landmark_chunk_expressions;
 
@@ -641,8 +663,9 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
         landmark_chunk_expressions.push_back(expr);
     }
 
+    /// If our number of landmark chunks and our landmarks differ then we have a non-matching pattern
     if ((landmark_chunk_expressions.size() - 1) != landmarks.size()) {
-        throw_error("Landmark chunks size does not match landmarks size", tks[0]);
+        return {};
     }
 
     pattern_match out;
