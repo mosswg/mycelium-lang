@@ -5,9 +5,6 @@
  The Mycelium std library has now been removed and will be rewritten in Mycelium on the language is useable. <br>
  The old version of std library has been moved to [Mycore](https://github.com/mossx-dev/Mycore)
 
-## Important Update
-Mycelium is going to be completely rewritten in C++. The reason for this change is the same reason there have been barely any updates to the project in months. I have been very busy and every time I try to code in assembly I can't get anything meaningful done. So hopefully now I can get back to working on this project again.
-
 ## Milestones
 - [x] tokenizer
 - [ ] parser
