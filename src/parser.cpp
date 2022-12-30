@@ -679,8 +679,8 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 			std::cout << "\"" << tk.string << "\" ";
 		}
 		std::shared_ptr<expression> expr = get_expression_from_tokens(tks);
-		std::cout << expr->to_string();
 		if (expr) {
+			std::cout << expr->to_string();
 			out.pattern.emplace_back(expr);
 		}
 		return out;
