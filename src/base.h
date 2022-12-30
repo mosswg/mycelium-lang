@@ -496,6 +496,7 @@ namespace mycelium {
 			if (is_expression) {
 				return expr->to_string();
 			}
+			return oper;
 		}
 	};
 
@@ -547,6 +548,16 @@ namespace mycelium {
 
 		static pattern_match create_from_tokens(const std::vector<token>& tks) {
 			return create_from_tokens(tks, 0, (int)tks.size());
+		}
+
+		std::string to_string() const {
+			std::string out;
+
+			for (const auto& pt : pattern) {
+				out += "\t" + pt.to_string() + "\n";
+			}
+
+			return out;
 		}
 
 		std::vector<std::shared_ptr<expression>> get_expressions() {
@@ -940,27 +951,27 @@ namespace mycelium {
 		}
 
 		std::string to_string() const override {
-			return "Conditional: To String Not Implemented";
-			//			std::string out = "conditional ";
-			//			out += name.string;
-			//			out += '(';
-			//			for (int i = 0; i < args.pattern.size(); i++) {
-			//                if ()
-			//				out += args.pattern[i].;
-			//				if (i < args.size()-1) {
-			//					out += ", ";
-			//				}
-			//			}
-			//			out += ')';
-			//			out += ": ";
-			//			for (int i = 0; i < ret.size(); i++) {
-			//				out += ret[i].name;
-			//				if (i < ret.size()-1) {
-			//					out += ", ";
-			//				}
-			//			}
-			//
-			//			return out;
+			std::string out = "conditional ";
+			out += name.string;
+			out += '(';
+			for (const auto & arg : args.pattern) {
+				if (arg.is_expression) {
+					out += arg.expr->to_string();
+				}
+				else {
+					out += arg.oper;
+				}
+			}
+			out += ')';
+			out += ": ";
+			for (int i = 0; i < ret.size(); i++) {
+				out += ret[i].name;
+				if (i < ret.size()-1) {
+					out += ", ";
+				}
+			}
+
+			return out;
 		}
 
 		void execute() override {
@@ -1006,6 +1017,13 @@ namespace mycelium {
 			for (auto& arg : args) {
 				out += arg->to_string() + " ";
 			}
+
+			out += ": Body:\n";
+
+			for (auto& pt : args[0]->get_value()->fn_ptr->body) {
+				out += "\t" + pt->to_string() + "\n";
+			}
+
 			return out;
 		}
 
