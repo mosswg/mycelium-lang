@@ -213,6 +213,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::find_ops_in(int number_o
 
 std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_tokens(const std::vector<token>& tks) {
 
+
 	if (tks.empty()) {
 		/// If we have no token then warn and return nothing indicating the expression is invalid
 		warn("No tokens passed to get_expression", token());
@@ -230,27 +231,27 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 
 	if (tks.front().string == "(" && tks.back().string == ")") {
 		int search_depth = 0;
-std::string opening_grouping = "(";
-std::string closing_grouping = ")";
+		std::string opening_grouping = "(";
+		std::string closing_grouping = ")";
 
-std::vector<token> out;
-int current_token_index = 1;
-while (!(search_depth == 0 && tks[current_token_index].string == closing_grouping) && current_token_index < tks.size()) {
-if (tks[current_token_index].string == opening_grouping) {
-search_depth++;
-}
-else if (tks[current_token_index].string == closing_grouping) {
-search_depth--;
-}
-out.push_back(tks[current_token_index]);
-current_token_index++;
-}
+		std::vector<token> out;
+		int current_token_index = 1;
+		while (!(search_depth == 0 && tks[current_token_index].string == closing_grouping) && current_token_index < tks.size()) {
+			if (tks[current_token_index].string == opening_grouping) {
+				search_depth++;
+			}
+			else if (tks[current_token_index].string == closing_grouping) {
+				search_depth--;
+			}
+			out.push_back(tks[current_token_index]);
+			current_token_index++;
+		}
 
-return get_expression_from_tokens(out);
-}
+		return get_expression_from_tokens(out);
+	}
 
-for (auto& op : operators) {
-pattern_match op_use_pattern = this->generate_pattern_from_function(op, tks);
+	for (auto& op : operators) {
+		pattern_match op_use_pattern = this->generate_pattern_from_function(op, tks);
 		if (op->args.is_match(op_use_pattern)) {
 			return std::make_shared<operator_use>(op, op_use_pattern.get_expressions());
 		}
@@ -643,7 +644,6 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 
 	std::vector<std::vector<token>> landmark_chunks;
 	std::vector<int> desired_chunk_sizes = {0};
-	int current_desired_chunk_size;
 	int number_of_chunks = 1;
 	std::vector<token> landmarks;
 
@@ -695,7 +695,6 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 		}
 	}
 
-
 	if (number_of_chunks != landmark_chunks.size()) {
 		return {};
 	}
@@ -726,11 +725,6 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 		}
 	}
 
-	/// If our number of landmark chunks and our landmarks differ then we have a non-matching pattern
-	if ((landmark_chunk_expressions.size() - 1) != landmarks.size()) {
-		return {};
-	}
-
 	pattern_match out;
 
 	int expr_index = 0;
@@ -749,7 +743,6 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
 	tokenizer.current_token_index--;
 	mycelium::token next_token = tokenizer.get_next_token();
-
 
 	if (!tokenizer.has_next_token() || tokenizer.get_next_token_without_increment().string != "(") {
 		auto var = get_word_variable(next_token);
@@ -965,6 +958,11 @@ void mycelium::parser::execute() {
 		std::vector<std::shared_ptr<variable>> args;
 		if (mycelium::show_debug_lines) {
 			std::cout << "Calling main function:\n";
+			for (auto &pt: main->body) {
+				if (pt.get()) {
+					std::cout << pt->to_string() << "\n";
+				}
+			}
 		}
 		main->call(args);
 	}
