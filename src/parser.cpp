@@ -493,8 +493,7 @@ std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_bod
 		throw_error("operator definitions must contain a context", keyword_token);
 	}
 
-	// Ignore whitespace
-	next_token = tokenizer.get_next_non_whitespace_token();
+	next_token = tokenizer.get_next_token();
 
 	if (next_token.string == "<") {
 		for (auto& token : find_in_grouping(tokenizer.current_token_index, "<", ">")) {
@@ -512,6 +511,7 @@ std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_bod
 			context.push_back(token);
 		}
 		ret.clear();
+		tokenizer.current_token_index--;
 	}
 
 	pattern_match context_pattern = pattern_match::create_from_tokens(context);
