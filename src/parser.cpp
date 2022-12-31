@@ -538,9 +538,8 @@ std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_bod
 
 	if (show_debug_lines) {
 		std::cout << "\n";
+		std::cout << "Parsed Operator: " << out->to_string() << std::endl;
 	}
-
-	std::cout << "Parsed Operator: " << out->to_string() << std::endl;
 
 	return out;
 }
@@ -675,12 +674,8 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 	if (landmarks.empty()) {
 		landmark_chunks.emplace_back();
 		pattern_match out;
-		for (auto& tk : tks) {
-			std::cout << "\"" << tk.string << "\" ";
-		}
 		std::shared_ptr<expression> expr = get_expression_from_tokens(tks);
 		if (expr) {
-			std::cout << expr->to_string();
 			out.pattern.emplace_back(expr);
 		}
 		return out;
@@ -1044,6 +1039,14 @@ std::shared_ptr<mycelium::variable> builtin_gt_int(std::vector<std::shared_ptr<m
 	return mycelium::constant::make_constant(args[0]->value > args[1]->value);
 }
 
+std::shared_ptr<mycelium::variable> builtin_leq_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	return mycelium::constant::make_constant(args[0]->value <= args[1]->value);
+}
+
+std::shared_ptr<mycelium::variable> builtin_geq_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	return mycelium::constant::make_constant(args[0]->value >= args[1]->value);
+}
+
 std::shared_ptr<mycelium::variable> builtin_add_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
 	return mycelium::constant::make_constant(args[0]->value + args[1]->value);
 }
@@ -1100,6 +1103,12 @@ std::shared_ptr<mycelium::variable> builtin_minus_equals_int(std::vector<std::sh
 	return args[0];
 }
 
+std::shared_ptr<mycelium::variable> builtin_multiply_equals_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	args[0]->value = args[0]->value * args[1]->value;
+
+	return args[0];
+}
+
 std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_operators() {
 	std::vector<std::shared_ptr<operatr>> out;
 
@@ -1147,6 +1156,10 @@ std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_op
 	);
 
 	out.push_back(
+			std::make_shared<builtin_operator>("*=", std::vector<token>({token("int"), token("a"), token("*="), token("int"), token("b")}), "builtin_multiply_eq_int", std::vector<type>({type::integer}), builtin_multiply_equals_int, 99, generate_new_scope())
+	);
+
+	out.push_back(
 			std::make_shared<builtin_operator>("-=", std::vector<token>({token("int"), token("a"), token("-="), token("int"), token("b")}), "builtin_minus_eq_int", std::vector<type>({type::integer}), builtin_minus_equals_int, 99, generate_new_scope())
 	);
 
@@ -1174,8 +1187,18 @@ std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_op
 	);
 
 	out.push_back(
-			std::make_shared<builtin_operator>("<", std::vector<token>({token("int"), token("a"), token(">"), token("int"), token("b")}), "builtin_gt_int", std::vector<type>({type::boolean}),
+			std::make_shared<builtin_operator>(">", std::vector<token>({token("int"), token("a"), token(">"), token("int"), token("b")}), "builtin_gt_int", std::vector<type>({type::boolean}),
 											   builtin_gt_int, 50, generate_new_scope())
+	);
+
+	out.push_back(
+			std::make_shared<builtin_operator>("<=", std::vector<token>({token("int"), token("a"), token("<="), token("int"), token("b")}), "builtin_leq_int", std::vector<type>({type::boolean}),
+											   builtin_leq_int, 50, generate_new_scope())
+	);
+
+	out.push_back(
+			std::make_shared<builtin_operator>(">", std::vector<token>({token("int"), token("a"), token(">="), token("int"), token("b")}), "builtin_geq_int", std::vector<type>({type::boolean}),
+											   builtin_geq_int, 50, generate_new_scope())
 	);
 
 	/// Bools
