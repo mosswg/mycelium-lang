@@ -40,7 +40,7 @@
 ## Syntax
 Note: This is a work in progress and is completely subject to change.
 ### Variables
-Variables are decalred with a [type](#Types) which define how they function. 
+Variables are decalred with a [type](#Types) which define how they function.
 e.g.
 
 ``` c++
@@ -66,9 +66,9 @@ var1 = 5;
 
 
 ### Functions
-Functions are decalred with the `func` keyword. 
-Then return types and amount are defined. 
-This can be omitted if the function does not return anything. 
+Functions are decalred with the `func` keyword.
+Then return types and amount are defined.
+This can be omitted if the function does not return anything.
 Next the function name is defined. Then the arguments.
 
 e.g. a function that takes two `int`s and returns two `int`s
@@ -104,27 +104,28 @@ A function can also use custom argument syntax
 e.g. a function that uses semi-colons instead of commas
 
 ``` c++
-pattern func my_semi_colon_func(int a; int b) {
+func my_semi_colon_func(int a; int b) {
 	...
 }
 ```
 or a function could take arguments in the form of a string
 
 ``` c++
-pattern func my_patterned_func(My arguments are int a and string b) {
+func my_patterned_func(My arguments are int a and string b) {
 	...
 }
 
 my_patterned_func(My arguments are 5 and "Test")
 ```
+From a technical perpective all functions use patterns, they just tend to use a comma as a separator.
 #### Conditionals
-A function can use the special keyword `cn` and then is a conditional which takes a function and any other arguments. 
+A function can use the special keyword `cn` and then is a conditional which takes a function and any other arguments.
 It should return a boolean to indicate that the condition was true. This can be used to define custom if statements
 e.g. a conditional that takes a string and executes the code if the string is empty
 ``` c++
-cond if_empty_string(func func, string str) {
+cond if_empty_string(function fn, string str) {
 	if (str.is_empty()) {
-		func.run();
+		fn.run();
 		return true;
 	}
 	return false;
@@ -140,14 +141,14 @@ else {
 ```
 #### Loops
 Using the conditional function type and the conditional argument type a loop can be made.
-Note: infinite recursion will not result in a stack overflow but will cause errors after 18 quintillion times (when the recursion counter goes negative). 
+Note: infinite recursion will not result in a stack overflow but will cause errors after 18 quintillion times (when the recursion counter goes negative).
 
 e.g. A loop that runs n number of times
 ```c++
-cond loop_n_times(func func, int counter) {
+cond loop_n_times(function fn, int counter) {
 	if (counter != 0) {
-		func.run();
-		loop_n_times(func, counter - 1);
+		fn.run();
+		loop_n_times(fn, counter - 1);
 	}
 	return false;
 }
@@ -182,7 +183,7 @@ Which turns into
 ```
 {variable(int), string("++")}
 ```
-This is exactly the same so we can say they match. This does pose an issue. Let's say we have the pattern:
+This is exactly the same as when they're defined so we can say they match. This does pose an issue. Let's say we have the pattern:
 ```
 {variable(int), string("+"), variable(int))}
 ```
@@ -197,7 +198,7 @@ We want to say this matches because ``value - 1`` can be turned into an integer 
 {variable(int), string("+"), variable(int), string("-"), variable(int)}
 ```
 The solution to this is instead of creating two independent patterns we can use one to create the other.
-By useing expressions rather than variables and finding landmark of the first pattern we can check not only if the current state of the program match but also if any other lossless conversion could match.
+By using expressions rather than variables and finding landmark of the first pattern we can check not only if the current state of the program match but also if any other lossless conversion could match.
 For Example with the same pattern:
 ```
 {variable(int), string("+"), variable(int))}
@@ -234,7 +235,7 @@ Then our final pattern from the program is:
 All syntax here is in development and is most likely going to change.
 ### Polymorphism
 A function can be declared multiple times with different arguments and do different things based on which arguments it are used.
-e.g. two print functions that take a string and an int could be decalred as. 
+e.g. two print functions that take a string and an int could be decalred as.
 ``` c++
 func print(string str) {
     ...
@@ -246,12 +247,12 @@ func print(int num) {
     ...
 }
 ```
-They would compile to
+They could compile to (this is not implemented)
 
 ``` asm
 print_ret_void_arg_string:
 ```
-and 
+and
 
 ``` asm
 print_ret_void_arg_int:
@@ -283,7 +284,7 @@ div_ret_int_arg_int_int:
 	...
 	ret
 ```
-and 
+and
 
 ``` asm
 div_ret_int_int_arg_int_int:
@@ -380,8 +381,8 @@ mov     rbx, 1
 add     rax, rbx
 ```
 
-### Special Case 
-#### This might not be implemented
+### Special Case
+#### Warning: This might not be implemented
 a function can be defined as normal, then a special case can be added to do something when a certain value is passed
 e.g. a function to get the digits in a number can be defined as
 ``` c++
@@ -407,5 +408,5 @@ sc int digits(num = 0) {
 
  ## Contributors
  - Moss Gallagher - [mossx-dev](https://github.com/mossx-dev)
- 
- 
+
+
