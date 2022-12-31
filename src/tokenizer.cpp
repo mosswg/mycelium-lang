@@ -17,10 +17,10 @@ void mycelium::tokenizer::tokenize() {
 	std::vector<std::string> split_groups = {};
 
 	split_groups.insert(split_groups.end(), token::whitespace_strings.begin(), token::whitespace_strings.end());
+	split_groups.insert(split_groups.end(), token::oper_strings.begin(), token::oper_strings.end());
 	split_groups.insert(split_groups.end(), token::grouping_strings.begin(), token::grouping_strings.end());
 	split_groups.insert(split_groups.end(), token::separator_strings.begin(), token::separator_strings.end());
 	split_groups.insert(split_groups.end(), token::comment_strings.begin(), token::comment_strings.end());
-	split_groups.insert(split_groups.end(), token::oper_strings.begin(), token::oper_strings.end());
 
 	for (auto& line : lines) {
 		split_lines.push_back(string_split(line, split_groups));

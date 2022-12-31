@@ -68,7 +68,7 @@ void mycelium::initialize_static_values() {
 	token::line_end.insert(token::line_end.end(), {"\n"});
 	token::separator_strings.insert(token::separator_strings.end(), {";", ","});
 	token::comment_strings.insert(token::comment_strings.end(), {token::line_comment, token::open_block_comment, token::close_block_comment});
-	token::oper_strings.insert(token::oper_strings.end(), {"++", "--", "+=", "-=", "+", "-", "*", "/", "%", "==", "=", "!=", "<=", ">=",
+	token::oper_strings.insert(token::oper_strings.end(), {"++", "--", "+=", "*=", "-=", "+", "-", "*", "/", "%", "==", "!=", "<=", ">=", "=",
 														   "&&", "||", "!", "<<", ">>", "&", "|", "~"});
 
 	token::string_lists.insert(token::string_lists.end(), {token::oper_strings, token::whitespace_strings,
