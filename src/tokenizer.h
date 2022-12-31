@@ -25,6 +25,8 @@ namespace mycelium {
 
 		token get_next_token_without_increment() const;
 
+		token get_current_token() const;
+
 		token get_next_non_whitespace_token();
 
 		std::vector<mycelium::token> get_next_non_whitespace_tokens_until(const std::string& until);

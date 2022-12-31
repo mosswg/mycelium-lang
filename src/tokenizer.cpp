@@ -89,6 +89,10 @@ mycelium::token mycelium::tokenizer::get_next_token_without_increment() const {
 	return this->tokens[current_token_index];
 }
 
+mycelium::token mycelium::tokenizer::get_current_token() const {
+	return this->tokens[current_token_index-1];
+}
+
 mycelium::token mycelium::tokenizer::get_next_non_whitespace_token() {
 	if (current_token_index >= this->tokens.size()) {
 		return {};
