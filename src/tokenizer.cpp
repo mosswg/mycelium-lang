@@ -37,7 +37,7 @@ void mycelium::tokenizer::tokenize() {
 			}
 			// Handle string literals with spaces in them
 			if (token_string.front() == '"' && (token_string.back() != '"' || (token_string.size() == 1))) {
-				for (int j = 1; j < i + line.size(); i++) {
+				for (int j = 1; (j + i) < line.size(); j++) {
 					if (line[i + j].back() == '"') {
 						token_string.append(line[i + j]);
 						i += j;

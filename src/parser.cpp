@@ -329,9 +329,8 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token() {
 				std::cout << "\"" << tk.string << "\" ";
 			}
 
-			std::cout << op->to_string();
-
 			if (op) {
+				std::cout << op->to_string();
 				std::cout << " = " << op->get_value()->get_as_string() << "\n";
 				tokenizer.skip_to_newline();
 				return op;
