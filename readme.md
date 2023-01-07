@@ -1,9 +1,5 @@
  # Mycelium
- Mycelium will be a language built with scripting principles like lists, automatic types, multiple return values, etc. but the language will ultimately be converted to assembly to be compiled and run natively. Mycelium will be a compiled dynamic language.
-
- ## std library
- The Mycelium std library has now been removed and will be rewritten in Mycelium on the language is useable. <br>
- The old version of std library has been moved to [Mycore](https://github.com/mossx-dev/Mycore)
+ mycelium is an in-progress language built with scripting principles like lists, automatic types, multiple return values, etc. but the language will ultimately be compiled and run natively. Currently there is a partially usable interpreter written in c++.
 
 ## Milestones
 - [x] tokenizer
@@ -26,7 +22,7 @@
   - [x] user defined functions
   - [x] std operations (e.g. adding ints)
   - [ ] user defined classes
-  - [ ] user defined operations
+  - [x] user defined operations
 - [ ] type checker
 - [ ] compiler
   - [ ] std functions (e.g. print)
@@ -119,7 +115,7 @@ my_patterned_func(My arguments are 5 and "Test")
 ```
 From a technical perpective all functions use patterns, they just tend to use a comma as a separator.
 #### Conditionals
-A function can use the special keyword `cn` and then is a conditional which takes a function and any other arguments.
+A function can use the special keyword `cond` and then is a conditional which takes a function and any other arguments.
 It should return a boolean to indicate that the condition was true. This can be used to define custom if statements
 e.g. a conditional that takes a string and executes the code if the string is empty
 ``` c++
@@ -141,7 +137,6 @@ else {
 ```
 #### Loops
 Using the conditional function type and the conditional argument type a loop can be made.
-Note: infinite recursion will not result in a stack overflow but will cause errors after 18 quintillion times (when the recursion counter goes negative).
 
 e.g. A loop that runs n number of times
 ```c++
