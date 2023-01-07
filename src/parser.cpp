@@ -211,6 +211,20 @@ std::shared_ptr<mycelium::expression> mycelium::parser::find_ops_in(int number_o
 	return operator_uses.front();
 }
 
+
+std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_single_token(const token& tk) {
+	for (auto& op : operators) {
+		pattern_match op_use_pattern = this->generate_pattern_from_function(op, tk);
+		if (op->args.is_match(op_use_pattern)) {
+			return std::make_shared<operator_use>(op, op_use_pattern.get_expressions());
+		}
+	}
+
+	/// If no matching operators are found we return an empty expression.
+	return {};
+}
+
+
 std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_tokens(const std::vector<token>& tks) {
 
 
@@ -221,12 +235,12 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 	}
 
 	if (tks.size() == 1) {
-		/// If all we have is a single token we want to return that as either a variable or nothing
+		/// If all we have is a single token we want to try to match that to a pattern or return that as either a variable or nothing
 		auto pt = get_pattern_token(tks[0]);
 		if (pt.is_expression) {
 			return pt.expr;
 		}
-		return {};
+		return get_expression_from_single_token(tks[0]);
 	}
 
 	if (tks.front().string == "(" && tks.back().string == ")") {
@@ -627,6 +641,60 @@ std::shared_ptr<mycelium::variable> mycelium::parser::parse_variable(int variabl
 	return current_scope->make_variable(tokenizer.get_next_token(), type::types[variable_type]);
 }
 
+
+
+mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const std::shared_ptr<mycelium::function_base>& fn, const mycelium::token& tk) {
+
+	// We convert the single token (e.g. "1+2") into multiple if possible
+	// For example with the operator int + int we would convert it into "1", "+", "2" and then pass it on to the multiple token function
+
+	std::vector<int> landmark_positions = {0};
+	std::vector<token> tokens;
+
+	for (auto & arg : fn->args.pattern) {
+		if (!arg.is_expression) {
+			unsigned long pos;
+			if (!landmark_positions.empty()) {
+				if ((pos = tk.string.find(arg.oper, landmark_positions.back())) != std::string::npos) {
+					if (pos != 0) {
+						tokens.emplace_back(tk.string.substr(landmark_positions.back(), pos - landmark_positions.back()));
+					}
+					tokens.emplace_back(tk.string.substr(pos, arg.oper.length()));
+
+					landmark_positions.push_back(pos + arg.oper.length());
+				}
+			}
+			else {
+				if ((pos = tk.string.find(arg.oper, 0) != std::string::npos)) {
+					if (pos != 0) {
+						tokens.emplace_back(tk.string.substr(0, pos));
+					}
+					tokens.emplace_back(tk.string.substr(pos, arg.oper.length()));
+
+					landmark_positions.push_back(pos + arg.oper.length());
+				}
+			}
+		}
+	}
+
+
+
+	if (tokens.empty()) {
+		return {};
+	}
+
+	if (landmark_positions.back() != tk.string.length()) {
+		tokens.emplace_back(tk.string.substr(landmark_positions.back()));
+	}
+
+
+	// We pass the vector of tokens to the multiple token function.
+	// This way we avoid repeating ourselves. Its possible that it would be easier to do things separately
+	// but I don't feel like doing that.
+	return generate_pattern_from_function(fn, tokens);
+}
+
+
 mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const std::shared_ptr<mycelium::function_base>& fn, const std::vector<mycelium::token>& tks) {
 	if (fn->args.pattern.empty()) {
 		if (tks.empty()) {
@@ -794,7 +862,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
 		for (auto& cn : conditionals) {
 			if (cn->name == next_token) {
 				pattern_match cn_call_pattern = this->generate_pattern_from_function(cn, inside_grouping);
-				if (cn->args.is_match(cn_call_pattern)) {
+ 				if (cn->args.is_match(cn_call_pattern)) {
 					conds.push_back(cn);
 					cond_call_patterns.push_back(cn_call_pattern);
 				}

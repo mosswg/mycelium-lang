@@ -427,6 +427,16 @@ namespace mycelium {
 		static std::shared_ptr<constant> make_constant(const std::string& value) {
 			return std::make_shared<constant>(value);
 		}
+
+		std::string to_string() const override {
+			std::string out = "constant ";
+			out += type.name;
+			out += ' ';
+			out += token.string;
+			out += ": ";
+			out += get_as_string();
+			return out;
+		}
 	};
 
 	class scope {

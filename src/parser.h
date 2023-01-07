@@ -94,9 +94,13 @@ namespace mycelium {
 
 		std::vector<std::shared_ptr<mycelium::conditional>> create_base_conditionals();
 
-		pattern_match
-		generate_pattern_from_function(const std::shared_ptr<mycelium::function_base> &fn,
+		pattern_match generate_pattern_from_function(const std::shared_ptr<mycelium::function_base> &fn,
 					       const std::vector<mycelium::token> &tks);
+
+		pattern_match generate_pattern_from_function(const std::shared_ptr<mycelium::function_base> &fn,
+					       const mycelium::token& tk);
+
+		std::shared_ptr<expression> get_expression_from_single_token(const token &tk);
 
 		std::shared_ptr<expression> get_expression_from_tokens(const std::vector<token> &tks);
 
