@@ -287,7 +287,11 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 		}
 	}
 
-	/// If no matching operators are found we return an empty expression.
+	/// If no matching operators are found we check for functions
+	if (tks[1].string == "(") {
+		return get_function(tks, 0);
+	}
+
 	return {};
 }
 
@@ -650,7 +654,7 @@ void mycelium::parser::find_function_declarations() {
 std::shared_ptr<mycelium::variable> mycelium::parser::parse_variable(int variable_type) {
 
 	if (show_debug_lines) {
-		//std::cout << "parsing variable: type: " << tokenizer.get_next_token_without_increment().string << "\tname: " << tokenizer.tokens[tokenizer.current_token_index+1].string << std::endl;
+		std::cout << "parsing variable: type: " << type::types[variable_type].name << "\tname: " << tokenizer.tokens[tokenizer.current_token_index].string << std::endl;
 	}
 
 	return current_scope->make_variable(tokenizer.get_next_token(), type::types[variable_type]);
@@ -818,6 +822,113 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 	return out;
 }
 
+
+std::shared_ptr<mycelium::expression> mycelium::parser::get_function(const std::vector<token>& tks, int index) {
+	token name = tks[index++];
+
+
+	int search_depth = 0;
+	std::string opening_grouping = tks[index++].string;
+	std::string closing_grouping = token::get_closing_grouping(opening_grouping);
+	int closing_grouping_index = index;
+
+	while (!(search_depth == 0 && tks[closing_grouping_index].string == closing_grouping) && index < tks.size()) {
+		if (tks[closing_grouping_index].string == opening_grouping) {
+			search_depth++;
+		}
+		else if (tks[closing_grouping_index].string == closing_grouping) {
+			search_depth--;
+		}
+		closing_grouping_index++;
+	}
+
+	std::vector<token> inside_grouping;
+
+	for (int i = index; i < closing_grouping_index; i++) {
+		inside_grouping.push_back(tks[i]);
+	}
+
+	std::vector<std::shared_ptr<function>> funcs;
+	std::vector<pattern_match> func_call_patterns;
+
+	for (auto& fn : functions) {
+		if (fn->name == name) {
+			pattern_match fn_call_pattern = this->generate_pattern_from_function(fn, inside_grouping);
+			if (fn->args.is_match(fn_call_pattern)) {
+				funcs.push_back(fn);
+				func_call_patterns.push_back(fn_call_pattern);
+			}
+		}
+	}
+
+
+	index = closing_grouping_index + 1;
+	if (funcs.empty()) {
+		std::vector<std::shared_ptr<conditional>> conds;
+		std::vector<pattern_match> cond_call_patterns;
+		for (auto& cn : conditionals) {
+			if (cn->name == name) {
+				pattern_match cn_call_pattern = this->generate_pattern_from_function(cn, inside_grouping);
+ 				if (cn->args.is_match(cn_call_pattern)) {
+					conds.push_back(cn);
+					cond_call_patterns.push_back(cn_call_pattern);
+				}
+			}
+		}
+
+		if (!conds.empty()) {
+			// Assume there is only one match for conditionals
+			if (conds.size() != 1) {
+				// Only output the first two because
+				throw_error("Ambiguous Function Call Between " + conds[0]->to_string() + " and " + conds[1]->to_string(), name);
+			}
+			std::shared_ptr<conditional> cn = conds[0];
+			if (tks[index].string == "{") {
+				int starting_body_location = index;
+				// TODO: Make this get the right thing. (Just look at it you'll know)
+				int ending_body_location = index;
+				std::shared_ptr<mycelium::scope> pushed_scope = current_scope;
+				std::shared_ptr<mycelium::scope> body_scope = generate_new_scope();
+				change_scope(body_scope);
+				std::vector<std::shared_ptr<parsed_token>> call_body = parse_tokens(starting_body_location + 1, ending_body_location - 1);
+				change_scope(pushed_scope);
+				index = ending_body_location + 1;
+
+				/// Create an anonymous function with body of the conditional statement and pass that as the first argument
+				std::vector<std::shared_ptr<expression>> cn_call_expressions({function::make_anonymous_function(call_body, {}, {}, body_scope)});
+				std::vector<std::shared_ptr<expression>> cn_pattern_expressions = cond_call_patterns[0].get_expressions();
+				cn_call_expressions.insert(cn_call_expressions.end(), cn_pattern_expressions.begin(), cn_pattern_expressions.end());
+
+				return std::make_shared<conditional_call>(cn, cn_call_expressions, body_scope);
+			}
+			else {
+				throw_error("Conditional Call Must Have Body", name);
+			}
+		}
+		else {
+			pattern_match fn_call_pattern = get_pattern_from_tokens(inside_grouping);
+			std::string pattern_string;
+			for (auto &arg: fn_call_pattern.pattern) {
+				if (arg.is_expression) {
+					pattern_string += arg.expr->get_type().name + ' ';
+				} else {
+					pattern_string += arg.oper + ' ';
+				}
+			}
+			throw_error("Unknown function or conditional \"" + name.string + "(" + pattern_string + ")", name);
+		}
+	}
+	else if (funcs.size() == 1) {
+		return std::make_shared<function_call>(funcs[0], func_call_patterns[0].get_expressions());
+	}
+	else {
+		/// TODO: Decide if this should be an error or a warning
+		throw_error("Ambiguous Function Call Between " + funcs[0]->to_string() + " and " + funcs[1]->to_string(), name);
+	}
+
+	return {};
+}
+
 std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
 	tokenizer.current_token_index--;
 	mycelium::token next_token = tokenizer.get_next_token();
@@ -830,6 +941,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
 				throw_error("Unknown word \"" + next_token.string + "\"", next_token);
 			}
 		}
+		std::cout << "FOI\n";
 		std::shared_ptr<expression> op = find_ops_in(tokenizer.num_tokens_until_newline());
 		if (op) {
 			return op;
@@ -843,112 +955,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
 		}
 	}
 
-	/// TODO: Change this to work like operators:
-	///     Loop through all the functions and check if this could be a match
-	///     Using this we can handle things like expression inside of patterns
-	///     ...
-	///     Although expression inside of patterns don't work for operators they
-	///     just call more operators. I think the current system works fine for now
-	int close_grouping_index = tokenizer.get_ending_grouping_token_index();
-
-	std::vector<token> inside_grouping;
-
-	for (int i = tokenizer.current_token_index; i < close_grouping_index; i++) {
-		inside_grouping.push_back(tokenizer.tokens[i]);
-	}
-
-	std::vector<std::shared_ptr<function>> funcs;
-	std::vector<pattern_match> func_call_patterns;
-
-	for (auto& fn : functions) {
-		if (fn->name == next_token) {
-			pattern_match fn_call_pattern = this->generate_pattern_from_function(fn, inside_grouping);
-			if (fn->args.is_match(fn_call_pattern)) {
-				funcs.push_back(fn);
-				func_call_patterns.push_back(fn_call_pattern);
-			}
-		}
-	}
-
-
-	tokenizer.current_token_index = close_grouping_index + 1;
-	if (funcs.empty()) {
-		std::vector<std::shared_ptr<conditional>> conds;
-		std::vector<pattern_match> cond_call_patterns;
-		for (auto& cn : conditionals) {
-			if (cn->name == next_token) {
-				pattern_match cn_call_pattern = this->generate_pattern_from_function(cn, inside_grouping);
- 				if (cn->args.is_match(cn_call_pattern)) {
-					conds.push_back(cn);
-					cond_call_patterns.push_back(cn_call_pattern);
-				}
-			}
-		}
-
-		if (!conds.empty()) {
-			// Assume there is only one match for conditionals
-			if (conds.size() != 1) {
-				// Only output the first two because
-				throw_error("Ambiguous Function Call Between " + conds[0]->to_string() + " and " + conds[1]->to_string(), next_token);
-			}
-			std::shared_ptr<conditional> cn = conds[0];
-			if (this->tokenizer.get_next_token_without_increment().string == "{") {
-				int starting_body_location = tokenizer.current_token_index;
-				int ending_body_location = tokenizer.get_ending_grouping_token_index();
-				std::shared_ptr<mycelium::scope> pushed_scope = current_scope;
-				std::shared_ptr<mycelium::scope> body_scope = generate_new_scope();
-				change_scope(body_scope);
-				std::vector<std::shared_ptr<parsed_token>> call_body = parse_tokens(starting_body_location + 1, ending_body_location - 1);
-				change_scope(pushed_scope);
-				tokenizer.current_token_index = ending_body_location + 1;
-
-				/// Create an anonymous function with body of the conditional statement and pass that as the first argument
-				std::vector<std::shared_ptr<expression>> cn_call_expressions({function::make_anonymous_function(call_body, {}, {}, body_scope)});
-				std::vector<std::shared_ptr<expression>> cn_pattern_expressions = cond_call_patterns[0].get_expressions();
-				cn_call_expressions.insert(cn_call_expressions.end(), cn_pattern_expressions.begin(), cn_pattern_expressions.end());
-
-				return std::make_shared<conditional_call>(cn, cn_call_expressions, body_scope);
-			}
-			else {
-				throw_error("Conditional Call Must Have Body", next_token);
-			}
-		}
-		else {
-			pattern_match fn_call_pattern = get_pattern_from_tokens(inside_grouping);
-			std::string pattern_string;
-			for (auto &arg: fn_call_pattern.pattern) {
-				if (arg.is_expression) {
-					pattern_string += arg.expr->get_type().name + ' ';
-				} else {
-					pattern_string += arg.oper + ' ';
-				}
-			}
-			throw_error("Unknown function or conditional \"" + next_token.string + "(" + pattern_string + ")", next_token);
-		}
-	}
-	else if (funcs.size() == 1) {
-		return std::make_shared<function_call>(funcs[0], func_call_patterns[0].get_expressions());
-	}
-	else {
-		/// TODO: Decide if this should be an error
-		///         Having it just assume that you want the pattern match version could be very confusing.
-		///         It would probably be best to make it an error to declare an ambiguous functions and
-		///         then we won't have to deal with it here.
-		int longest_call_index = 0;
-		for (int i = 0; i < funcs.size(); i++) {
-			if ((funcs[longest_call_index]->args.pattern.size() < funcs[i]->args.pattern.size())) {
-				longest_call_index = i;
-				continue;
-			}
-
-			if (funcs[longest_call_index]->args.pattern.size() == funcs[i]->args.pattern.size()) {
-				throw_error("Ambiguous Function Call Between " + funcs[longest_call_index]->to_string() + " and " + funcs[i]->to_string(), next_token);
-			}
-		}
-		return std::make_shared<function_call>(function_call(funcs[longest_call_index], func_call_patterns[longest_call_index].get_expressions()));
-	}
-
-	return {};
+	return get_function(tokenizer.tokens, tokenizer.current_token_index - 1);
 }
 
 //bool mycelium::parser::can_match_pattern(const mycelium::pattern_match& match, const mycelium::pattern_match& other) {
