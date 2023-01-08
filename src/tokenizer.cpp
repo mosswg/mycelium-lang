@@ -182,7 +182,7 @@ bool mycelium::tokenizer::has_next_token() const {
 int mycelium::tokenizer::num_tokens_until_newline() {
 	int pushed_index = this->current_token_index;
 	int count, current_line = this->tokens[current_token_index - 1].line;
-	for (count = 0; this->get_next_token().line == current_line; count++);
+	for (count = 0; this->get_next_token().line == current_line && this->get_next_token().string != ";"; count++);
 	this->current_token_index = pushed_index;
 	return count;
 }
@@ -196,6 +196,9 @@ std::vector<mycelium::token> mycelium::tokenizer::tokens_until_newline() {
 	/// If we're on the last line we just want to return the remaining tokens
 	if (this->tokens[current_token_index - 1].line == this->tokens.back().line) {
 		for (int i = current_token_index; i < this->tokens.size(); i++) {
+			if (tokens[i].string == ";") {
+				break;
+			}
 			out.push_back(tokens[i]);
 		}
 		this->current_token_index = pushed_index;
@@ -204,7 +207,7 @@ std::vector<mycelium::token> mycelium::tokenizer::tokens_until_newline() {
 
 
 	token next;
-	for (count = 0; (next = this->get_next_token()).line == current_line; count++) {
+	for (count = 0; (next = this->get_next_token()).line == current_line && next.string != ";"; count++) {
 		out.push_back(next);
 	}
 	this->current_token_index = pushed_index;
