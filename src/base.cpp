@@ -41,6 +41,7 @@ std::string mycelium::token::conditional_keyword = "cond";
 std::string mycelium::token::override_keyword = "override";
 std::string mycelium::token::class_keyword = "class";
 std::string mycelium::token::this_keyword = "this";
+std::string mycelium::token::return_keyword = "return";
 
 void mycelium::throw_error(const std::string& error) {
 	std::cerr << "ERROR: " << error << std::endl;
@@ -64,7 +65,7 @@ void mycelium::initialize_static_values() {
 
 	token::whitespace_strings.insert(token::whitespace_strings.end(), {" ", "	"});
 	token::grouping_strings.insert(token::grouping_strings.end(), {"(", ")", "{", "}", "[", "]", "<", ">"});
-	token::keyword_strings.insert(token::keyword_strings.end(), {token::function_keyword, token::operator_keyword, token::conditional_keyword, token::class_keyword, token::override_keyword, token::this_keyword});
+	token::keyword_strings.insert(token::keyword_strings.end(), {token::function_keyword, token::operator_keyword, token::conditional_keyword, token::class_keyword, token::override_keyword, token::this_keyword, token::return_keyword});
 	token::line_end.insert(token::line_end.end(), {"\n"});
 	token::separator_strings.insert(token::separator_strings.end(), {";", ","});
 	token::comment_strings.insert(token::comment_strings.end(), {token::line_comment, token::open_block_comment, token::close_block_comment});

@@ -55,6 +55,7 @@ int main(int argc, char** argv) {
 	parser.parse();
 
 	if (mycelium::show_debug_lines) {
+		std::cout << "Parsed Tokens:\n";
 		for (auto &pt: parser.parsed_tokens) {
 			if (pt.get()) {
 				std::cout << pt->to_string() << "\n";

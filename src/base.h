@@ -81,7 +81,7 @@ namespace mycelium {
 		static std::string override_keyword;
 		static std::string class_keyword;
 		static std::string this_keyword;
-
+		static std::string return_keyword;
 
 
 	public:
@@ -703,6 +703,9 @@ namespace mycelium {
 				}
 				else {
 					out += arg.oper;
+				}
+				if (&arg != &args.pattern.back()) {
+					out += ' ';
 				}
 			}
 			out += ')';
