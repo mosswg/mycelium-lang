@@ -26,6 +26,8 @@ namespace mycelium {
 
 		std::shared_ptr<scope> current_scope;
 
+		std::shared_ptr<function_base> current_parsing_function;
+
 		mycelium::tokenizer tokenizer;
 		mycelium::token search_type;
 		std::string searching_for;
@@ -90,7 +92,7 @@ namespace mycelium {
 
 		pattern_match get_pattern_from_tokens(int start_index, int end_index);
 
-		static void throw_error(const std::string& error, const token& token);
+		void throw_error(const std::string& error, const token& token);
 
 		bool can_match_pattern(const pattern_match& match, const pattern_match& other);
 

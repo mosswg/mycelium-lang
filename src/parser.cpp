@@ -34,7 +34,12 @@ void print_tokens(const std::vector<mycelium::token>& tks) {
 
 
 void mycelium::parser::throw_error(const std::string &error, const token& tk) {
-	std::cerr << "ERROR on line " << tk.line << ": "  << error << std::endl;
+	if (current_parsing_function) {
+		std::cerr << "ERROR in " << current_parsing_function->to_string() << " on line " << tk.line << ": "  << error << std::endl;
+	}
+	else {
+		std::cerr << "ERROR on line " << tk.line << ": "  << error << std::endl;
+	}
 	exit(1);
 }
 
@@ -592,6 +597,9 @@ std::vector<mycelium::token> mycelium::parser::find_in_grouping(int& index, cons
 		else if (tokenizer.tokens[index].string == close) {
 			search_depth--;
 		}
+		else if (tokenizer.tokens[index].string == "\\") {
+			out.push_back(tokenizer.tokens[++index]);
+		}
 		else {
 			out.push_back(tokenizer.tokens[index]);
 		}
@@ -613,15 +621,12 @@ void mycelium::parser::find_function_declarations() {
 			if (current_token.string == token::function_keyword) {
 				tokenizer.current_token_index = i;
 
-				std::shared_ptr<mycelium::function> out = parse_function(false);
-
-				functions.push_back(out);
+				functions.push_back(parse_function(false));
 			}
 			else if (current_token.string == token::operator_keyword) {
 				tokenizer.current_token_index = i;
-				std::shared_ptr<operatr> out = parse_operator(false);
 
-				operators.push_back(out);
+				operators.push_back(parse_operator(false));
 			}
 			else if (current_token.string == token::conditional_keyword) {
 
@@ -637,6 +642,10 @@ void mycelium::parser::find_function_declarations() {
 	for (int i = number_of_builtin_functions; i < functions.size(); i++) {
 		// Change to the function scope so that arguments names will be known
 		change_scope(functions[i]->scope);
+
+		// Change the current parsing function for returns
+		current_parsing_function = functions[i];
+
 		// Parse the body tokens
 		functions[i]->body = parse_tokens(functions[i]->body_start_index + 1, functions[i]->body_end_index - 1);
 	}
@@ -645,6 +654,10 @@ void mycelium::parser::find_function_declarations() {
 	for (int i = number_of_builtin_operators; i < operators.size(); i++) {
 		// Change to the operator scope so that arguments names will be known
 		change_scope(operators[i]->scope);
+
+		// Change the current parsing function for returns
+		current_parsing_function = operators[i];
+
 		// Parse the body tokens
 		operators[i]->body = parse_tokens(operators[i]->body_start_index + 1, operators[i]->body_end_index - 1);
 	}
@@ -665,7 +678,10 @@ std::shared_ptr<mycelium::return_from_function> mycelium::parser::parse_return()
 	std::cout << "\n";
 
 	if (tks.empty()) {
-		return std::make_shared<return_from_function>();
+		if (current_parsing_function->ret.empty()) {
+			return std::make_shared<return_from_function>(current_parsing_function);
+		}
+		throw_error("Mismatch in return types", current_parsing_function->name);
 	}
 	else {
 		bool contains_comma = false;
@@ -678,12 +694,17 @@ std::shared_ptr<mycelium::return_from_function> mycelium::parser::parse_return()
 		}
 
 		if (contains_comma) {
-			throw_error("ERROR: Returning Multiple Values is Not Yet Supported", tks[0]);
+			throw_error("Returning Multiple Values is Not Yet Supported", tks[0]);
 		}
 
 		std::shared_ptr<expression> value = get_expression_from_tokens(tks);
 
-		return std::make_shared<return_from_function>(value);
+
+		if (current_parsing_function->ret.size() == 1 && current_parsing_function->ret[1] == value->get_type()) {
+			return std::make_shared<return_from_function>(current_parsing_function, value);
+		}
+
+		throw_error("Mismatch in return types", current_parsing_function->name);
 	}
 }
 
@@ -977,7 +998,6 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression() {
 				throw_error("Unknown word \"" + next_token.string + "\"", next_token);
 			}
 		}
-		std::cout << "FOI\n";
 		std::shared_ptr<expression> op = find_ops_in(tokenizer.num_tokens_until_newline());
 		if (op) {
 			return op;
@@ -1116,7 +1136,6 @@ std::shared_ptr<mycelium::variable> builtin_println(std::vector<std::shared_ptr<
 	return mycelium::constant::make_constant(0);
 }
 
-
 std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_functions() {
 	std::vector<std::shared_ptr<function>> out;
 
@@ -1139,6 +1158,10 @@ std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_f
 	out.push_back(
 			std::make_shared<builtin_function>("println", std::vector<type>({}), std::vector<type>({type::string}),  builtin_println, generate_new_scope())
 	);
+
+	out.push_back(
+			std::make_shared<builtin_function>("println", std::vector<type>({}), std::vector<type>({type::boolean}),  builtin_println, generate_new_scope())
+				  );
 
 	out.push_back(
 			std::make_shared<builtin_function>("println", std::vector<type>({}), std::vector<type>({}), builtin_println, generate_new_scope())

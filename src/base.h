@@ -567,7 +567,10 @@ namespace mycelium {
 			std::string out;
 
 			for (const auto& pt : pattern) {
-				out += "\t" + pt.to_string() + "\n";
+				out += pt.to_string();
+				if (&pt != &pattern.back()) {
+					out += ' ';
+				}
 			}
 
 			return out;
@@ -657,19 +660,20 @@ namespace mycelium {
 
 	class return_from_function : public expression {
 		public:
+		std::shared_ptr<function_base> fn;
 		std::shared_ptr<expression> return_value;
 
-		return_from_function(const std::shared_ptr<expression>& value) : return_value(value), expression(mycelium::token("return", token_type::keyword), function_return) {}
+		return_from_function(std::shared_ptr<function_base> fn, const std::shared_ptr<expression>& value) : fn(fn), return_value(value), expression(mycelium::token("return", token_type::keyword), function_return) {}
 
 
-		return_from_function() : return_value({}), expression(mycelium::token("return", token_type::keyword), function_return) {}
+		return_from_function(std::shared_ptr<function_base> fn) : fn(fn), return_value({}), expression(mycelium::token("return", token_type::keyword), function_return) {}
 
 		std::string to_string() const override {
 			if (return_value.get()) {
-				return "Return from function with " + return_value->to_string();
+				return "Return from " + fn->to_string() + " with " + return_value->to_string();
 			}
 
-			return "Return from function";
+			return "Return from " + fn->to_string();
 		}
 
 
@@ -736,28 +740,18 @@ namespace mycelium {
 		}
 
 		std::string to_string() const override {
-			std::string out = "function ";
-			out += name.string;
-			out += '(';
-			for (const auto & arg : args.pattern) {
-				if (arg.is_expression) {
-					out += arg.expr->to_string();
+			std::string out = "function";
+			if (!ret.empty()) {
+				out += "<";
+				for (int i = 0; i < ret.size(); i++) {
+					out += ret[i].name;
+					if (i < ret.size()-1) {
+						out += ", ";
+					}
 				}
-				else {
-					out += arg.oper;
-				}
-				if (&arg != &args.pattern.back()) {
-					out += ' ';
-				}
+				out += ">";
 			}
-			out += ')';
-			out += ": ";
-			for (int i = 0; i < ret.size(); i++) {
-				out += ret[i].name;
-				if (i < ret.size()-1) {
-					out += ", ";
-				}
-			}
+			out += name.string + '(' + args.to_string() + ')';
 
 			return out;
 		}
