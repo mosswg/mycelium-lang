@@ -60,6 +60,8 @@ namespace mycelium {
 
 		std::vector<token> find_in_grouping(int& index, const std::string &open, const std::string &close);
 
+		std::shared_ptr<mycelium::return_from_function> parse_return();
+
 		std::shared_ptr<mycelium::variable> parse_variable(int variable_type);
 
 		std::shared_ptr<mycelium::expression> get_function(const std::vector<token>& tks, int index);

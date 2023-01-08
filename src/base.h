@@ -174,6 +174,7 @@ namespace mycelium {
 		expr,
 		oper_use,
 		func_call,
+		function_return,
 		bad
 	};
 
@@ -202,6 +203,8 @@ namespace mycelium {
 	class expression : public parsed_token {
 	public:
 		explicit expression(mycelium::token name) : parsed_token(std::move(name), expr) {}
+
+		explicit expression(mycelium::token name, mycelium::parsed_token_type type) : parsed_token(std::move(name), type) {}
 
 		virtual std::shared_ptr<variable> get_value() = 0;
 
@@ -651,6 +654,45 @@ namespace mycelium {
 		}
 	};
 
+
+	class return_from_function : public expression {
+		public:
+		std::shared_ptr<expression> return_value;
+
+		return_from_function(const std::shared_ptr<expression>& value) : return_value(value), expression(mycelium::token("return", token_type::keyword), function_return) {}
+
+
+		return_from_function() : return_value({}), expression(mycelium::token("return", token_type::keyword), function_return) {}
+
+		std::string to_string() const override {
+			if (return_value.get()) {
+				return "Return from function with " + return_value->to_string();
+			}
+
+			return "Return from function";
+		}
+
+
+		void execute() override {}
+
+		std::shared_ptr<variable> get_value() override {
+			return return_value->get_value();
+		}
+
+		mycelium::type  get_type() override {
+			if (return_value.get()) {
+				return return_value->get_type();
+			}
+
+			return type::none;
+		}
+
+
+		bool is_similar(std::shared_ptr<parsed_token> compare) override {
+			return false;
+		}
+	};
+
 	class function : public function_base {
 	public:
 		function(mycelium::token token, mycelium::token name, std::vector<mycelium::type> ret, pattern_match args, std::shared_ptr<mycelium::scope> scope) :
@@ -729,6 +771,10 @@ namespace mycelium {
 				this->scope->variables[i]->set_value(call_args[i]);
 			}
 			for (auto& pt : body) {
+				if (pt->type == function_return) {
+					auto* return_expression = (return_from_function*)pt.get();
+					return return_expression->get_value();
+				}
 				pt->execute();
 			}
 			/// TODO: Handle user function returns

@@ -320,6 +320,10 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token() {
 				throw_error("Keyword with nothing following found", current_token);
 			}
 
+			if (current_token.string == token::return_keyword) {
+				return parse_return();
+			}
+
 			throw_error("Invalid keyword use", current_token);
 			break;
 		case word:
@@ -649,6 +653,40 @@ void mycelium::parser::find_function_declarations() {
 
 	// Pop the scope back to the old current scope
 	change_scope(pushed_scope);
+}
+
+
+std::shared_ptr<mycelium::return_from_function> mycelium::parser::parse_return() {
+	// Skip the "return" token
+	tokenizer.current_token_index++;
+	std::vector<token> tks = tokenizer.tokens_until_newline();
+	tokenizer.skip_to_newline();
+
+	std::cout << "return tks: ";
+	print_tokens(tks);
+	std::cout << "\n";
+
+	if (tks.empty()) {
+		return std::make_shared<return_from_function>();
+	}
+	else {
+		bool contains_comma = false;
+
+		for (const auto& tk : tks) {
+			if (tk.string == ",") {
+				contains_comma = true;
+				break;
+			}
+		}
+
+		if (contains_comma) {
+			throw_error("ERROR: Returning Multiple Values is Not Yet Supported", tks[0]);
+		}
+
+		std::shared_ptr<expression> value = get_expression_from_tokens(tks);
+
+		return std::make_shared<return_from_function>(value);
+	}
 }
 
 std::shared_ptr<mycelium::variable> mycelium::parser::parse_variable(int variable_type) {
