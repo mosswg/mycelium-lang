@@ -223,6 +223,6 @@ void mycelium::tokenizer::skip_to_newline() {
 		return;
 	}
 
-	for (; this->get_next_token().line == current_line;);
+	for (; this->get_next_token().line == current_line && this->get_current_token().string != ";";);
 	this->current_token_index--;
 }

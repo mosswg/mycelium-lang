@@ -82,7 +82,7 @@ namespace mycelium {
 
 		pattern_match get_pattern_from_tokens(int number_of_tokens);
 
-		pattern_token get_pattern_token(const token &tk);
+		pattern_token get_pattern_token(const std::vector<mycelium::token>& tks, int& index);
 
 		pattern_match get_pattern_from_tokens(int start_index, int end_index);
 

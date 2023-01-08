@@ -21,6 +21,17 @@ void print_the_thing(const std::vector<mycelium::token>& tks) {
 	}
 }
 
+void print_tokens(const std::vector<mycelium::token>& tks) {
+	std::cout << "{";
+	for (const auto& tk : tks) {
+		std::cout << tk.string;
+		if (&tk != &tks.back()) {
+			std::cout << ", ";
+		}
+	}
+	std::cout << "}";
+}
+
 
 void mycelium::parser::throw_error(const std::string &error, const token& tk) {
 	std::cerr << "ERROR on line " << tk.line << ": "  << error << std::endl;
@@ -80,7 +91,8 @@ void mycelium::parser::parse() {
 	}
 }
 
-mycelium::pattern_token mycelium::parser::get_pattern_token(const mycelium::token& tk) {
+mycelium::pattern_token mycelium::parser::get_pattern_token(const std::vector<mycelium::token>& tks, int& index) {
+	token tk = tks[index++];
 	if (tk.type == ttype) {
 		/// Still not sure what the right thing to do about types is but
 		/// I think we should just treat them like string in this case
@@ -98,11 +110,6 @@ mycelium::pattern_token mycelium::parser::get_pattern_token(const mycelium::toke
 		return pattern_token(constant::make_constant(tk.string));
 	} else if (tk.type == grouping) {
 		/// FIXME: Handle Parentheses In Operator
-//    tokenizer.current_token_index--;
-//    std::vector<std::shared_ptr<operator_use>> ops = find_ops();
-//    for (auto& new_op : ops) {
-//        pattern.pattern.emplace_back(new_op);
-//    }
 		return pattern_token(tk.string);
 	} else {
 		return pattern_token(tk.string);
@@ -113,7 +120,7 @@ mycelium::pattern_match mycelium::parser::get_pattern_from_tokens(int number_of_
 	pattern_match pattern;
 	token current_type;
 	while (pattern.pattern.size() < number_of_tokens) {
-		pattern_token new_token = get_pattern_token(tokenizer.get_next_token());
+		pattern_token new_token = get_pattern_token(tokenizer.tokens, tokenizer.current_token_index);
 		if (!new_token.is_expression && new_token.oper.empty()) {
 			// Return when we have an empty token because that means we have an invalid token e.g. a type
 			return {};
@@ -127,7 +134,7 @@ mycelium::pattern_match mycelium::parser::get_pattern_from_tokens(int number_of_
 mycelium::pattern_match mycelium::parser::get_pattern_from_tokens(int start_index, int end_index) {
 	pattern_match pattern;
 	for (int current_token_index = start_index; current_token_index < end_index; current_token_index++) {
-		pattern.pattern.push_back(get_pattern_token(tokenizer.tokens[current_token_index]));
+		pattern.pattern.push_back(get_pattern_token(tokenizer.tokens, current_token_index));
 	}
 
 	return pattern;
@@ -135,8 +142,8 @@ mycelium::pattern_match mycelium::parser::get_pattern_from_tokens(int start_inde
 
 mycelium::pattern_match mycelium::parser::get_pattern_from_tokens(const std::vector<token>& tks) {
 	pattern_match pattern;
-	for (auto& tk : tks) {
-		pattern.pattern.push_back(get_pattern_token(tk));
+	for (int i = 0; i < tks.size(); i++) {
+		pattern.pattern.push_back(get_pattern_token(tks, i));
 	}
 
 	return pattern;
@@ -227,6 +234,13 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_sing
 
 std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_tokens(const std::vector<token>& tks) {
 
+	if (show_debug_lines) {
+		std::cout << "Getting Expression From: ";
+
+		print_tokens(tks);
+
+		std::cout << "\n";
+	}
 
 	if (tks.empty()) {
 		/// If we have no token then warn and return nothing indicating the expression is invalid
@@ -236,7 +250,8 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 
 	if (tks.size() == 1) {
 		/// If all we have is a single token we want to try to match that to a pattern or return that as either a variable or nothing
-		auto pt = get_pattern_token(tks[0]);
+		int tmp = 0;
+		auto pt = get_pattern_token(tks, tmp);
 		if (pt.is_expression) {
 			return pt.expr;
 		}
@@ -264,6 +279,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 		return get_expression_from_tokens(out);
 	}
 
+
 	for (auto& op : operators) {
 		pattern_match op_use_pattern = this->generate_pattern_from_function(op, tks);
 		if (op->args.is_match(op_use_pattern)) {
@@ -282,7 +298,6 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token() {
 	if (tokenizer.has_next_token()) {
 		next_token = tokenizer.get_next_token_without_increment();
 	}
-
 
 	// Check for operator on every token.
 	std::vector<token> remaining_line_tokens = tokenizer.tokens_until_newline();
@@ -761,12 +776,13 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 		return {};
 	}
 
+
 	std::vector<std::shared_ptr<expression>> landmark_chunk_expressions;
 
 	for (int i = 0; i < landmark_chunks.size(); i++) {
 		if (desired_chunk_sizes[i] == landmark_chunks[i].size()) {
-			for (auto& tk : landmark_chunks[i]) {
-				auto pt = get_pattern_token(tk);
+			for (int j = 0; j < landmark_chunks[i].size(); j++) {
+				auto pt = get_pattern_token(landmark_chunks[i], j);
 				if (pt.is_expression) {
 					landmark_chunk_expressions.push_back(pt.expr);
 				}
