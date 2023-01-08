@@ -279,17 +279,15 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 		return get_expression_from_tokens(out);
 	}
 
+	if (tks[1].type == mycelium::token_type::grouping && tks.back().type == mycelium::token_type::grouping) {
+		return get_function(tks, 0);
+	}
 
 	for (auto& op : operators) {
 		pattern_match op_use_pattern = this->generate_pattern_from_function(op, tks);
 		if (op->args.is_match(op_use_pattern)) {
 			return std::make_shared<operator_use>(op, op_use_pattern.get_expressions());
 		}
-	}
-
-	/// If no matching operators are found we check for functions
-	if (tks[1].string == "(") {
-		return get_function(tks, 0);
 	}
 
 	return {};
