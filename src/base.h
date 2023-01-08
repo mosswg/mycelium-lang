@@ -777,7 +777,6 @@ namespace mycelium {
 				}
 				pt->execute();
 			}
-			/// TODO: Handle user function returns
 			return {};
 		}
 	};
@@ -912,9 +911,12 @@ namespace mycelium {
 				this->scope->variables[i]->set_value(call_args[i]);
 			}
 			for (auto& pt : body) {
+				if (pt->type == function_return) {
+					auto* return_expression = (return_from_function*)pt.get();
+					return return_expression->get_value();
+				}
 				pt->execute();
 			}
-			/// TODO: Handle user operator returns
 			return {};
 		}
 	};
