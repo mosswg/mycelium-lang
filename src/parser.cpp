@@ -662,6 +662,8 @@ void mycelium::parser::find_function_declarations() {
 		operators[i]->body = parse_tokens(operators[i]->body_start_index + 1, operators[i]->body_end_index - 1);
 	}
 
+	current_parsing_function = {};
+
 	// Pop the scope back to the old current scope
 	change_scope(pushed_scope);
 }

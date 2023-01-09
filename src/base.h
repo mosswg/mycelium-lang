@@ -749,7 +749,7 @@ namespace mycelium {
 						out += ", ";
 					}
 				}
-				out += ">";
+				out += "> ";
 			}
 			out += name.string + '(' + args.to_string() + ')';
 
