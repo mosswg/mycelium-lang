@@ -869,7 +869,7 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 	pattern_match out;
 
 	int expr_index = 0;
-	for (int i = 0; i < landmark_chunk_expressions.size(); i++) {
+	for (int i = 0; out.pattern.size() < landmark_chunk_expressions.size() + landmarks.size() && i < desired_chunk_sizes.size(); i++) {
 		for (int j = 0; j < desired_chunk_sizes[i]; j++) {
 			out.pattern.emplace_back(landmark_chunk_expressions[expr_index++]);
 		}
