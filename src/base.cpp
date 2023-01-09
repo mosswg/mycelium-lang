@@ -22,6 +22,8 @@ std::vector<mycelium::type> mycelium::type::types = {};
 
 std::vector<std::string> mycelium::type::strings = {};
 
+std::vector<std::vector<std::shared_ptr<mycelium::function_base>>> mycelium::type::member_functions(none.code + 1);
+
 std::vector<std::string> mycelium::token::whitespace_strings = {};
 std::vector<std::string> mycelium::token::grouping_strings = {};
 std::vector<std::string> mycelium::token::keyword_strings = {};
@@ -67,7 +69,7 @@ void mycelium::initialize_static_values() {
 	token::grouping_strings.insert(token::grouping_strings.end(), {"(", ")", "{", "}", "[", "]", "<", ">"});
 	token::keyword_strings.insert(token::keyword_strings.end(), {token::function_keyword, token::operator_keyword, token::conditional_keyword, token::class_keyword, token::override_keyword, token::this_keyword, token::return_keyword});
 	token::line_end.insert(token::line_end.end(), {"\n"});
-	token::separator_strings.insert(token::separator_strings.end(), {";", ","});
+	token::separator_strings.insert(token::separator_strings.end(), {";", ",", "."});
 	token::comment_strings.insert(token::comment_strings.end(), {token::line_comment, token::open_block_comment, token::close_block_comment});
 	token::oper_strings.insert(token::oper_strings.end(), {"++", "--", "+=", "*=", "-=", "+", "-", "*", "/", "%", "==", "!=", "<=", ">=", "=",
 														   "&&", "||", "!", "<<", ">>", "&", "|", "~"});

@@ -40,6 +40,8 @@ namespace mycelium {
 
 		std::vector<std::shared_ptr<mycelium::operatr>> create_base_operators();
 
+		std::vector<std::shared_ptr<mycelium::conditional>> create_base_conditionals();
+
 		explicit parser(mycelium::tokenizer tokenizer) : tokenizer(std::move(tokenizer)), search_type() {
 			global_scope = std::make_shared<scope>(nullptr);
 			current_scope = global_scope;
@@ -66,7 +68,19 @@ namespace mycelium {
 
 		std::shared_ptr<mycelium::variable> parse_variable(int variable_type);
 
+		std::vector<mycelium::token> get_tokens_in_curlies(const std::vector<token>& tks, int search_index);
+
+		std::vector<mycelium::token> get_tokens_in_curlies(const std::vector<token>& tks, int search_index, int& start_parentheses, int& end_parentheses);
+
+		std::vector<mycelium::token> get_tokens_in_parentheses(const std::vector<token>& tks, int search_index);
+
+		std::vector<mycelium::token> get_tokens_in_parentheses(const std::vector<token>& tks, int search_index, int& start_parentheses, int& end_parentheses);
+
+		std::shared_ptr<mycelium::expression> get_object_function(const std::vector<token>& tks, int index);
+
 		std::shared_ptr<mycelium::expression> get_function(const std::vector<token>& tks, int index);
+
+		std::shared_ptr<mycelium::expression> get_function(const std::vector<token>& tks, int index, const std::vector<std::shared_ptr<function_base>>& search_functions);
 
 		std::shared_ptr<mycelium::expression> parse_expression();
 
@@ -97,8 +111,6 @@ namespace mycelium {
 		bool can_match_pattern(const pattern_match& match, const pattern_match& other);
 
 		static void warn(const std::string &warning, const token &tk);
-
-		std::vector<std::shared_ptr<mycelium::conditional>> create_base_conditionals();
 
 		pattern_match generate_pattern_from_function(const std::shared_ptr<mycelium::function_base> &fn,
 					       const std::vector<mycelium::token> &tks);

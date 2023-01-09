@@ -108,15 +108,22 @@ namespace mycelium {
 		}
 	};
 
+	class function_base;
+
 	class type {
 	public:
 		int code;
 		std::string name;
 		int size;
+		static std::vector<std::vector<std::shared_ptr<function_base>>> member_functions;
 
 		static std::vector<std::string> strings;
 
 		type(const int code, std::string name, const int size) : code(code), name(std::move(name)), size(size) {}
+
+		type(const int code, std::string name, const int size, const std::vector<std::shared_ptr<function_base>> functions) : code(code), name(std::move(name)), size(size) {
+			member_functions[code] = functions;
+		}
 
 		static const type reference;
 		static const type integer;
@@ -144,6 +151,23 @@ namespace mycelium {
 			}
 			mycelium::throw_error("unknown type \"" + type.string + "\"");
 			return -1;
+		}
+
+		std::string to_string() const {
+			return strings[this->code];
+		}
+
+
+		std::vector<std::shared_ptr<function_base>> get_member_functions() const {
+			return member_functions[this->code];
+		}
+
+		static std::vector<std::shared_ptr<function_base>> get_member_functions(const mycelium::type& type) {
+			return member_functions[type.code];
+		}
+
+		void add_member_function(std::shared_ptr<function_base> fn) const {
+			member_functions[this->code].push_back(fn);
 		}
 
 
@@ -749,9 +773,9 @@ namespace mycelium {
 						out += ", ";
 					}
 				}
-				out += "> ";
+				out += ">";
 			}
-			out += name.string + '(' + args.to_string() + ')';
+			out += " " + name.string + '(' + args.to_string() + ')';
 
 			return out;
 		}
