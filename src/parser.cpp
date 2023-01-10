@@ -1266,6 +1266,17 @@ std::shared_ptr<mycelium::variable> builtin_file_has_line(std::vector<std::share
 }
 
 
+
+std::shared_ptr<mycelium::variable> builtin_list_push_back(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	args[0]->list_ptr->push_back(args[1]->get_value());
+	return mycelium::constant::make_constant(0);
+}
+
+std::shared_ptr<mycelium::variable> builtin_list_length(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	return mycelium::constant::make_constant( args[0]->list_ptr->size() );
+}
+
+
 std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_functions() {
 	std::vector<std::shared_ptr<function>> out;
 
@@ -1293,6 +1304,11 @@ std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_f
 			std::make_shared<builtin_function>("println", std::vector<type>({}), std::vector<type>({type::boolean}),  builtin_println, generate_new_scope())
 				  );
 
+
+	out.push_back(
+			std::make_shared<builtin_function>("println", std::vector<type>({}), std::vector<type>({type::list}),  builtin_println, generate_new_scope())
+	);
+
 	out.push_back(
 			std::make_shared<builtin_function>("println", std::vector<type>({}), std::vector<type>({}), builtin_println, generate_new_scope())
 	);
@@ -1311,6 +1327,16 @@ std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_f
 
 	type::file.add_member_function(
 		std::make_shared<mycelium::builtin_function>("has_line", std::vector<mycelium::type>({type::boolean}), std::vector<mycelium::type>({}), builtin_file_has_line, generate_new_scope())
+	);
+
+
+	// List Functions
+	type::list.add_member_function(
+		std::make_shared<mycelium::builtin_function>("push_back", std::vector<mycelium::type>({}), std::vector<mycelium::type>({type::integer}), builtin_list_push_back, generate_new_scope())
+	);
+
+	type::list.add_member_function(
+		std::make_shared<mycelium::builtin_function>("length", std::vector<mycelium::type>({type::integer}), std::vector<mycelium::type>({}), builtin_list_length, generate_new_scope())
 	);
 
 
@@ -1410,6 +1436,16 @@ std::shared_ptr<mycelium::variable> builtin_assign_file(std::vector<std::shared_
 	*args[0]->str = *args[1]->get_value()->str;
 	args[0]->file->open(*args[0]->str);
 	return args[0];
+}
+
+
+std::shared_ptr<mycelium::variable> builtin_index_list(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	if (!args[0]->list_ptr || args[1]->value >= args[0]->list_ptr->size()) {
+		/// TODO: Make this a function
+		std::cerr << "Runtime Error: Index Out Of Bounds\n";
+		exit(1);
+	}
+	return args[0]->list_ptr->at(args[1]->get_value()->value);
 }
 
 std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_operators() {
@@ -1515,6 +1551,13 @@ std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_op
 	out.push_back(
 			std::make_shared<builtin_operator>("=", std::vector<token>({token("file"), token("a"), token("="), token("string"), token("b")}), "builtin_assign_file", std::vector<type>({type::file}),
 											   builtin_assign_file, 99, generate_new_scope())
+	);
+
+
+	/// Lists
+	out.push_back(
+			std::make_shared<builtin_operator>("[]", std::vector<token>({token("list"), token("a"), token("["), token("int"), token("b"), token("]")}), "builtin_index_list", std::vector<type>({type::integer}),
+											   builtin_index_list, 99, generate_new_scope())
 	);
 
 

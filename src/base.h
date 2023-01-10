@@ -252,6 +252,7 @@ namespace mycelium {
 		std::shared_ptr<std::string> str;
 		std::shared_ptr<mycelium::function> fn_ptr;
 		std::shared_ptr<std::fstream> file;
+		std::shared_ptr<std::vector<std::shared_ptr<variable>>> list_ptr;
 
 		variable(mycelium::token name, const mycelium::type& type) : expression(std::move(name)), type(type) {
 			if (type == type::string) {
@@ -265,7 +266,7 @@ namespace mycelium {
 				this->file = std::make_shared<std::fstream>();
 			}
 			else if (type == type::list) {
-				throw_error("Unsupported Creation of list");
+				this->list_ptr = std::make_shared<std::vector<std::shared_ptr<variable>>>();
 			}
 			else if (type == type::tuple) {
 				throw_error("Unsupported Creation of tuple");
@@ -284,6 +285,10 @@ namespace mycelium {
 		variable(mycelium::token name, std::shared_ptr<std::fstream> file_ptr) : expression(std::move(name)), type(type::file), file(std::move(file_ptr)) {
 			this->str = std::make_shared<std::string>("");
 		}
+
+		variable(mycelium::token name, std::shared_ptr<std::vector<std::shared_ptr<variable>>> list_ptr) : expression(std::move(name)), type(type::file), list_ptr(std::move(list_ptr)) {}
+
+		variable(mycelium::token name, const std::vector<std::shared_ptr<variable>>& list_ptr) : expression(std::move(name)), type(type::file), list_ptr(std::make_shared<std::vector<std::shared_ptr<variable>>>(list_ptr)) {}
 
 		~variable() override {
 			this->destroy();
@@ -306,6 +311,10 @@ namespace mycelium {
 
 		static std::shared_ptr<variable> make_variable_without_scope(const mycelium::token& name, const std::shared_ptr<std::fstream>& file_ptr) {
 			return std::make_shared<variable>(name, file_ptr);
+		}
+
+		static std::shared_ptr<variable> make_variable_without_scope(const mycelium::token& name, const std::shared_ptr<std::vector<std::shared_ptr<variable>>>& list_ptr) {
+			return std::make_shared<variable>(name, list_ptr);
 		}
 
 		static std::vector<std::shared_ptr<mycelium::variable>> convert_tokens_to_variables(const std::vector<mycelium::token>& tks) {
@@ -350,7 +359,7 @@ namespace mycelium {
 				// explicitly do nothing
 			}
 			else if (type.code == type::list.code) {
-				throw_error("Unsupported Destroy of list");
+				this->list_ptr->clear();
 			}
 			else if (type.code == type::tuple.code) {
 				throw_error("Unsupported Destroy of tuple");
@@ -386,29 +395,13 @@ namespace mycelium {
 					this->value = other.value;
 				}
 			}
+			else if (other.type == type::list) {
+				*this->list_ptr = *other.list_ptr;
+			}
 		}
 
 		virtual void set_value(const std::shared_ptr<mycelium::variable>& other) {
-			if (other->type == type::string) {
-				if (this->type == type::string) {
-					*this->str = *other->str;
-				}
-				else if (this->type == type::integer) {
-					throw_error("Cannot convert string to int");
-				}
-				else if (this->type == type::file) {
-					*this->str = *other->str;
-					this->file = std::make_shared<std::fstream>(*other->str, std::fstream::in | std::fstream::out);
-				}
-			}
-			else if (other->type == type::integer) {
-				if (this->type == type::string) {
-					*this->str = std::to_string(other->value);
-				}
-				else if (this->type == type::integer) {
-					this->value = other->value;
-				}
-			}
+			return set_value(*other);
 		}
 
 		mycelium::type get_type() override {
@@ -424,7 +417,16 @@ namespace mycelium {
 				return *this->str;
 			}
 			else if (type.code == type::list.code) {
-				throw_error("Unsupported Get As String of list");
+				std::string out;
+				out += "{";
+				for ( const auto& var : *this->list_ptr ) {
+					out += var->get_as_string();
+					if ( &var != &this->list_ptr->back() ) {
+						out += ", ";
+					}
+				}
+				out += "}";
+				return out;
 			}
 			else if (type.code == type::tuple.code) {
 				throw_error("Unsupported Get As String of tuple");
@@ -464,6 +466,8 @@ namespace mycelium {
 		explicit constant(long value) : variable({}, value) {}
 
 		explicit constant(std::string value) : variable({}, std::move(value)) {}
+
+		explicit constant(const std::vector<std::shared_ptr<variable>>& list) : variable({}, std::make_shared<std::vector<std::shared_ptr<variable>>>(list)) {}
 
 
 		void set_value(const mycelium::variable&) override {
@@ -534,6 +538,10 @@ namespace mycelium {
 
 		std::shared_ptr<variable> make_variable(const mycelium::token& name, const std::shared_ptr<mycelium::function>& fn_ptr) {
 			return make_variable(std::make_shared<variable>(name, fn_ptr));
+		}
+
+		std::shared_ptr<variable> make_variable(const mycelium::token& name, const std::vector<std::shared_ptr<variable>>& list_ptr) {
+			return make_variable(std::make_shared<variable>(name, list_ptr));
 		}
 
 		std::shared_ptr<variable> get_variable(const std::string& name) {
