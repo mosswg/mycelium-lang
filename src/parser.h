@@ -84,9 +84,9 @@ namespace mycelium {
 
 		std::shared_ptr<mycelium::expression> get_object_function(const std::vector<token>& tks, int index);
 
-		std::shared_ptr<mycelium::expression> get_function(const std::vector<token>& tks, int index);
+		std::shared_ptr<mycelium::expression> get_function(const std::vector<token>& tks, int& index);
 
-		std::shared_ptr<mycelium::expression> get_function(const std::vector<token>& tks, int index, const std::vector<std::shared_ptr<function_base>>& search_functions);
+		std::shared_ptr<mycelium::expression> get_function(const std::vector<token>& tks, int& index, const std::vector<std::shared_ptr<function_base>>& search_functions);
 
 		std::shared_ptr<mycelium::expression> parse_expression(const std::vector<token>& tokens, int& index);
 

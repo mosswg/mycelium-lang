@@ -1,0 +1,5 @@
+file current = "examples/todo.txt"
+
+while (current.has_line()) {
+	println(current.get_line())
+}

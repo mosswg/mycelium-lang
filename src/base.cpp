@@ -16,7 +16,8 @@ const mycelium::type mycelium::type::func(8, "function", 8);
 const mycelium::type mycelium::type::array(9, "array", 8);
 const mycelium::type mycelium::type::cstring(10, "twine", 8);
 const mycelium::type mycelium::type::token(11, "token", 8);
-const mycelium::type mycelium::type::none(12, "none", 0);
+const mycelium::type mycelium::type::file(12, "file", 8);
+const mycelium::type mycelium::type::none(13, "none", 0);
 
 std::vector<mycelium::type> mycelium::type::types = {};
 
@@ -53,7 +54,7 @@ void mycelium::throw_error(const std::string& error) {
 
 void mycelium::initialize_static_values() {
 
-	for (auto& type : {mycelium::type::reference, mycelium::type::integer, mycelium::type::character, mycelium::type::boolean, mycelium::type::string, mycelium::type::list, mycelium::type::tuple, mycelium::type::oper, mycelium::type::func, mycelium::type::array, mycelium::type::cstring, mycelium::type::token, mycelium::type::none}) {
+	for (auto& type : {mycelium::type::reference, mycelium::type::integer, mycelium::type::character, mycelium::type::boolean, mycelium::type::string, mycelium::type::list, mycelium::type::tuple, mycelium::type::oper, mycelium::type::func, mycelium::type::array, mycelium::type::cstring, mycelium::type::token, mycelium::type::file, mycelium::type::none}) {
 		type::types.push_back(type);
 	}
 
@@ -77,7 +78,7 @@ void mycelium::initialize_static_values() {
 	token::string_lists.insert(token::string_lists.end(), {token::oper_strings, token::whitespace_strings,
 														   token::grouping_strings, token::keyword_strings, type::strings, token::line_end, token::separator_strings});
 
-	token::type_names.insert(mycelium::token::type_names.end(), {"operator", "whitespace", "grouping", "keyword", "type", "endline", "word", "num",
+	token::type_names.insert(mycelium::token::type_names.end(), {"operator", "whitespace", "grouping", "keyword", "type", "endline", "separator", "word", "num",
 																 "invalid", "newline"});
 
 	if (show_debug_lines) {

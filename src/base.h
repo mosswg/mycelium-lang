@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 #include <memory>
+#include <fstream>
 #include <functional>
 
 namespace mycelium {
@@ -137,6 +138,7 @@ namespace mycelium {
 		static const type array;
 		static const type cstring;
 		static const type token;
+		static const type file;
 		static const type none;
 		static std::vector<type> types;
 
@@ -249,6 +251,7 @@ namespace mycelium {
 		long value;
 		std::shared_ptr<std::string> str;
 		std::shared_ptr<mycelium::function> fn_ptr;
+		std::shared_ptr<std::fstream> file;
 
 		variable(mycelium::token name, const mycelium::type& type) : expression(std::move(name)), type(type) {
 			if (type == type::string) {
@@ -256,6 +259,10 @@ namespace mycelium {
 			}
 			if (type == type::func) {
 				// Do nothing
+			}
+			if (type == type::file) {
+				this->str = std::make_shared<std::string>();
+				this->file = std::make_shared<std::fstream>();
 			}
 			else if (type == type::list) {
 				throw_error("Unsupported Creation of list");
@@ -274,6 +281,10 @@ namespace mycelium {
 
 		variable(mycelium::token name, std::shared_ptr<mycelium::function> fn_ptr) : expression(std::move(name)), type(type::func), fn_ptr(std::move(fn_ptr)) {}
 
+		variable(mycelium::token name, std::shared_ptr<std::fstream> file_ptr) : expression(std::move(name)), type(type::file), file(std::move(file_ptr)) {
+			this->str = std::make_shared<std::string>("");
+		}
+
 		~variable() override {
 			this->destroy();
 		}
@@ -291,6 +302,10 @@ namespace mycelium {
 		static std::shared_ptr<variable> make_variable_without_scope(const mycelium::token& name, const std::shared_ptr<function>& fn_ptr) {
 			std::shared_ptr<variable> out = std::make_shared<variable>(name, fn_ptr);
 			return out;
+		}
+
+		static std::shared_ptr<variable> make_variable_without_scope(const mycelium::token& name, const std::shared_ptr<std::fstream>& file_ptr) {
+			return std::make_shared<variable>(name, file_ptr);
 		}
 
 		static std::vector<std::shared_ptr<mycelium::variable>> convert_tokens_to_variables(const std::vector<mycelium::token>& tks) {
@@ -350,10 +365,14 @@ namespace mycelium {
 		virtual void set_value(const mycelium::variable& other) {
 			if (other.type == type::string) {
 				if (this->type == type::string) {
-					this->str = other.str;
+					*this->str = *other.str;
 				}
 				else if (this->type == type::integer) {
 					throw_error("Cannot convert string to int");
+				}
+				else if (this->type == type::file) {
+					*this->str = *other.str;
+					this->file = std::make_shared<std::fstream>(*other.str, std::fstream::in | std::fstream::out);
 				}
 			}
 			else if (other.type == type::func) {
@@ -361,7 +380,7 @@ namespace mycelium {
 			}
 			else if (other.type == type::integer) {
 				if (this->type == type::string) {
-					this->str = std::make_shared<std::string>(std::to_string(other.value));
+					*this->str = std::to_string(other.value);
 				}
 				else if (this->type == type::integer) {
 					this->value = other.value;
@@ -372,15 +391,19 @@ namespace mycelium {
 		virtual void set_value(const std::shared_ptr<mycelium::variable>& other) {
 			if (other->type == type::string) {
 				if (this->type == type::string) {
-					this->str = other->str;
+					*this->str = *other->str;
 				}
 				else if (this->type == type::integer) {
 					throw_error("Cannot convert string to int");
 				}
+				else if (this->type == type::file) {
+					*this->str = *other->str;
+					this->file = std::make_shared<std::fstream>(*other->str, std::fstream::in | std::fstream::out);
+				}
 			}
 			else if (other->type == type::integer) {
 				if (this->type == type::string) {
-					this->str = std::make_shared<std::string>(std::to_string(other->value));
+					*this->str = std::to_string(other->value);
 				}
 				else if (this->type == type::integer) {
 					this->value = other->value;
@@ -409,6 +432,15 @@ namespace mycelium {
 			else if (type == type::func) {
 				return function_to_string(this->fn_ptr);
 			}
+			else if (type == type::file) {
+				if (this->str.get()) {
+					return "file(" + *this->str + ")";
+				}
+				return "file";
+			}
+			else if (type == type::boolean) {
+				return this->value ? "true" : "false";
+			}
 			else {
 				return std::to_string(this->value);
 			}
@@ -432,8 +464,6 @@ namespace mycelium {
 		explicit constant(long value) : variable({}, value) {}
 
 		explicit constant(std::string value) : variable({}, std::move(value)) {}
-
-		explicit constant(bool value) : variable({}, value) {}
 
 
 		void set_value(const mycelium::variable&) override {
@@ -459,7 +489,9 @@ namespace mycelium {
 
 
 		static std::shared_ptr<constant> make_bool_constant(bool value) {
-			return std::make_shared<constant>(value);
+			auto out = std::make_shared<constant>(value);
+			out->type = type::boolean;
+			return out;
 		}
 
 		std::string to_string() const override {
