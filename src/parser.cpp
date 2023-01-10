@@ -213,7 +213,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 		return get_expression_from_tokens(out);
 	}
 
-	if (tks[1].type == mycelium::token_type::grouping && tks.back().type == mycelium::token_type::grouping) {
+	if (tks[1].string == "(" && tks.back().string == ")") {
 		int tmp = 0;
 		return get_function(tks, tmp);
 	}
@@ -738,6 +738,9 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 				return {};
 			}
 
+			// Skip the operator after we check if it exists
+			landmark_chunk_index++;
+
 			if (&arg != &fn->args.pattern.back()) {
 				number_of_chunks++;
 			}
@@ -759,10 +762,10 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 	}
 
 	/// If the last pattern token is a land mark then we don't want get the last chunk as there isn't one
-	if (landmark_chunk_index + 1 < tks.size()) {
+	if (landmark_chunk_index < tks.size()) {
 		/// Get the last tokens into a chunk if there is one
 		landmark_chunks.emplace_back();
-		for (int i = landmark_chunk_index + 1; i < tks.size(); i++) {
+		for (int i = landmark_chunk_index; i < tks.size(); i++) {
 			landmark_chunks.back().push_back(tks[i]);
 		}
 	}
