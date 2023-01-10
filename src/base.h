@@ -433,6 +433,8 @@ namespace mycelium {
 
 		explicit constant(std::string value) : variable({}, std::move(value)) {}
 
+		explicit constant(bool value) : variable({}, value) {}
+
 
 		void set_value(const mycelium::variable&) override {
 			throw_error("Cannot Set Value of Constant");
@@ -452,6 +454,11 @@ namespace mycelium {
 		}
 
 		static std::shared_ptr<constant> make_constant(const std::string& value) {
+			return std::make_shared<constant>(value);
+		}
+
+
+		static std::shared_ptr<constant> make_bool_constant(bool value) {
 			return std::make_shared<constant>(value);
 		}
 

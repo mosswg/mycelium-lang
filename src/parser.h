@@ -50,7 +50,9 @@ namespace mycelium {
 			conditionals = this->create_base_conditionals();
 		}
 
-		std::shared_ptr<parsed_token> parse_token();
+		std::shared_ptr<parsed_token> parse_token(const std::vector<token>& tokens, int& index);
+
+		std::vector<std::shared_ptr<mycelium::parsed_token>> parse_tokens(const std::vector<token>& tokens);
 
 		std::vector<std::shared_ptr<mycelium::parsed_token>> parse_tokens(int start, int end);
 
@@ -64,9 +66,13 @@ namespace mycelium {
 
 		std::vector<token> find_in_grouping(int& index, const std::string &open, const std::string &close);
 
-		std::shared_ptr<mycelium::return_from_function> parse_return();
+		std::shared_ptr<mycelium::return_from_function> parse_return(const std::vector<token>& tokens, int& index);
 
 		std::shared_ptr<mycelium::variable> parse_variable(int variable_type);
+
+		std::vector<mycelium::token> get_tokens_until_newline(const std::vector<token>& tokens, int index);
+
+		void skip_to_newline(const std::vector<token>& tokens, int& index);
 
 		std::vector<mycelium::token> get_tokens_in_curlies(const std::vector<token>& tks, int search_index);
 
@@ -82,7 +88,7 @@ namespace mycelium {
 
 		std::shared_ptr<mycelium::expression> get_function(const std::vector<token>& tks, int index, const std::vector<std::shared_ptr<function_base>>& search_functions);
 
-		std::shared_ptr<mycelium::expression> parse_expression();
+		std::shared_ptr<mycelium::expression> parse_expression(const std::vector<token>& tokens, int& index);
 
 		std::shared_ptr<mycelium::variable> get_word_variable(const mycelium::token& word);
 
