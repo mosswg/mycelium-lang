@@ -45,6 +45,8 @@ std::string mycelium::token::override_keyword = "override";
 std::string mycelium::token::class_keyword = "class";
 std::string mycelium::token::this_keyword = "this";
 std::string mycelium::token::return_keyword = "return";
+std::string mycelium::token::boolean_true = "true";
+std::string mycelium::token::boolean_false = "false";
 
 void mycelium::throw_error(const std::string& error) {
 	std::cerr << "ERROR: " << error << std::endl;
@@ -196,7 +198,10 @@ mycelium::token_type mycelium::token::find_type(const std::string &string) {
 		return invalid;
 	} else if (string[0] == '"' && string[string.size() - 1] == '"') {
 		return string_literal;
-	} else {
+	} else if (string == token::boolean_true || string == token::boolean_false) {
+		return boolean_literal;
+	}
+	else {
 		return word;
 	}
 }

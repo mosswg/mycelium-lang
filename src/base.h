@@ -51,6 +51,7 @@ namespace mycelium {
 		word,
 		num,
 		string_literal,
+		boolean_literal,
 		invalid
 	};
 
@@ -83,6 +84,8 @@ namespace mycelium {
 		static std::string class_keyword;
 		static std::string this_keyword;
 		static std::string return_keyword;
+		static std::string boolean_true;
+		static std::string boolean_false;
 
 
 	public:

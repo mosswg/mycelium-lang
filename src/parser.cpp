@@ -112,6 +112,16 @@ mycelium::pattern_token mycelium::parser::get_pattern_token(const std::vector<my
 		return pattern_token(constant::make_constant(std::stoi(tk.string)));
 	} else if (tk.type == string_literal) {
 		return pattern_token(constant::make_constant(tk.string));
+	} else if (tk.type == boolean_literal) {
+		if (tk.string == token::boolean_true) {
+			return pattern_token(constant::make_bool_constant(true));
+		}
+		else if (tk.string == token::boolean_false) {
+			return pattern_token(constant::make_bool_constant(false));
+		}
+		else {
+			throw_error("Unknown boolean " + tk.string, tk);
+		}
 	} else if (tk.type == grouping) {
 		/// FIXME: Handle Parentheses In Operator
 		return pattern_token(tk.string);
@@ -274,6 +284,7 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 			break;
 		case word:
 		case num:
+		case boolean_literal:
 		case string_literal:
 			return parse_expression(tokens, index);
 		case ttype: {
@@ -363,7 +374,7 @@ std::vector<std::shared_ptr<mycelium::parsed_token>> mycelium::parser::parse_tok
 	// find_function_declarations();
 	std::vector<std::shared_ptr<parsed_token>> ptokens;
 
-	for (int index = 0; index < tokens.size(); index++) {
+	for (int index = 0; index < tokens.size();) {
 		if (show_debug_lines) {
 			std::cout << "parsing token: " << index << ": " << tokens[index].string << std::endl;
 		}
@@ -628,8 +639,16 @@ void mycelium::parser::find_function_declarations() {
 
 
 std::shared_ptr<mycelium::return_from_function> mycelium::parser::parse_return(const std::vector<token>& tokens, int& index) {
-	// Skip the "return" token
-	index++;
+	if (index > tokens.size()) {
+		throw_error("trying to get parse return out of bounds", tokens.back());
+	}
+	// check if the return is the last token
+	if (index == tokens.size()) {
+		if (current_parsing_function->ret.empty()) {
+			return std::make_shared<return_from_function>(current_parsing_function);
+		}
+		throw_error("Mismatch in return types", current_parsing_function->name);
+	}
 
 	std::vector<token> tks = get_tokens_until_newline(tokens, index);
 	skip_to_newline(tokens, index);
