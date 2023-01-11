@@ -20,6 +20,11 @@ int main(int argc, char** argv) {
 		mycelium::throw_error("Could not open " + std::string(argv[1]));
 	}
 
+	std::vector<std::string> args;
+	for (int i = 2; i < argc; i++) {
+		args.push_back(argv[i]);
+	}
+
 	std::string line;
 
 	std::vector<std::string> program;
@@ -46,7 +51,7 @@ int main(int argc, char** argv) {
 		std::cout << "}\n";
 	}
 
-	mycelium::parser parser(tokenizer);
+	mycelium::parser parser(tokenizer, args);
 
 	if (mycelium::show_debug_lines) {
 		std::cout << "Parsing Tokens:\n";

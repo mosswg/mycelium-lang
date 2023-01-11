@@ -1131,8 +1131,11 @@ namespace mycelium {
 		std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::expression>>&)> exec;
 
 		builtin_conditional(const std::string& name, const std::vector<mycelium::type>& args, std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::expression>>&)> exec, std::shared_ptr<mycelium::scope> scope) :
-			conditional(mycelium::token(name), mycelium::token(name), function::generate_arguments_pattern_match_from_variables(variable::convert_types_to_variables(args)), std::move(scope)), exec(std::move(exec)) {
-		}
+			conditional(mycelium::token(name), mycelium::token(name), function::generate_arguments_pattern_match_from_variables(variable::convert_types_to_variables(args)), std::move(scope)), exec(std::move(exec)) {}
+
+
+		builtin_conditional(const std::string& name, const std::vector<mycelium::token>& pattern_match_tokens, std::function<std::shared_ptr<variable>(std::vector<std::shared_ptr<mycelium::expression>>&)> exec, std::shared_ptr<mycelium::scope> scope) :
+			conditional(mycelium::token(name), mycelium::token(name), pattern_match::create_from_tokens(pattern_match_tokens), std::move(scope)), exec(std::move(exec)) {}
 
 		std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::expression>>& call_args) const override {
 			if (call_args[0]->get_type().code != type::func.code) {

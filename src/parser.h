@@ -28,9 +28,9 @@ namespace mycelium {
 
 		std::shared_ptr<function_base> current_parsing_function;
 
+		static std::vector<std::string> program_args;
+
 		mycelium::tokenizer tokenizer;
-		mycelium::token search_type;
-		std::string searching_for;
 		std::vector<std::shared_ptr<mycelium::parsed_token>> temp = {};
 		std::vector<std::shared_ptr<mycelium::parsed_token>> parsed_tokens = {};
 
@@ -42,12 +42,14 @@ namespace mycelium {
 
 		std::vector<std::shared_ptr<mycelium::conditional>> create_base_conditionals();
 
-		explicit parser(mycelium::tokenizer tokenizer) : tokenizer(std::move(tokenizer)), search_type() {
+		explicit parser(mycelium::tokenizer tokenizer, std::vector<std::string> args) : tokenizer(std::move(tokenizer)) {
 			global_scope = std::make_shared<scope>(nullptr);
 			current_scope = global_scope;
 			functions = this->create_base_functions();
 			operators = this->create_base_operators();
 			conditionals = this->create_base_conditionals();
+
+			program_args = args;
 		}
 
 		std::shared_ptr<parsed_token> parse_token(const std::vector<std::shared_ptr<parsed_token>>& previous_tokens, const std::vector<token>& tokens, int& index);
@@ -129,5 +131,6 @@ namespace mycelium {
 		std::shared_ptr<expression> get_expression_from_tokens(const std::vector<token> &tks);
 
 		pattern_match get_pattern_from_tokens(const std::vector<token> &tks);
+
 	};
 }

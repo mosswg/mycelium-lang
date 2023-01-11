@@ -5,6 +5,9 @@
 #include <algorithm>
 #include "parser.h"
 
+
+std::vector<std::string> mycelium::parser::program_args = {};
+
 template <typename T>
 int mycelium::vector_find(const std::vector<T>& vec, const T& search) {
 	for (int i = 0; i < vec.size(); i++) {
@@ -252,6 +255,8 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std::vector<std::shared_ptr<parsed_token>>& previous_tokens, const std::vector<token>& tokens, int& index) {
 	mycelium::token current_token = tokens[index++];
 
+	std::cout << "parsing " << current_token.string << " at " << index - 1 << "\n";
+
 	mycelium::token next_token;
 	if (index < tokens.size()) {
 		next_token = tokens[index];
@@ -385,7 +390,6 @@ std::vector<std::shared_ptr<mycelium::parsed_token>> mycelium::parser::parse_tok
 		if (show_debug_lines) {
 			std::cout << "parsing token: " << index << ": " << tokens[index].string << std::endl;
 		}
-		/// TODO: Stop using tokenizer so much and make it so that functions like parse_token can be used with an array of tokens
 		std::shared_ptr<mycelium::parsed_token> parsed_token = parse_token(ptokens, tokens, index);
 		// Don't save null tokens
 		if (parsed_token) {
@@ -1263,6 +1267,15 @@ std::shared_ptr<mycelium::variable> builtin_println(std::vector<std::shared_ptr<
 	return mycelium::constant::make_constant(0);
 }
 
+
+std::shared_ptr<mycelium::variable> builtin_get_arg(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	return mycelium::constant::make_constant(mycelium::parser::program_args[args[0]->get_value()->value]);
+}
+
+std::shared_ptr<mycelium::variable> builtin_num_args(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	return mycelium::constant::make_constant(mycelium::parser::program_args.size());
+}
+
 std::shared_ptr<mycelium::variable> builtin_int_to_string(std::vector<std::shared_ptr<mycelium::variable>>& args) {
 	return mycelium::constant::make_constant(args[0]->get_as_string());
 }
@@ -1327,6 +1340,15 @@ std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_f
 
 	out.push_back(
 			std::make_shared<builtin_function>("println", std::vector<type>({}), std::vector<type>({}), builtin_println, generate_new_scope())
+	);
+
+
+	out.push_back(
+			std::make_shared<builtin_function>("get_arg", std::vector<type>({type::string}), std::vector<type>({type::integer}), builtin_get_arg, generate_new_scope())
+	);
+
+	out.push_back(
+			std::make_shared<builtin_function>("num_args", std::vector<type>({type::integer}), std::vector<type>({}), builtin_num_args, generate_new_scope())
 	);
 
 
@@ -1611,7 +1633,7 @@ std::vector<std::shared_ptr<mycelium::conditional>> mycelium::parser::create_bas
 
 	out.push_back(
 			std::make_shared<mycelium::builtin_conditional>("while", std::vector<mycelium::type>({type::boolean}),
-															builtin_while_conditional, builtin_scope)
+															builtin_while_conditional, generate_new_scope())
 	);
 
 	return out;
