@@ -50,7 +50,7 @@ namespace mycelium {
 			conditionals = this->create_base_conditionals();
 		}
 
-		std::shared_ptr<parsed_token> parse_token(const std::vector<token>& tokens, int& index);
+		std::shared_ptr<parsed_token> parse_token(const std::vector<std::shared_ptr<parsed_token>>& previous_tokens, const std::vector<token>& tokens, int& index);
 
 		std::vector<std::shared_ptr<mycelium::parsed_token>> parse_tokens(const std::vector<token>& tokens);
 

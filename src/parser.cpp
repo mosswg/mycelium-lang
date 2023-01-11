@@ -87,7 +87,7 @@ void mycelium::parser::parse() {
 		if (show_debug_lines) {
 			std::cout << "parsing token: " << tokenizer.current_token_index << ": " << tokenizer.get_next_token_without_increment().string << std::endl;
 		}
-		std::shared_ptr<mycelium::parsed_token> token = parse_token(tokenizer.tokens, tokenizer.current_token_index);
+		std::shared_ptr<mycelium::parsed_token> token = parse_token(parsed_tokens, tokenizer.tokens, tokenizer.current_token_index);
 		// Don't save null tokens
 		if (token) {
 			parsed_tokens.push_back(token);
@@ -232,7 +232,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 	return {};
 }
 
-std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std::vector<token>& tokens, int& index) {
+std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std::vector<std::shared_ptr<parsed_token>>& previous_tokens, const std::vector<token>& tokens, int& index) {
 	mycelium::token current_token = tokens[index++];
 
 	mycelium::token next_token;
@@ -244,16 +244,12 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 	std::vector<token> remaining_line_tokens = get_tokens_until_newline(tokens, index);
 	// HACK: Checking manually for a body then appending it (this might be fine I haven't thought about it too much). Also it doesn't work for curlies on newlines.
 	if (remaining_line_tokens.back().string == "{") {
-		int start_curly, end_curly;
-		std::vector<token> inside_curlies = get_tokens_in_curlies(tokens, index, start_curly, end_curly);
-		inside_curlies.push_back(tokens[end_curly]);
-		remaining_line_tokens.insert(remaining_line_tokens.end(), inside_curlies.begin(), inside_curlies.end());
-		index = end_curly + 1;
+		remaining_line_tokens.pop_back();
 	}
 	std::shared_ptr<expression> op = get_expression_from_tokens(remaining_line_tokens);
 
 	if (op) {
-		skip_to_newline(tokens, index);
+		index += remaining_line_tokens.size() - 1;
 		return op;
 	}
 
@@ -321,6 +317,32 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 					throw_error("Unknown Value Inside Grouping", current_token);
 				}
 			}
+			else if (current_token.string == "{") {
+				if (previous_tokens.back()->type == parsed_token_type::cond_call) {
+					index--;
+					std::cout << "getting cond body\n";
+					std::shared_ptr<conditional_call> cn = std::static_pointer_cast<conditional_call>(previous_tokens.back());
+					int starting_body_index, ending_body_index;
+
+					auto body = get_tokens_in_curlies(tokens, index, starting_body_index, ending_body_index);
+
+					std::cout << "bd: " << tokens_to_string(body) << "\n";
+
+					std::shared_ptr<mycelium::scope> pushed_scope = current_scope;
+					change_scope(cn->body_scope);
+					std::vector<std::shared_ptr<parsed_token>> call_body = parse_tokens(body);
+					change_scope(pushed_scope);
+					index = ending_body_index + 1;
+
+					/// Create an anonymous function with body of the conditional statement and pass that as the first argument
+					std::shared_ptr<expression> cn_call_expressions(function::make_anonymous_function(call_body, {}, {}, cn->body_scope));
+					cn->args.insert(cn->args.begin(), cn_call_expressions);
+
+					index = ending_body_index + 1;
+					std::cout << "going to " << index << "\n";
+					return {};
+				}
+			}
 			else {
 				throw_error("Why the hell is there a '" + current_token.string + "' there?", current_token);
 			}
@@ -345,7 +367,7 @@ std::vector<std::shared_ptr<mycelium::parsed_token>> mycelium::parser::parse_tok
 			std::cout << "parsing token: " << index << ": " << tokens[index].string << std::endl;
 		}
 		/// TODO: Stop using tokenizer so much and make it so that functions like parse_token can be used with an array of tokens
-		std::shared_ptr<mycelium::parsed_token> parsed_token = parse_token(tokens, index);
+		std::shared_ptr<mycelium::parsed_token> parsed_token = parse_token(ptokens, tokens, index);
 		// Don't save null tokens
 		if (parsed_token) {
 			ptokens.push_back(parsed_token);
@@ -367,7 +389,7 @@ std::vector<std::shared_ptr<mycelium::parsed_token>> mycelium::parser::parse_tok
 		if (show_debug_lines) {
 			std::cout << "parsing token: " << tokenizer.current_token_index << ": " << tokenizer.get_next_token_without_increment().string << std::endl;
 		}
-		std::shared_ptr<mycelium::parsed_token> token = parse_token(tokenizer.tokens, tokenizer.current_token_index);
+		std::shared_ptr<mycelium::parsed_token> token = parse_token(ptokens, tokenizer.tokens, tokenizer.current_token_index);
 		// Don't save null tokens
 		if (token) {
 			ptokens.push_back(token);
@@ -1010,30 +1032,13 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_function(const std::
 			return std::make_shared<function_call>(fn, func_call_patterns[0].get_expressions());
 		}
 		else if (funcs[0]->type == parsed_token_type::cond) {
-			if (tks[index].string == "{") {
+			std::shared_ptr<conditional> cn = std::static_pointer_cast<conditional>(funcs[0]);
 
-				std::shared_ptr<conditional> cn = std::static_pointer_cast<conditional>(funcs[0]);
-				int starting_body_index, ending_body_index;
+			std::cout << "retcn: " << cn->to_string() << " at " << index << "\n";
 
-				auto body = get_tokens_in_curlies(tks, index, starting_body_index, ending_body_index);
+			std::shared_ptr<mycelium::scope> body_scope = generate_new_scope();
 
-				std::shared_ptr<mycelium::scope> pushed_scope = current_scope;
-				std::shared_ptr<mycelium::scope> body_scope = generate_new_scope();
-				change_scope(body_scope);
-				std::vector<std::shared_ptr<parsed_token>> call_body = parse_tokens(body);
-				change_scope(pushed_scope);
-				index = ending_body_index + 1;
-
-				/// Create an anonymous function with body of the conditional statement and pass that as the first argument
-				std::vector<std::shared_ptr<expression>> cn_call_expressions({function::make_anonymous_function(call_body, {}, {}, body_scope)});
-				std::vector<std::shared_ptr<expression>> cn_pattern_expressions = func_call_patterns[0].get_expressions();
-				cn_call_expressions.insert(cn_call_expressions.end(), cn_pattern_expressions.begin(), cn_pattern_expressions.end());
-
-				return std::make_shared<conditional_call>(cn, cn_call_expressions, body_scope);
-			}
-			else {
-				throw_error("Conditional Call Must Have Body", name);
-			}
+			return std::make_shared<conditional_call>(cn, func_call_patterns[0].get_expressions(), body_scope);
 		}
 	}
 	else {

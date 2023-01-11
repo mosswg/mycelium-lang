@@ -200,6 +200,7 @@ namespace mycelium {
 		expr,
 		oper_use,
 		func_call,
+		cond_call,
 		function_return,
 		bad
 	};
@@ -1136,7 +1137,7 @@ namespace mycelium {
 
 
 		conditional_call(std::shared_ptr<conditional> cn, std::vector<std::shared_ptr<expression>> args,
-						 std::shared_ptr<mycelium::scope> body_scope) : cn(std::move(cn)), args(std::move(args)), expression(cn->name), body_scope(std::move(body_scope)) {}
+						 std::shared_ptr<mycelium::scope> body_scope) : cn(std::move(cn)), args(std::move(args)), expression(cn->name, cond_call), body_scope(std::move(body_scope)) {}
 
 		std::string to_string() const override {
 			std::string out = "Call to " + cn->to_string() + " with ";
@@ -1144,10 +1145,12 @@ namespace mycelium {
 				out += arg->to_string() + " ";
 			}
 
-			out += ": Body:\n";
+			if (args[0]->get_value()->fn_ptr) {
+				out += ": Body:\n";
 
-			for (auto& pt : args[0]->get_value()->fn_ptr->body) {
-				out += "\t" + pt->to_string() + "\n";
+				for (auto& pt : args[0]->get_value()->fn_ptr->body) {
+					out += "\t" + pt->to_string() + "\n";
+				}
 			}
 
 			return out;
