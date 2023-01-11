@@ -1281,6 +1281,16 @@ std::shared_ptr<mycelium::variable> builtin_int_to_string(std::vector<std::share
 }
 
 
+std::shared_ptr<mycelium::variable> builtin_exit(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	if (args.empty()) {
+		exit(0);
+	}
+
+	exit(args[0]->value);
+}
+
+
+
 
 std::shared_ptr<mycelium::variable> builtin_file_get_line(std::vector<std::shared_ptr<mycelium::variable>>& args) {
 	std::string line;
@@ -1340,6 +1350,15 @@ std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_f
 
 	out.push_back(
 			std::make_shared<builtin_function>("println", std::vector<type>({}), std::vector<type>({}), builtin_println, generate_new_scope())
+	);
+
+
+	out.push_back(
+			std::make_shared<builtin_function>("exit", std::vector<type>({}), std::vector<type>({}), builtin_exit, generate_new_scope())
+	);
+
+	out.push_back(
+			std::make_shared<builtin_function>("exit", std::vector<type>({}), std::vector<type>({type::integer}), builtin_exit, generate_new_scope())
 	);
 
 

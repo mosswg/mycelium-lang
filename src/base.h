@@ -839,7 +839,7 @@ namespace mycelium {
 			throw_error("Unimplemented Function: Function execute");
 		}
 
-		virtual std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& call_args) {
+		virtual std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& call_args) const {
 			for (int i = 0; i < call_args.size(); i++) {
 				this->scope->variables[i]->set_value(call_args[i]);
 			}
@@ -868,7 +868,7 @@ namespace mycelium {
 			this->body_end_index = 0;
 		}
 
-		std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& args) override {
+		std::shared_ptr<variable> call(std::vector<std::shared_ptr<mycelium::variable>>& args) const override {
 			return exec(args);
 		}
 	};
