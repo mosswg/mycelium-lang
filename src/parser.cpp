@@ -71,11 +71,18 @@ void mycelium::parser::parse() {
 			std::cout << func->to_string() << '\n';
 		}
 
-		std::cout << "ops" << std::endl;
+		std::cout << "opers" << std::endl;
 
 		for (auto &oper: operators) {
 			std::cout << oper->to_string() << '\n';
 		}
+
+		std::cout << "conds" << std::endl;
+
+		for (auto &cond: conditionals) {
+			std::cout << cond->to_string() << '\n';
+		}
+
 
 		std::cout << token::oper_strings << std::endl;
 
@@ -270,14 +277,14 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 
 	switch (current_token.type) {
 		case token_type::op:
-			throw_error("Unknown Operator: " + tokens[index].string, current_token);
+			throw_error("Unknown Operator: " + current_token.string, current_token);
 		case keyword:
-			if (next_token.type == token_type::invalid) {
-				throw_error("Keyword with nothing following found", current_token);
-			}
-
 			if (current_token.string == token::return_keyword) {
 				return parse_return(tokens, index);
+			}
+
+			if (next_token.type == token_type::invalid) {
+				throw_error("Keyword with nothing following found", current_token);
 			}
 
 			throw_error("Invalid keyword use", current_token);
@@ -1597,11 +1604,9 @@ std::vector<std::shared_ptr<mycelium::conditional>> mycelium::parser::create_bas
 
 	// const std::string& op_token, const mycelium::pattern_match& pattern_match, const std::string& name, const std::vector<mycelium::type>& ret, std::function<void(std::vector<std::shared_ptr<mycelium::variable>>&)> exec, int scope
 
-	std::shared_ptr<mycelium::scope> builtin_scope = generate_new_scope();
-
 	out.push_back(
 		std::make_shared<mycelium::builtin_conditional>("if", std::vector<mycelium::type>({type::boolean}),
-														builtin_if_conditional, builtin_scope)
+														builtin_if_conditional, generate_new_scope())
 	);
 
 	out.push_back(

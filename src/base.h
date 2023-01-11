@@ -770,6 +770,10 @@ namespace mycelium {
 		bool is_similar(std::shared_ptr<parsed_token> compare) override {
 			return false;
 		}
+
+		bool has_value() const {
+			return this->return_value.get();
+		}
 	};
 
 	class function : public function_base {
@@ -841,8 +845,11 @@ namespace mycelium {
 			}
 			for (auto& pt : body) {
 				if (pt->type == function_return) {
-					auto* return_expression = (return_from_function*)pt.get();
-					return return_expression->get_value();
+					std::shared_ptr<return_from_function> return_expression = std::static_pointer_cast<return_from_function>(pt);
+					if (return_expression->has_value()) {
+						return return_expression->get_value();
+					}
+					return mycelium::constant::make_constant(0);
 				}
 				pt->execute();
 			}
@@ -981,8 +988,11 @@ namespace mycelium {
 			}
 			for (auto& pt : body) {
 				if (pt->type == function_return) {
-					auto* return_expression = (return_from_function*)pt.get();
-					return return_expression->get_value();
+					std::shared_ptr<return_from_function> return_expression = std::static_pointer_cast<return_from_function>(pt);
+					if (return_expression->has_value()) {
+						return return_expression->get_value();
+					}
+					return mycelium::constant::make_constant(0);
 				}
 				pt->execute();
 			}
