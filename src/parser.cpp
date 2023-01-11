@@ -178,7 +178,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 
 	if (tks.empty()) {
 		/// If we have no token then warn and return nothing indicating the expression is invalid
-		warn("No tokens passed to get_expression", token());
+		warn("No tokens passed to get_expression_from_tokens", token());
 		return {};
 	}
 
@@ -242,15 +242,20 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 
 	// Check for operator on every token.
 	std::vector<token> remaining_line_tokens = get_tokens_until_newline(tokens, index);
-	// HACK: Checking manually for a body then appending it (this might be fine I haven't thought about it too much). Also it doesn't work for curlies on newlines.
+
+	// Removing open curly because we want it to still be with the main tokens when we find the body of the conditional. (we also don't want to confuse the function that gets expressions (it's a bit finicky but don't tell it I said that))
 	if (remaining_line_tokens.back().string == "{") {
 		remaining_line_tokens.pop_back();
 	}
-	std::shared_ptr<expression> op = get_expression_from_tokens(remaining_line_tokens);
 
-	if (op) {
-		index += remaining_line_tokens.size() - 1;
-		return op;
+	// Don't check if there's nothing to check!
+	if (!remaining_line_tokens.empty()) {
+		std::shared_ptr<expression> op = get_expression_from_tokens(remaining_line_tokens);
+
+		if (op) {
+			index += remaining_line_tokens.size() - 1;
+			return op;
+		}
 	}
 
 	switch (current_token.type) {
@@ -285,7 +290,7 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 
 			/// Check again for operators
 			remaining_line_tokens = get_tokens_until_newline(tokens, index);
-			op = get_expression_from_tokens(remaining_line_tokens);
+			std::shared_ptr<expression> op = get_expression_from_tokens(remaining_line_tokens);
 
 			if (op) {
 				skip_to_newline(tokens, index);
@@ -320,13 +325,10 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 			else if (current_token.string == "{") {
 				if (previous_tokens.back()->type == parsed_token_type::cond_call) {
 					index--;
-					std::cout << "getting cond body\n";
 					std::shared_ptr<conditional_call> cn = std::static_pointer_cast<conditional_call>(previous_tokens.back());
 					int starting_body_index, ending_body_index;
 
 					auto body = get_tokens_in_curlies(tokens, index, starting_body_index, ending_body_index);
-
-					std::cout << "bd: " << tokens_to_string(body) << "\n";
 
 					std::shared_ptr<mycelium::scope> pushed_scope = current_scope;
 					change_scope(cn->body_scope);
@@ -339,7 +341,6 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 					cn->args.insert(cn->args.begin(), cn_call_expressions);
 
 					index = ending_body_index + 1;
-					std::cout << "going to " << index << "\n";
 					return {};
 				}
 			}
@@ -799,27 +800,13 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 	std::vector<std::shared_ptr<expression>> landmark_chunk_expressions;
 
 	for (int i = 0; i < landmark_chunks.size(); i++) {
-		if (desired_chunk_sizes[i] == landmark_chunks[i].size()) {
-			for (int j = 0; j < landmark_chunks[i].size(); j++) {
-				auto pt = get_pattern_token(landmark_chunks[i], j);
-				if (pt.is_expression) {
-					landmark_chunk_expressions.push_back(pt.expr);
-				}
-				else {
-					/// If we get an invalid expression then the pattern is not valid
-					return {};
-				}
-			}
+		std::shared_ptr<expression> expr = get_expression_from_tokens(landmark_chunks[i]);
+		if (!expr) {
+			/// If we get an invalid expression then the pattern is not valid
+			return {};
 		}
-		else {
-			std::shared_ptr<expression> expr = get_expression_from_tokens(landmark_chunks[i]);
-			if (!expr) {
-				/// If we get an invalid expression then the pattern is not valid
-				return {};
-			}
 
-			landmark_chunk_expressions.push_back(expr);
-		}
+		landmark_chunk_expressions.push_back(expr);
 	}
 
 	pattern_match out;
@@ -955,6 +942,8 @@ std::vector<mycelium::token> mycelium::parser::get_tokens_in_parentheses(const s
 std::shared_ptr<mycelium::expression> mycelium::parser::get_function(const std::vector<token>& tks, int& index) {
 	// This is needed because of cpp type shenanigans
 	int index_copy = index;
+	int start_index = index;
+	token name = tks[index];
 	std::vector<std::shared_ptr<function_base>> search_functions;
 	for (const auto& func : this->functions) {
 		search_functions.push_back(func);
@@ -978,8 +967,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_function(const std::
 	}
 
 
-	token name = tks[index];
-	pattern_match fn_call_pattern = get_pattern_from_tokens(get_tokens_in_parentheses(tks, index));
+	pattern_match fn_call_pattern = get_pattern_from_tokens(get_tokens_in_parentheses(tks, start_index));
 	std::string pattern_string;
 	for (auto &arg: fn_call_pattern.pattern) {
 		if (arg.is_expression) {
@@ -988,7 +976,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_function(const std::
 			pattern_string += arg.oper + ' ';
 		}
 	}
-	throw_error("Unknown function or conditional \"" + name.string + "(" + pattern_string + ")", name);
+	throw_error("Unknown function or conditional \"" + name.string + "(" + pattern_string + ")\"", name);
 	return {};
 }
 
@@ -1028,13 +1016,10 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_function(const std::
 	else if (funcs.size() == 1) {
 		if (funcs[0]->type == parsed_token_type::func) {
 			std::shared_ptr<function> fn = std::static_pointer_cast<function>(funcs[0]);
-			std::cout << "retfn: " << fn->to_string() << " at " << index << "\n";
 			return std::make_shared<function_call>(fn, func_call_patterns[0].get_expressions());
 		}
 		else if (funcs[0]->type == parsed_token_type::cond) {
 			std::shared_ptr<conditional> cn = std::static_pointer_cast<conditional>(funcs[0]);
-
-			std::cout << "retcn: " << cn->to_string() << " at " << index << "\n";
 
 			std::shared_ptr<mycelium::scope> body_scope = generate_new_scope();
 
