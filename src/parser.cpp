@@ -88,7 +88,6 @@ void mycelium::parser::parse() {
 
 
 		std::cout << token::oper_strings << std::endl;
-
 	}
 
 	// TODO: Verify that no functions have been declared more than once
@@ -103,6 +102,39 @@ void mycelium::parser::parse() {
 			parsed_tokens.push_back(token);
 		}
 	}
+
+	// Push the current scope
+	std::shared_ptr<mycelium::scope> pushed_scope = current_scope;
+
+	// Loop over all the new functions and generate their body code. Doing things in this order allows for function
+	// definitions to be in any order without forward declarations in the file
+	for (int i = number_of_builtin_functions; i < functions.size(); i++) {
+		// Change to the function scope so that arguments names will be known
+		change_scope(functions[i]->scope);
+
+		// Change the current parsing function for returns
+		current_parsing_function = functions[i];
+
+		// Parse the body tokens
+		functions[i]->body = parse_tokens(functions[i]->body_start_index + 1, functions[i]->body_end_index - 1);
+	}
+
+	// Loop over all non builtin operators
+	for (int i = number_of_builtin_operators; i < operators.size(); i++) {
+		// Change to the operator scope so that arguments names will be known
+		change_scope(operators[i]->scope);
+
+		// Change the current parsing function for returns
+		current_parsing_function = operators[i];
+
+		// Parse the body tokens
+		operators[i]->body = parse_tokens(operators[i]->body_start_index + 1, operators[i]->body_end_index - 1);
+	}
+
+	current_parsing_function = {};
+
+	// Pop the scope back to the old current scope
+	change_scope(pushed_scope);
 }
 
 mycelium::pattern_token mycelium::parser::get_pattern_token(const std::vector<mycelium::token>& tks, int& index) {
@@ -292,7 +324,7 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 				throw_error("Keyword with nothing following found", current_token);
 			}
 
-			throw_error("Invalid keyword use", current_token);
+			skip_function_definition(tokens, index);
 			break;
 		case word:
 		case num:
@@ -394,6 +426,7 @@ std::vector<std::shared_ptr<mycelium::parsed_token>> mycelium::parser::parse_tok
 		// Don't save null tokens
 		if (parsed_token) {
 			ptokens.push_back(parsed_token);
+			std::cout << "got ptoken: " << parsed_token->to_string() << " at " << index << "\n";
 		}
 	}
 
@@ -591,10 +624,9 @@ std::vector<mycelium::token> mycelium::parser::find_in_grouping(int& index, cons
 }
 
 void mycelium::parser::find_function_declarations() {
+	int pushed_index = tokenizer.current_token_index;
 
 	// Find all the declarations for functions
-	int number_of_builtin_functions = functions.size();
-	int number_of_builtin_operators = operators.size();
 	for (int i = 0; i < tokenizer.tokens.size(); i++) {
 		mycelium::token current_token = tokenizer.tokens[i];
 		if (current_token.type == keyword) {
@@ -614,38 +646,7 @@ void mycelium::parser::find_function_declarations() {
 		}
 	}
 
-	// Push the current scope
-	std::shared_ptr<mycelium::scope> pushed_scope = current_scope;
-
-	// Loop over all the new functions and generate their body code. Doing things in this order allows for function
-	// definitions to be in any order without forward declarations in the file
-	for (int i = number_of_builtin_functions; i < functions.size(); i++) {
-		// Change to the function scope so that arguments names will be known
-		change_scope(functions[i]->scope);
-
-		// Change the current parsing function for returns
-		current_parsing_function = functions[i];
-
-		// Parse the body tokens
-		functions[i]->body = parse_tokens(functions[i]->body_start_index + 1, functions[i]->body_end_index - 1);
-	}
-
-	// Loop over all non builtin operators
-	for (int i = number_of_builtin_operators; i < operators.size(); i++) {
-		// Change to the operator scope so that arguments names will be known
-		change_scope(operators[i]->scope);
-
-		// Change the current parsing function for returns
-		current_parsing_function = operators[i];
-
-		// Parse the body tokens
-		operators[i]->body = parse_tokens(operators[i]->body_start_index + 1, operators[i]->body_end_index - 1);
-	}
-
-	current_parsing_function = {};
-
-	// Pop the scope back to the old current scope
-	change_scope(pushed_scope);
+	tokenizer.current_token_index = pushed_index;
 }
 
 
@@ -869,6 +870,43 @@ void mycelium::parser::skip_to_newline(const std::vector<token>& tokens, int& in
 	index--;
 }
 
+
+void mycelium::parser::skip_function_definition(const std::vector<token>& tokens, int& index) {
+	int depth = 0;
+	token first_curly;
+	for (; index < tokens.size(); index++) {
+		mycelium::token token = tokens[index];
+
+		if (token.string == "{") {
+			if (first_curly.type == token_type::invalid) {
+				first_curly = token;
+			}
+			depth++;
+		}
+
+		else if (token.string == "}") {
+			depth--;
+
+			if (first_curly.type == token_type::invalid) {
+				first_curly = token;
+			}
+
+			if (depth == 0) {
+				// Skip the closing curly brace
+				index++;
+				return;
+			}
+		}
+	}
+
+	if (depth > 0) {
+		throw_error("unclosed curly", first_curly);
+	}
+	else {
+		throw_error("stray curly", first_curly);
+	}
+}
+
 std::vector<mycelium::token> mycelium::parser::get_tokens_until_newline(const std::vector<token>& tokens, int index) {
 	std::vector<token> out;
 	/// Decrementing so that we get the current token
@@ -1064,8 +1102,6 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_function(const std::
 
 
 std::shared_ptr<mycelium::expression> mycelium::parser::get_object_function(const std::shared_ptr<expression>& object, const std::vector<token>& function_tokens, const std::vector<token>& other_tokens) {
-	std::cout << "Getting object fn with " << object->to_string() << " for " << object->get_type().to_string() << " . " << tokens_to_string(function_tokens) << " and " << tokens_to_string(other_tokens) << "\n";
-
 	int tmp = 0;
 	std::shared_ptr<expression> function_call_as_expression = get_function(function_tokens, tmp, object->get_type().get_member_functions());
 
@@ -1141,6 +1177,10 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_object_function(cons
 	}
 
 	if (function_call_tokens.empty()) {
+		throw_error("Stray dot!", tks.back());
+	}
+
+	if (multiple_seperators && other_tokens.empty()) {
 		throw_error("Stray dot!", tks.back());
 	}
 

@@ -751,6 +751,7 @@ namespace mycelium {
 		void execute() override {
 			throw_error("Unimplemented Function");
 		}
+
 	};
 
 
@@ -1217,6 +1218,7 @@ namespace mycelium {
 			}
 		}
 	};
+
 
 	// from: https://stackoverflow.com/questions/5100718/integer-to-hex-string-in-c
 	template <typename I> std::string int_to_hex_string(I w, size_t hex_len = sizeof(I)<<1) {

@@ -22,6 +22,10 @@ namespace mycelium {
 		std::vector<std::shared_ptr<mycelium::conditional>> conditionals;
 		std::vector<std::shared_ptr<mycelium::scope>> scopes = {};
 
+		int number_of_builtin_functions;
+		int number_of_builtin_operators;
+		int number_of_builtin_conditionals;
+
 		std::shared_ptr<scope> global_scope;
 
 		std::shared_ptr<scope> current_scope;
@@ -46,8 +50,11 @@ namespace mycelium {
 			global_scope = std::make_shared<scope>(nullptr);
 			current_scope = global_scope;
 			functions = this->create_base_functions();
+			number_of_builtin_functions = functions.size();
 			operators = this->create_base_operators();
+			number_of_builtin_operators = operators.size();
 			conditionals = this->create_base_conditionals();
+			number_of_builtin_conditionals = conditionals.size();
 
 			program_args = args;
 		}

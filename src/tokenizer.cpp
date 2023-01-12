@@ -51,6 +51,7 @@ void mycelium::tokenizer::tokenize() {
 					token_string.append(line[i + j]);
 				}
 			}
+
 			token_type type = token::find_type(token_string);
 			if (type != whitespace) {
 				if (token_string == "<" && line[i + 1] == "<") {

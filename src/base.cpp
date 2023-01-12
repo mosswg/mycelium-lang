@@ -176,6 +176,8 @@ std::vector<std::string> mycelium::string_split(const std::string& str, const st
 	return out;
 }
 
+
+
 mycelium::token_type mycelium::token::find_type(const std::string &string) {
 	for (int type = 0; type < string_lists.size(); type++) {
 		auto& token_string_list = string_lists[type];
