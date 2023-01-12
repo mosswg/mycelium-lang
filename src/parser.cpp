@@ -1069,9 +1069,6 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_object_function(cons
 
 	for (const auto& tk : tks) {
 		if (tk.string == ".") {
-			if (found_seperator) {
-				throw_error("Too many dots!", tk);
-			}
 
 			found_seperator = true;
 			continue;
@@ -1316,6 +1313,54 @@ std::shared_ptr<mycelium::variable> builtin_list_length(std::vector<std::shared_
 }
 
 
+std::shared_ptr<mycelium::variable> builtin_string_split(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	std::string str = *args[0]->str;
+	std::vector<std::shared_ptr<mycelium::variable>> spl = *args[1]->list_ptr;
+
+	if (str.empty()) {
+		return {};
+	}
+
+	std::vector<std::shared_ptr<mycelium::variable>> out;
+
+	size_t pos;
+	size_t prev_pos = 0;
+	size_t min_pos;
+	std::string split;
+
+	while (prev_pos < str.length()) {
+
+		min_pos = -1;
+
+		for (auto &comp: spl) {
+			if ((pos = str.find(*comp->str, prev_pos)) != std::string::npos) {
+				if (pos < min_pos || min_pos == -1) {
+					min_pos = pos;
+					split = *comp->str;
+				}
+			}
+		}
+
+		if (min_pos == -1) {
+			break;
+		}
+
+		if (min_pos != prev_pos) {
+			out.push_back(mycelium::constant::make_constant(str.substr(prev_pos, min_pos - prev_pos)));
+		}
+
+		out.push_back(mycelium::constant::make_constant(split));
+
+		prev_pos = min_pos + split.length();
+	}
+	if (min_pos >= str.length()) {
+		out.push_back(mycelium::constant::make_constant(str.substr(prev_pos, min_pos - prev_pos)));
+	}
+
+	return mycelium::constant::make_constant(out);
+}
+
+
 std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_functions() {
 	std::vector<std::shared_ptr<function>> out;
 
@@ -1393,7 +1438,17 @@ std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_f
 	);
 
 	type::list.add_member_function(
+		std::make_shared<mycelium::builtin_function>("push_back", std::vector<mycelium::type>({}), std::vector<mycelium::type>({type::string}), builtin_list_push_back, generate_new_scope())
+	);
+
+	type::list.add_member_function(
 		std::make_shared<mycelium::builtin_function>("length", std::vector<mycelium::type>({type::integer}), std::vector<mycelium::type>({}), builtin_list_length, generate_new_scope())
+	);
+
+
+	// String Functions
+	type::string.add_member_function(
+		std::make_shared<mycelium::builtin_function>("split", std::vector<mycelium::type>({type::list}), std::vector<mycelium::type>({type::list}), builtin_string_split, generate_new_scope())
 	);
 
 
@@ -1614,6 +1669,12 @@ std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_op
 	/// Lists
 	out.push_back(
 			std::make_shared<builtin_operator>("[]", std::vector<token>({token("list"), token("a"), token("["), token("int"), token("b"), token("]")}), "builtin_index_list", std::vector<type>({type::integer}),
+											   builtin_index_list, 99, generate_new_scope())
+	);
+
+
+	out.push_back(
+			std::make_shared<builtin_operator>("[]", std::vector<token>({token("list"), token("a"), token("["), token("int"), token("b"), token("]")}), "builtin_index_list", std::vector<type>({type::string}),
 											   builtin_index_list, 99, generate_new_scope())
 	);
 

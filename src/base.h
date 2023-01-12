@@ -496,6 +496,11 @@ namespace mycelium {
 		}
 
 
+		static std::shared_ptr<constant> make_constant(const std::vector<std::shared_ptr<variable>>& value) {
+			return std::make_shared<constant>(value);
+		}
+
+
 		static std::shared_ptr<constant> make_bool_constant(bool value) {
 			auto out = std::make_shared<constant>(value);
 			out->type = type::boolean;
@@ -567,6 +572,22 @@ namespace mycelium {
 				}
 			}
 			return {};
+		}
+
+		std::string to_string() const {
+			std::string out;
+			if (!parent_scope) {
+				out += "global ";
+			}
+			out += "scope: {";
+			for (const auto& var : variables) {
+				out += var->to_string();
+				if (&var != &variables.back()) {
+					out += ", ";
+				}
+			}
+			out += "}";
+			return out;
 		}
 	};
 
