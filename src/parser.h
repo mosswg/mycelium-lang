@@ -76,6 +76,8 @@ namespace mycelium {
 
 		void skip_to_newline(const std::vector<token>& tokens, int& index);
 
+		void skip_function_definition(const std::vector<token>& tokens, int& index);
+
 		std::vector<mycelium::token> get_tokens_in_curlies(const std::vector<token>& tks, int search_index);
 
 		std::vector<mycelium::token> get_tokens_in_curlies(const std::vector<token>& tks, int search_index, int& start_parentheses, int& end_parentheses);
@@ -83,6 +85,8 @@ namespace mycelium {
 		std::vector<mycelium::token> get_tokens_in_parentheses(const std::vector<token>& tks, int search_index);
 
 		std::vector<mycelium::token> get_tokens_in_parentheses(const std::vector<token>& tks, int search_index, int& start_parentheses, int& end_parentheses);
+
+		std::shared_ptr<mycelium::expression> get_object_function(const std::shared_ptr<expression>& object, const std::vector<token>& function_tokens, const std::vector<token>& other_tokens);
 
 		std::shared_ptr<mycelium::expression> get_object_function(const std::vector<token>& tks, int index);
 

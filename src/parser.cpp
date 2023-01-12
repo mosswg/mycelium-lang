@@ -1062,19 +1062,73 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_function(const std::
 	}
 }
 
+
+std::shared_ptr<mycelium::expression> mycelium::parser::get_object_function(const std::shared_ptr<expression>& object, const std::vector<token>& function_tokens, const std::vector<token>& other_tokens) {
+	std::cout << "Getting object fn with " << object->to_string() << " for " << object->get_type().to_string() << " . " << tokens_to_string(function_tokens) << " and " << tokens_to_string(other_tokens) << "\n";
+
+	int tmp = 0;
+	std::shared_ptr<expression> function_call_as_expression = get_function(function_tokens, tmp, object->get_type().get_member_functions());
+
+	std::shared_ptr<function_call> func = std::static_pointer_cast<function_call>(function_call_as_expression);
+
+	if (func.get()) {
+		func->args.insert(func->args.begin(), object);
+
+		if (!other_tokens.empty()) {
+			std::vector<token> new_function_tokens;
+			std::vector<token> new_other_tokens;
+			bool found_seperator = false;
+
+			for (const auto& tk : other_tokens) {
+				if (tk.string == ".") {
+					if (found_seperator) {
+						break;
+					}
+
+					found_seperator = true;
+					continue;
+				}
+
+				if (found_seperator) {
+					new_other_tokens.push_back(tk);
+				}
+				else {
+					new_function_tokens.push_back(tk);
+				}
+			}
+			return get_object_function(func, new_function_tokens, new_other_tokens);
+		}
+
+		return func;
+	}
+	else {
+		throw_error("Unknown member function of " + object->to_string(), function_tokens[0]);
+		return {};
+	}
+}
+
 std::shared_ptr<mycelium::expression> mycelium::parser::get_object_function(const std::vector<token>& tks, int index) {
 	std::vector<token> object_tokens;
 	std::vector<token> function_call_tokens;
+	std::vector<token> other_tokens;
 	bool found_seperator = false;
+	bool multiple_seperators = false;
 
 	for (const auto& tk : tks) {
 		if (tk.string == ".") {
+			if (found_seperator) {
+				multiple_seperators = true;
+			}
 
 			found_seperator = true;
 			continue;
 		}
 
-		if (found_seperator) {
+
+		if (multiple_seperators) {
+			other_tokens.push_back(tk);
+		}
+		else if (found_seperator) {
 			function_call_tokens.push_back(tk);
 		}
 		else {
@@ -1103,20 +1157,8 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_object_function(cons
 		throw_error("Unknown Object " + out, object_tokens[0]);
 	}
 
-	int tmp = 0;
-	std::shared_ptr<expression> function_call_as_expression = get_function(function_call_tokens, tmp, object->get_type().get_member_functions());
 
-	std::shared_ptr<function_call> func = std::static_pointer_cast<function_call>(function_call_as_expression);
-
-	if (func.get()) {
-		func->args.insert(func->args.begin(), object);
-
-		return func;
-	}
-	else {
-		throw_error("Unknown member function of " + object->to_string(), function_call_tokens[0]);
-		return {};
-	}
+	return get_object_function(object, function_call_tokens, other_tokens);
 }
 
 std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression(const std::vector<token>& tokens, int& index) {
