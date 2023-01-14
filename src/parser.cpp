@@ -1396,11 +1396,12 @@ std::shared_ptr<mycelium::variable> builtin_string_split(std::vector<std::shared
 	std::string str = *args[0]->str;
 	std::vector<std::shared_ptr<mycelium::variable>> spl = *args[1]->list_ptr;
 
-	if (str.empty()) {
-		return {};
-	}
-
 	std::vector<std::shared_ptr<mycelium::variable>> out;
+
+
+	if (str.empty()) {
+		return mycelium::constant::make_constant(out);
+	}
 
 	size_t pos;
 	size_t prev_pos = 0;
