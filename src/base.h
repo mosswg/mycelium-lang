@@ -290,9 +290,9 @@ namespace mycelium {
 			this->str = std::make_shared<std::string>("");
 		}
 
-		variable(mycelium::token name, std::shared_ptr<std::vector<std::shared_ptr<variable>>> list_ptr) : expression(std::move(name)), type(type::file), list_ptr(std::move(list_ptr)) {}
+		variable(mycelium::token name, std::shared_ptr<std::vector<std::shared_ptr<variable>>> list_ptr) : expression(std::move(name)), type(type::list), list_ptr(std::move(list_ptr)) {}
 
-		variable(mycelium::token name, const std::vector<std::shared_ptr<variable>>& list_ptr) : expression(std::move(name)), type(type::file), list_ptr(std::make_shared<std::vector<std::shared_ptr<variable>>>(list_ptr)) {}
+		variable(mycelium::token name, const std::vector<std::shared_ptr<variable>>& list_ptr) : expression(std::move(name)), type(type::list), list_ptr(std::make_shared<std::vector<std::shared_ptr<variable>>>(list_ptr)) {}
 
 		~variable() override {
 			this->destroy();
