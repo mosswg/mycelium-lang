@@ -840,6 +840,7 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 		return {};
 	}
 
+
 	std::vector<std::shared_ptr<expression>> landmark_chunk_expressions;
 
 	for (int i = 0; i < landmark_chunks.size(); i++) {
@@ -863,6 +864,7 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 			out.pattern.emplace_back(landmarks[i].string);
 		}
 	}
+
 	if (show_debug_lines) {
 		std::cout << "got pattern: " << out.to_string() << "\n";
 	}
@@ -1640,7 +1642,6 @@ std::shared_ptr<mycelium::variable> builtin_assign_int(std::vector<std::shared_p
 	return args[0];
 }
 
-
 std::shared_ptr<mycelium::variable> builtin_inc_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
 	args[0]->value++;
 	return mycelium::constant::make_constant(args[0]->value - 1);
@@ -1655,6 +1656,20 @@ std::shared_ptr<mycelium::variable> builtin_assign_string(std::vector<std::share
 	*args[0]->str = *args[1]->get_value()->str;
 	return args[0];
 }
+
+std::shared_ptr<mycelium::variable> builtin_eq_string(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	return mycelium::constant::make_bool_constant(*args[0]->str == *args[1]->get_value()->str);
+}
+
+
+std::shared_ptr<mycelium::variable> builtin_or_bool(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	return mycelium::constant::make_bool_constant(args[0]->value || args[1]->get_value()->value);
+}
+
+std::shared_ptr<mycelium::variable> builtin_and_bool(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	return mycelium::constant::make_bool_constant(args[0]->value && args[1]->get_value()->value);
+}
+
 
 std::shared_ptr<mycelium::variable> builtin_plus_equals_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
 	args[0]->value = args[0]->value + args[1]->value;
@@ -1724,6 +1739,11 @@ std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_op
 	out.push_back(
 			std::make_shared<builtin_operator>("=", std::vector<token>({token("string"), token("a"), token("="), token("string"), token("b")}), "builtin_assign_string", std::vector<type>({type::string}), builtin_assign_string, 99, generate_new_scope())
 	);
+
+	out.push_back(
+			std::make_shared<builtin_operator>("==", std::vector<token>({token("string"), token("a"), token("=="), token("string"), token("b")}), "builtin_eq_string", std::vector<type>({type::boolean}), builtin_eq_string, 99, generate_new_scope())
+	);
+
 
 
 	/// Ints
