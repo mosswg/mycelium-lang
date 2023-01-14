@@ -221,11 +221,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_sing
 std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_tokens(const std::vector<token>& tks) {
 
 	if (show_debug_lines) {
-		std::cout << "Getting Expression From: ";
-
-		print_tokens(tks);
-
-		std::cout << "\n";
+		std::cout << "Getting Expression From: " << tokens_to_string(tks) << "\n";
 	}
 
 	if (tks.empty()) {
@@ -281,6 +277,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 		return get_object_function(tks, 0);
 	}
 
+
 	return {};
 }
 
@@ -292,11 +289,23 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 		next_token = tokens[index];
 	}
 
+
+	/// If the last thing we parsed was a conditional call ensure that we have a body
+	if (!previous_tokens.empty()) {
+		if (previous_tokens.back()->type == parsed_token_type::cond_call && (current_token.type != token_type::grouping || current_token.string != "{")) {
+			std::shared_ptr<conditional_call> cn = std::static_pointer_cast<conditional_call>(previous_tokens.back());
+			if (!cn->has_body) {
+				throw_error("Conditional calls must have a body", previous_tokens.back()->token);
+			}
+		}
+	}
+
+
 	// Check for operator on every token.
 	std::vector<token> remaining_line_tokens = get_tokens_until_newline(tokens, index);
 
 	// Removing open curly because we want it to still be with the main tokens when we find the body of the conditional. (we also don't want to confuse the function that gets expressions (it's a bit finicky but don't tell it I said that))
-	if (remaining_line_tokens.back().string == "{") {
+	if (!remaining_line_tokens.empty() && remaining_line_tokens.back().string == "{") {
 		remaining_line_tokens.pop_back();
 	}
 
@@ -392,6 +401,7 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 					/// Create an anonymous function with body of the conditional statement and pass that as the first argument
 					std::shared_ptr<expression> cn_call_expressions(function::make_anonymous_function(call_body, {}, {}, cn->body_scope));
 					cn->args.insert(cn->args.begin(), cn_call_expressions);
+					cn->has_body = true;
 
 					index = ending_body_index + 1;
 					return {};
@@ -1088,7 +1098,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_function(const std::
 
 			std::shared_ptr<mycelium::scope> body_scope = generate_new_scope();
 
-			return std::make_shared<conditional_call>(cn, func_call_patterns[0].get_expressions(), body_scope);
+			return std::make_shared<conditional_call>(cn, func_call_patterns[0].get_expressions(), body_scope, false);
 		}
 	}
 	else {

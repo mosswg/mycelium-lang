@@ -1172,10 +1172,11 @@ namespace mycelium {
 		std::shared_ptr<conditional> cn;
 		std::vector<std::shared_ptr<expression>> args;
 		std::shared_ptr<mycelium::scope> body_scope;
+		bool has_body;
 
 
 		conditional_call(std::shared_ptr<conditional> cn, std::vector<std::shared_ptr<expression>> args,
-						 std::shared_ptr<mycelium::scope> body_scope) : cn(std::move(cn)), args(std::move(args)), expression(cn->name, cond_call), body_scope(std::move(body_scope)) {}
+						 std::shared_ptr<mycelium::scope> body_scope, bool has_body = true) : cn(std::move(cn)), args(std::move(args)), expression(cn->name, cond_call), body_scope(std::move(body_scope)), has_body(has_body) {}
 
 		std::string to_string() const override {
 			std::string out = "Call to " + cn->to_string() + " with ";
