@@ -878,7 +878,11 @@ void mycelium::parser::skip_to_newline(const std::vector<token>& tokens, int& in
 		return;
 	}
 
-	for (; tokens[index++].line == current_line && tokens[index - 1].type != token_type::newline;);
+	for (; tokens[index++].line == current_line;) {
+		if (tokens[index - 1].type != string_literal && tokens[index - 1].string == ";") {
+			break;
+		}
+	}
 	index--;
 }
 
@@ -922,11 +926,12 @@ void mycelium::parser::skip_function_definition(const std::vector<token>& tokens
 std::vector<mycelium::token> mycelium::parser::get_tokens_until_newline(const std::vector<token>& tokens, int index) {
 	std::vector<token> out;
 	/// Decrementing so that we get the current token
-	int count, current_line = tokens[--index].line;
+	int current_line = tokens[--index].line;
 	/// If we're on the last line we just want to return the remaining tokens
 	if (current_line == tokens.back().line) {
 		for (int i = index; i < tokens.size(); i++) {
-			if (tokens[i].type == newline) {
+			if (tokens[i].type == separator && tokens[i].string == ";") {
+				std::cout << "sgun\n";
 				break;
 			}
 			out.push_back(tokens[i]);
@@ -936,9 +941,14 @@ std::vector<mycelium::token> mycelium::parser::get_tokens_until_newline(const st
 
 
 	token next;
-	for (count = 0; (next = tokens[index++]).line == current_line && next.type != newline; count++) {
+	for (; (next = tokens[index++]).line == current_line;) {
+		if (next.type != string_literal && next.string == ";") {
+			std::cout << "stopping gun: " << next.string << "\n";
+			break;
+		}
 		out.push_back(next);
 	}
+
 	return out;
 }
 
