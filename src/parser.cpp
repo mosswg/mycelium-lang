@@ -287,8 +287,6 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std::vector<std::shared_ptr<parsed_token>>& previous_tokens, const std::vector<token>& tokens, int& index) {
 	mycelium::token current_token = tokens[index++];
 
-	std::cout << "parsing " << current_token.string << " at " << index - 1 << "\n";
-
 	mycelium::token next_token;
 	if (index < tokens.size()) {
 		next_token = tokens[index];
@@ -426,7 +424,6 @@ std::vector<std::shared_ptr<mycelium::parsed_token>> mycelium::parser::parse_tok
 		// Don't save null tokens
 		if (parsed_token) {
 			ptokens.push_back(parsed_token);
-			std::cout << "got ptoken: " << parsed_token->to_string() << " at " << index << "\n";
 		}
 	}
 
@@ -946,14 +943,14 @@ std::vector<mycelium::token> mycelium::parser::get_tokens_in_curlies(const std::
 
 	for (int i = search_index; i < tks.size(); i++) {
 		const auto& token = tks[i];
-		if (token.string == "{") {
+		if (token.type == token_type::grouping && token.string == "{") {
 			if (search_depth == 0) {
 				start_parentheses = i;
 			}
 			search_depth++;
 			continue;
 		}
-		else if (token.string == "}") {
+		else if (token.type == token_type::grouping && token.string == "}") {
 			search_depth--;
 			if (search_depth == 0) {
 				end_parentheses = i;
@@ -982,7 +979,7 @@ std::vector<mycelium::token> mycelium::parser::get_tokens_in_parentheses(const s
 
 	for (int i = search_index; i < tks.size(); i++) {
 		const auto& token = tks[i];
-		if (token.string == "(") {
+		if (token.type == token_type::grouping && token.string == "(") {
 			if (search_depth == 0) {
 				start_parentheses = i;
 				search_depth++;
@@ -990,7 +987,7 @@ std::vector<mycelium::token> mycelium::parser::get_tokens_in_parentheses(const s
 			}
 			search_depth++;
 		}
-		else if (token.string == ")") {
+		else if (token.type == token_type::grouping && token.string == ")") {
 			search_depth--;
 			if (search_depth == 0) {
 				end_parentheses = i;
