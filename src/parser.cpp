@@ -1706,6 +1706,12 @@ std::shared_ptr<mycelium::variable> builtin_index_list(std::vector<std::shared_p
 	return args[0]->list_ptr->at(args[1]->get_value()->value);
 }
 
+
+std::shared_ptr<mycelium::variable> builtin_assign_list(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	*args[0]->list_ptr = *args[1]->get_value()->list_ptr;
+	return args[0];
+}
+
 std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_operators() {
 	std::vector<std::shared_ptr<operatr>> out;
 
@@ -1837,6 +1843,11 @@ std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_op
 	out.push_back(
 			std::make_shared<builtin_operator>("[]", std::vector<token>({token("list"), token("a"), token("["), token("int"), token("b"), token("]")}), "builtin_index_list", std::vector<type>({type::string}),
 											   builtin_index_list, 99, generate_new_scope())
+	);
+
+	out.push_back(
+			std::make_shared<builtin_operator>("=", std::vector<token>({token("list"), token("a"), token("="), token("list"), token("b"), token("")}), "builtin_assign_list", std::vector<type>({type::list}),
+											   builtin_assign_list, 99, generate_new_scope())
 	);
 
 
