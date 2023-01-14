@@ -669,10 +669,12 @@ std::shared_ptr<mycelium::return_from_function> mycelium::parser::parse_return(c
 		throw_error("Mismatch in return types", current_parsing_function->name);
 	}
 
-	std::vector<token> tks = get_tokens_until_newline(tokens, index);
+	// Skip 'return' token
+	index++;
+	std::vector<token> remaining_line_tokens = get_tokens_until_newline(tokens, index);
 	skip_to_newline(tokens, index);
 
-	if (tks.empty()) {
+	if (remaining_line_tokens.empty()) {
 		if (current_parsing_function->ret.empty()) {
 			return std::make_shared<return_from_function>(current_parsing_function);
 		}
@@ -681,7 +683,7 @@ std::shared_ptr<mycelium::return_from_function> mycelium::parser::parse_return(c
 	else {
 		bool contains_comma = false;
 
-		for (const auto& tk : tks) {
+		for (const auto& tk : remaining_line_tokens) {
 			if (tk.string == ",") {
 				contains_comma = true;
 				break;
@@ -689,13 +691,16 @@ std::shared_ptr<mycelium::return_from_function> mycelium::parser::parse_return(c
 		}
 
 		if (contains_comma) {
-			throw_error("Returning Multiple Values is Not Yet Supported", tks[0]);
+			throw_error("Returning Multiple Values is Not Yet Supported", remaining_line_tokens[0]);
 		}
 
-		std::shared_ptr<expression> value = get_expression_from_tokens(tks);
+		std::shared_ptr<expression> value = get_expression_from_tokens(remaining_line_tokens);
 
+		if (!value.get()) {
+			throw_error("Unknown return value " + tokens_to_string(remaining_line_tokens), remaining_line_tokens[0]);
+		}
 
-		if (current_parsing_function->ret.size() == 1 && current_parsing_function->ret[1] == value->get_type()) {
+		if (current_parsing_function->ret.size() == 1 && current_parsing_function->ret[0] == value->get_type()) {
 			return std::make_shared<return_from_function>(current_parsing_function, value);
 		}
 
