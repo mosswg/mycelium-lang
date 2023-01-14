@@ -345,7 +345,7 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 				throw_error("Type with no following variable name found", current_token);
 			}
 
-			std::shared_ptr<variable> var = parse_variable(type);
+			std::shared_ptr<variable> var = parse_variable(tokens, index, type);
 			if (show_debug_lines) {
 				std::cout << "Got variable: " << var->type.name << ": " << var->token.string << "\n";
 			}
@@ -703,13 +703,13 @@ std::shared_ptr<mycelium::return_from_function> mycelium::parser::parse_return(c
 	}
 }
 
-std::shared_ptr<mycelium::variable> mycelium::parser::parse_variable(int variable_type) {
+std::shared_ptr<mycelium::variable> mycelium::parser::parse_variable(const std::vector<token>& tokens, int& index, int variable_type) {
 
 	if (show_debug_lines) {
-		std::cout << "parsing variable: type: " << type::types[variable_type].name << "\tname: " << tokenizer.tokens[tokenizer.current_token_index].string << std::endl;
+		std::cout << "parsing variable: type: " << type::types[variable_type].name << "\tname: " << tokens[index].string << std::endl;
 	}
 
-	return current_scope->make_variable(tokenizer.get_next_token(), type::types[variable_type]);
+	return current_scope->make_variable(tokens[index++], type::types[variable_type]);
 }
 
 

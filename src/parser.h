@@ -77,7 +77,7 @@ namespace mycelium {
 
 		std::shared_ptr<mycelium::return_from_function> parse_return(const std::vector<token>& tokens, int& index);
 
-		std::shared_ptr<mycelium::variable> parse_variable(int variable_type);
+		std::shared_ptr<mycelium::variable> parse_variable(const std::vector<token>& tokens, int& index, int variable_type);
 
 		std::vector<mycelium::token> get_tokens_until_newline(const std::vector<token>& tokens, int index);
 
