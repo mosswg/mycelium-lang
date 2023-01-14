@@ -969,11 +969,11 @@ std::vector<mycelium::token> mycelium::parser::get_tokens_in_curlies(const std::
 	for (int i = search_index; i < tks.size(); i++) {
 		const auto& token = tks[i];
 		if (token.type == token_type::grouping && token.string == "{") {
-			if (search_depth == 0) {
-				start_parentheses = i;
-			}
 			search_depth++;
-			continue;
+			if (search_depth == 1) {
+				start_parentheses = i;
+				continue;
+			}
 		}
 		else if (token.type == token_type::grouping && token.string == "}") {
 			search_depth--;
