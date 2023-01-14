@@ -1444,6 +1444,15 @@ std::shared_ptr<mycelium::variable> builtin_string_split(std::vector<std::shared
 	return mycelium::constant::make_constant(out);
 }
 
+std::shared_ptr<mycelium::variable> builtin_string_length(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	return mycelium::constant::make_constant( args[0]->str->size() );
+}
+
+std::shared_ptr<mycelium::variable> builtin_string_is_empty(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	return mycelium::constant::make_constant( args[0]->str->empty() );
+}
+
+
 
 std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_functions() {
 	std::vector<std::shared_ptr<function>> out;
@@ -1537,6 +1546,14 @@ std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_f
 	// String Functions
 	type::string.add_member_function(
 		std::make_shared<mycelium::builtin_function>("split", std::vector<mycelium::type>({type::list}), std::vector<mycelium::type>({type::list}), builtin_string_split, generate_new_scope())
+	);
+
+	type::string.add_member_function(
+		std::make_shared<mycelium::builtin_function>("length", std::vector<mycelium::type>({type::integer}), std::vector<mycelium::type>({}), builtin_string_length, generate_new_scope())
+	);
+
+	type::string.add_member_function(
+		std::make_shared<mycelium::builtin_function>("is_empty", std::vector<mycelium::type>({type::boolean}), std::vector<mycelium::type>({}), builtin_string_is_empty, generate_new_scope())
 	);
 
 
