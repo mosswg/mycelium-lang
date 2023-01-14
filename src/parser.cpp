@@ -1652,6 +1652,7 @@ std::shared_ptr<mycelium::variable> builtin_dec_int(std::vector<std::shared_ptr<
 	return mycelium::constant::make_constant(args[0]->value + 1);
 }
 
+
 std::shared_ptr<mycelium::variable> builtin_assign_string(std::vector<std::shared_ptr<mycelium::variable>>& args) {
 	*args[0]->str = *args[1]->get_value()->str;
 	return args[0];
@@ -1807,6 +1808,16 @@ std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_op
 	out.push_back(
 			std::make_shared<builtin_operator>("=", std::vector<token>({token("bool"), token("a"), token("="), token("int"), token("b")}), "builtin_assign_bool", std::vector<type>({type::boolean}),
 											   builtin_assign_int, 99, generate_new_scope())
+	);
+
+	out.push_back(
+			std::make_shared<builtin_operator>("||", std::vector<token>({token("bool"), token("a"), token("||"), token("bool"), token("b")}), "builtin_or_bool", std::vector<type>({type::boolean}),
+											   builtin_or_bool, 99, generate_new_scope())
+	);
+
+	out.push_back(
+			std::make_shared<builtin_operator>("&&", std::vector<token>({token("bool"), token("a"), token("&&"), token("bool"), token("b")}), "builtin_and_bool", std::vector<type>({type::boolean}),
+											   builtin_and_bool, 99, generate_new_scope())
 	);
 
 	/// Files
