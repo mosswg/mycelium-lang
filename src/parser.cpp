@@ -1527,11 +1527,11 @@ std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_f
 
 	// List Functions
 	type::list.add_member_function(
-		std::make_shared<mycelium::builtin_function>("push_back", std::vector<mycelium::type>({}), std::vector<mycelium::type>({type::integer}), builtin_list_push_back, generate_new_scope())
+		std::make_shared<mycelium::builtin_function>("push", std::vector<mycelium::type>({}), std::vector<mycelium::type>({type::integer}), builtin_list_push_back, generate_new_scope())
 	);
 
 	type::list.add_member_function(
-		std::make_shared<mycelium::builtin_function>("push_back", std::vector<mycelium::type>({}), std::vector<mycelium::type>({type::string}), builtin_list_push_back, generate_new_scope())
+		std::make_shared<mycelium::builtin_function>("push", std::vector<mycelium::type>({}), std::vector<mycelium::type>({type::string}), builtin_list_push_back, generate_new_scope())
 	);
 
 	type::list.add_member_function(
