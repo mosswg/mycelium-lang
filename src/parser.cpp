@@ -795,12 +795,12 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 			desired_chunk_sizes.push_back(0);
 			landmarks.emplace_back(arg.oper);
 			landmark_chunks.emplace_back();
-			for (; tks[landmark_chunk_index].string != arg.oper && landmark_chunk_index < tks.size(); landmark_chunk_index++) {
+			for (; landmark_chunk_index < tks.size() && tks[landmark_chunk_index].string != arg.oper; landmark_chunk_index++) {
 				landmark_chunks.back().push_back(tks[landmark_chunk_index]);
 			}
 
 			/// If we don't find the landmark this pattern is invalid.
-			if (tks[landmark_chunk_index].string != arg.oper) {
+			if (landmark_chunk_index >= tks.size() || tks[landmark_chunk_index].string != arg.oper) {
 				return {};
 			}
 
