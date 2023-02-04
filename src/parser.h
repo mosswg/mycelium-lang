@@ -73,8 +73,6 @@ namespace mycelium {
 
 		std::shared_ptr<mycelium::conditional> parse_cond(bool get_body = false);
 
-		std::vector<token> find_in_grouping(int& index, const std::string &open, const std::string &close);
-
 		std::shared_ptr<mycelium::return_from_function> parse_return(const std::vector<token>& tokens, int& index);
 
 		std::shared_ptr<mycelium::variable> parse_variable(const std::vector<token>& tokens, int& index, int variable_type);
@@ -85,13 +83,19 @@ namespace mycelium {
 
 		void skip_function_definition(const std::vector<token>& tokens, int& index);
 
+		std::vector<mycelium::token> get_tokens_in_grouping(const std::vector<token>& tks, int search_index, int& open_token_index, int& close_token_index, const std::string& open_token_string, const std::string& close_token_string);
+
+		std::vector<mycelium::token> get_tokens_in_angle_brackets(const std::vector<token>& tks, int search_index);
+
+		std::vector<mycelium::token> get_tokens_in_angle_brackets(const std::vector<token>& tks, int search_index, int& open_angle_index, int& close_angle_index);
+
 		std::vector<mycelium::token> get_tokens_in_curlies(const std::vector<token>& tks, int search_index);
 
-		std::vector<mycelium::token> get_tokens_in_curlies(const std::vector<token>& tks, int search_index, int& start_parentheses, int& end_parentheses);
+		std::vector<mycelium::token> get_tokens_in_curlies(const std::vector<token>& tks, int search_index, int& open_curly_index, int& close_curly_index);
 
 		std::vector<mycelium::token> get_tokens_in_parentheses(const std::vector<token>& tks, int search_index);
 
-		std::vector<mycelium::token> get_tokens_in_parentheses(const std::vector<token>& tks, int search_index, int& start_parentheses, int& end_parentheses);
+		std::vector<mycelium::token> get_tokens_in_parentheses(const std::vector<token>& tks, int search_index, int& open_parentheses_index, int& close_parentheses_index);
 
 		std::shared_ptr<mycelium::expression> get_object_function(const std::shared_ptr<expression>& object, const std::vector<token>& function_tokens, const std::vector<token>& other_tokens);
 

@@ -54,14 +54,6 @@ void mycelium::tokenizer::tokenize() {
 
 			token_type type = token::find_type(token_string);
 			if (type != whitespace) {
-				if (token_string == "<" && line[i + 1] == "<") {
-					tokens.emplace_back(op, "<<", line_index);
-					i++;
-				} else if (token_string == ">" && line[i + 1] == ">") {
-					tokens.emplace_back(op, ">>", line_index);
-					i++;
-				}
-
 				if (type == string_literal) {
 					tokens.emplace_back(type, token_string.substr(1, token_string.size() - 2), line_index);
 				}

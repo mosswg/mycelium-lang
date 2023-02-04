@@ -541,7 +541,7 @@ std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_bod
 	token next_token = tokenizer.get_next_non_whitespace_token();
 
 	if (next_token.string == "<") {
-		for (auto& token : find_in_grouping(tokenizer.current_token_index, "<", ">")) {
+		for (auto& token : get_tokens_in_angle_brackets(tokenizer.tokens, tokenizer.current_token_index)) {
 			if (show_debug_lines) {
 				std::cout << "ret: " << token.string << std::endl;
 			}
@@ -555,7 +555,7 @@ std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_bod
 	next_token = tokenizer.get_next_token();
 
 	if (next_token.string == "<") {
-		for (auto& token : find_in_grouping(tokenizer.current_token_index, "<", ">")) {
+		for (auto& token : get_tokens_in_angle_brackets(tokenizer.tokens, tokenizer.current_token_index)) {
 			if (show_debug_lines) {
 				std::cout << "context: " << token.string << std::endl;
 			}
@@ -605,29 +605,6 @@ std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_bod
 
 std::shared_ptr<mycelium::conditional> mycelium::parser::parse_cond(bool get_body) {
 
-}
-
-std::vector<mycelium::token> mycelium::parser::find_in_grouping(int& index, const std::string& open, const std::string& close) {
-	std::vector<mycelium::token> out = {};
-	int search_depth = 0;
-	while (!(search_depth == 0 && tokenizer.tokens[index].string == close)) {
-		if (tokenizer.tokens[index].string == open) {
-			search_depth++;
-		}
-		else if (tokenizer.tokens[index].string == close) {
-			search_depth--;
-		}
-		else if (tokenizer.tokens[index].string == "\\") {
-			out.push_back(tokenizer.tokens[++index]);
-		}
-		else {
-			out.push_back(tokenizer.tokens[index]);
-		}
-		index++;
-	}
-	// Skip all found tokens along with the closing grouping token
-	tokenizer.current_token_index = index + 1;
-	return out;
 }
 
 void mycelium::parser::find_function_declarations() {
@@ -954,80 +931,69 @@ std::vector<mycelium::token> mycelium::parser::get_tokens_until_newline(const st
 	return out;
 }
 
+std::vector<mycelium::token> mycelium::parser::get_tokens_in_grouping(const std::vector<token>& tks, int search_index, int& open_token_index, int& close_token_index, const std::string& open_token_string, const std::string& close_token_string) {
+	std::vector<token> out;
+	int search_depth = 0;
+	open_token_index = -1;
+	close_token_index = -1;
 
-std::vector<mycelium::token> mycelium::parser::get_tokens_in_curlies(const std::vector<token>& tks, int search_index) {
+	for (int i = search_index; i < tks.size(); i++) {
+		const auto& token = tks[i];
+		if (token.type == token_type::grouping && token.string == open_token_string) {
+			search_depth++;
+			if (search_depth == 1) {
+				open_token_index = i;
+				continue;
+			}
+		}
+		else if (token.type == token_type::grouping && token.string == close_token_string) {
+			search_depth--;
+			if (search_depth == 0) {
+				close_token_index = i;
+				break;
+			}
+		}
+
+		if (search_depth != 0) {
+			out.push_back(token);
+		}
+	}
+
+	return out;
+}
+
+
+inline std::vector<mycelium::token> mycelium::parser::get_tokens_in_angle_brackets(const std::vector<token>& tks, int search_index) {
 	int tmp1,tmp2;
 
 	return get_tokens_in_curlies(tks, search_index, tmp1, tmp2);
 }
 
 
-std::vector<mycelium::token> mycelium::parser::get_tokens_in_curlies(const std::vector<token>& tks, int search_index, int& start_parentheses, int& end_parentheses) {
-	std::vector<token> out;
-	int search_depth = 0;
-	start_parentheses = -1;
-	end_parentheses = -1;
-
-	for (int i = search_index; i < tks.size(); i++) {
-		const auto& token = tks[i];
-		if (token.type == token_type::grouping && token.string == "{") {
-			search_depth++;
-			if (search_depth == 1) {
-				start_parentheses = i;
-				continue;
-			}
-		}
-		else if (token.type == token_type::grouping && token.string == "}") {
-			search_depth--;
-			if (search_depth == 0) {
-				end_parentheses = i;
-				break;
-			}
-		}
-
-		if (search_depth != 0) {
-			out.push_back(token);
-		}
-	}
-
-	return out;
+inline std::vector<mycelium::token> mycelium::parser::get_tokens_in_angle_brackets(const std::vector<token>& tks, int search_index, int& open_angle_index, int& close_angle_index) {
+	return get_tokens_in_grouping(tks, search_index, open_angle_index, close_angle_index, "<", ">");
 }
 
-std::vector<mycelium::token> mycelium::parser::get_tokens_in_parentheses(const std::vector<token>& tks, int search_index) {
+inline std::vector<mycelium::token> mycelium::parser::get_tokens_in_curlies(const std::vector<token>& tks, int search_index) {
+	int tmp1,tmp2;
+
+	return get_tokens_in_curlies(tks, search_index, tmp1, tmp2);
+}
+
+
+inline std::vector<mycelium::token> mycelium::parser::get_tokens_in_curlies(const std::vector<token>& tks, int search_index, int& open_curly_index, int& close_curly_index) {
+	return get_tokens_in_grouping(tks, search_index, open_curly_index, close_curly_index, "{", "}");
+}
+
+inline std::vector<mycelium::token> mycelium::parser::get_tokens_in_parentheses(const std::vector<token>& tks, int search_index) {
 	int tmp1,tmp2;
 
 	return get_tokens_in_parentheses(tks, search_index, tmp1, tmp2);
 }
 
 
-std::vector<mycelium::token> mycelium::parser::get_tokens_in_parentheses(const std::vector<token>& tks, int search_index, int& start_parentheses, int& end_parentheses) {
-	std::vector<token> out;
-	int search_depth = 0;
-
-	for (int i = search_index; i < tks.size(); i++) {
-		const auto& token = tks[i];
-		if (token.type == token_type::grouping && token.string == "(") {
-			if (search_depth == 0) {
-				start_parentheses = i;
-				search_depth++;
-				continue;
-			}
-			search_depth++;
-		}
-		else if (token.type == token_type::grouping && token.string == ")") {
-			search_depth--;
-			if (search_depth == 0) {
-				end_parentheses = i;
-				break;
-			}
-		}
-
-		if (search_depth != 0) {
-			out.push_back(token);
-		}
-	}
-
-	return out;
+inline std::vector<mycelium::token> mycelium::parser::get_tokens_in_parentheses(const std::vector<token>& tks, int search_index, int& open_parentheses_index, int& close_parentheses_index) {
+	return get_tokens_in_grouping(tks, search_index, open_parentheses_index, close_parentheses_index, "(", ")");
 }
 
 
