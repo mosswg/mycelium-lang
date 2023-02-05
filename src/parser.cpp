@@ -1812,7 +1812,7 @@ std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_op
 	);
 
 	out.push_back(
-			std::make_shared<builtin_operator>("=", std::vector<token>({token("list"), token("a"), token("="), token("list"), token("b"), token("")}), "builtin_assign_list", std::vector<type>({type::list}),
+			std::make_shared<builtin_operator>("=", std::vector<token>({token("list"), token("a"), token("="), token("list"), token("b")}), "builtin_assign_list", std::vector<type>({type::list}),
 											   builtin_assign_list, 99, generate_new_scope())
 	);
 
