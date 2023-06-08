@@ -298,3 +298,9 @@ std::string mycelium::operatr::encode_operator(const std::string &oper) {
 std::string mycelium::function_to_string(const std::shared_ptr<mycelium::function>& fn) {
 	return fn->to_string();
 }
+
+
+
+	std::shared_ptr<mycelium::pattern_token> mycelium::make_pattern_token(const std::vector<mycelium::token>&) {
+		return std::make_shared<pattern_tokens::oper>("this doesn't work yet");
+	}

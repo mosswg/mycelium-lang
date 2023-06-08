@@ -22,7 +22,9 @@ namespace mycelium {
 		pattern_token_type type;
 		uint32_t token_length;
 
-		explicit pattern_token(pattern_token_type ptt) : type(ptt) {}
+		pattern_token(pattern_token_type ptt) : type(ptt), token_length(0) {}
+
+		pattern_token(const pattern_token& pt) : type(pt.type), token_length(pt.token_length) {}
 
 		/**
 			Returns the number of matched tokens starting at the start of the vector or zero if no match.
@@ -30,18 +32,23 @@ namespace mycelium {
 
 			@ret number of matched tokens
 			*/
-		virtual uint32_t num_matched(const std::vector<std::shared_ptr<pattern_token>>& other);
+		virtual uint32_t num_matched(const std::vector<std::shared_ptr<pattern_token>>& other) const {
+			return 0;
+		}
 
-		virtual std::string to_string() const;
+		virtual std::string to_string() const {
+			return "";
+		}
 	};
 
 	namespace pattern_tokens {
 		class oper : public pattern_token {
 		public:
 			std::string value;
-			oper(std::string str) : pattern_token(std::move(pt_oper)), value(str) {}
+			explicit oper(std::string str) : pattern_token(std::move(pt_oper)), value(str) {}
+			explicit oper(const token& tk) : pattern_token(std::move(pt_oper)), value(tk.string) {}
 
-			uint32_t num_matched(const std::vector<std::shared_ptr<pattern_token>>& other) override {
+			uint32_t num_matched(const std::vector<std::shared_ptr<pattern_token>>& other) const override {
 				if (other[0]->type != pt_oper) {
 					return 0;
 				}
@@ -58,16 +65,16 @@ namespace mycelium {
 		};
 
 
-		class expr : public pattern_token {
+		class variable : public pattern_token {
 		public:
 			std::shared_ptr<expression> value;
-			expr(std::shared_ptr<expression> expr) : pattern_token(pt_oper), value(expr) {}
+			explicit variable(std::shared_ptr<expression> expr) : pattern_token(pt_expr), value(expr) {}
 
-			uint32_t num_matched(const std::vector<std::shared_ptr<pattern_token>>& other) override {
-				if (other[0]->type != pt_expr) {
+			uint32_t num_matched(const std::vector<std::shared_ptr<pattern_token>>& other) const override {
+				if (other.front()->type != pt_expr) {
 					return 0;
 				}
-				auto other_as_expr = (expr*)other[0].get();
+				auto other_as_expr = (variable*)other.front().get();
 				if (other_as_expr->value->get_type().code == value->get_type().code) {
 					return 1;
 				}
@@ -83,7 +90,52 @@ namespace mycelium {
 			public:
 			std::vector<std::shared_ptr<pattern_token>> value;
 			bool allow_zero_length = false;
+
+			list() : pattern_token(pt_oper), value({}) {}
+
 			list(const std::vector<std::shared_ptr<pattern_token>>& list) : pattern_token(pt_oper), value(list) {}
+
+
+			static list create_from_tokens(const std::vector<token>& tokens) {
+				list out;
+				for (const auto& token : tokens) {
+					if (token.type == ttype) {
+						out.value.push_back(std::make_shared<pattern_tokens::variable>(std::make_shared<mycelium::variable>(token, type::types[type::validate_type(token)])));
+					}
+					else if (token.type == word) {
+						out.value.push_back(std::make_shared<pattern_tokens::oper>(token));
+					}
+					else {
+						throw_error("pattern list create_from_token doesn't know what to do with \"" + token.string + "\", type: " + std::to_string((int)token.type));
+					}
+				}
+				return out;
+			}
+
+			uint32_t num_matched(const std::vector<std::shared_ptr<pattern_token>>& other) const override {
+				if (other.size() < value.size()) {
+					return 0;
+				}
+
+				if (other[0]->type != value[0]->type) {
+					return 0;
+				}
+
+				uint32_t num_consumed = 0;
+				std::vector<std::shared_ptr<pattern_token>> other_subvec = other;
+				std::vector<std::shared_ptr<pattern_token>> value_subvec = value;
+				/// TODO: This includes any matching subsets of the list. E.G. {<int,>...ints} would match all of "1, 2, 3" but also {<+int>...ints} would match "1 + 2 +". Decide if thats good or not.
+				while ((num_consumed < other.size()) && (other_subvec.front()->type == value[num_consumed % value.size()]->type)) {
+					uint32_t matched = value[num_consumed % value.size()]->num_matched(other_subvec);
+					if (matched == 0) {
+						break;
+					}
+					// take the subvector of other_subvect from 'matched' to end
+					other_subvec = {other_subvec.begin() + matched, other_subvec.end()};
+					num_consumed += matched;
+				}
+				return num_consumed;
+			}
 
 			std::string to_string() const override {
 				std::string out = "{";
@@ -97,23 +149,21 @@ namespace mycelium {
 				return out;
 			}
 
-			uint32_t num_matched(const std::vector<std::shared_ptr<pattern_token>>& other) override {
-				if (other.size() < value.size()) {
-					return 0;
-				}
-
-				if (other[0]->type != value[0]->type) {
-					return 0;
-				}
-
-				uint32_t num_consumed = 0;
-				while (other[num_consumed]->type == value[num_consumed % value.size()]->type) {
-
-					num_consumed++;
-				}
-				return 0;
-			}
 		};
+	}
+
+
+	std::shared_ptr<pattern_token> make_pattern_token(const std::vector<token>&);
+
+
+	/// FIXME: This should be shared_ptr but many thing expect it to not be.
+
+	inline pattern_token make_pattern_token(const std::string& str) {
+		return pattern_tokens::oper(str);
+	}
+
+	inline pattern_token make_pattern_token(const std::shared_ptr<expression>& expr) {
+		return pattern_tokens::variable(expr);
 	}
 
 	class pattern_match {
@@ -142,7 +192,7 @@ namespace mycelium {
 				}
 				else if (tk.type == word) {
 					if (current_type.type != token_type::invalid) {
-						out.pattern.emplace_back(std::make_shared<variable>(tk, type::types[type::validate_type(current_type)]));
+						out.pattern.push_back(pattern_tokens::variable(std::make_shared<variable>(tk, type::types[type::validate_type(current_type)])));
 
 						current_type.type = token_type::invalid;
 						if (!found_op) {
@@ -150,12 +200,12 @@ namespace mycelium {
 						}
 					}
 					else {
-						out.pattern.emplace_back(tk.string);
+						out.pattern.push_back(pattern_tokens::oper(tk.string));
 						found_op = true;
 					}
 				}
 				else {
-					out.pattern.emplace_back(tk.string);
+					out.pattern.push_back(pattern_tokens::oper(tk.string));
 					found_op = true;
 				}
 			}
@@ -180,6 +230,7 @@ namespace mycelium {
 		}
 
 		std::vector<std::shared_ptr<expression>> get_expressions() {
+			/*
 			std::vector<std::shared_ptr<expression>> out;
 			for (auto& pt : pattern) {
 				if (pt.type == pt_expr) {
@@ -187,9 +238,12 @@ namespace mycelium {
 				}
 			}
 			return out;
+			*/
+			return {};
 		}
 
 		bool is_match(const pattern_match& test_pattern) {
+			/*
 			long test_size = (long)test_pattern.pattern.size();
 
 			if (test_size != pattern.size()) {
@@ -214,6 +268,8 @@ namespace mycelium {
 				}
 			}
 			return true;
+			*/
+			return false;
 		}
 
 		bool is_match(const std::vector<token>& test) {

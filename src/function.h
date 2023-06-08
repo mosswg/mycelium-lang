@@ -84,9 +84,9 @@ namespace mycelium {
 			pattern_match out;
 
 			for (auto& arg : args) {
-				out.pattern.emplace_back(arg);
+				out.pattern.push_back(pattern_tokens::variable(arg));
 				if (&arg != &args.back()) {
-					out.pattern.emplace_back(",");
+					out.pattern.push_back(pattern_tokens::oper(","));
 				}
 			}
 

@@ -142,33 +142,33 @@ mycelium::pattern_token mycelium::parser::get_pattern_token(const std::vector<my
 	if (tk.type == ttype) {
 		/// Still not sure what the right thing to do about types is but
 		/// I think we should just treat them like string in this case
-		   return pattern_token(tk.string);
+		   return make_pattern_token(tk.string);
 	} else if (tk.type == word) {
 		std::shared_ptr<variable> var = get_word_variable(tk);
 		if (var.get()) {
-			return pattern_token(var);
+			return make_pattern_token(var);
 		} else {
-			return pattern_token(tk.string);
+			return make_pattern_token(tk.string);
 		}
 	} else if (tk.type == num) {
-		return pattern_token(constant::make_constant(std::stoi(tk.string)));
+		return make_pattern_token(constant::make_constant(std::stoi(tk.string)));
 	} else if (tk.type == string_literal) {
-		return pattern_token(constant::make_constant(tk.string));
+		return make_pattern_token(constant::make_constant(tk.string));
 	} else if (tk.type == boolean_literal) {
 		if (tk.string == token::boolean_true) {
-			return pattern_token(constant::make_bool_constant(true));
+			return make_pattern_token(constant::make_bool_constant(true));
 		}
 		else if (tk.string == token::boolean_false) {
-			return pattern_token(constant::make_bool_constant(false));
+			return make_pattern_token(constant::make_bool_constant(false));
 		}
 		else {
 			throw_error("Unknown boolean " + tk.string, tk);
 		}
 	} else if (tk.type == grouping) {
 		/// FIXME: Handle Parentheses In Operator
-		return pattern_token(tk.string);
+		return make_pattern_token(tk.string);
 	} else {
-		return pattern_token(tk.string);
+		return make_pattern_token(tk.string);
 	}
 }
 
@@ -177,10 +177,12 @@ mycelium::pattern_match mycelium::parser::get_pattern_from_tokens(int number_of_
 	token current_type;
 	while (pattern.pattern.size() < number_of_tokens) {
 		pattern_token new_token = get_pattern_token(tokenizer.tokens, tokenizer.current_token_index);
+		/*
 		if (!new_token.is_expression && new_token.oper.empty()) {
 			// Return when we have an empty token because that means we have an invalid token e.g. a type
 			return {};
 		}
+		*/
 		pattern.pattern.emplace_back(new_token);
 	}
 
@@ -234,9 +236,10 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 		/// If all we have is a single token we want to try to match that to a pattern or return that as either a variable or nothing
 		int tmp = 0;
 		auto pt = get_pattern_token(tks, tmp);
-		if (pt.is_expression) {
-			return pt.expr;
-		}
+		// if (pt.type == parsed_token_type::expr) {
+			/// FIXME: casualty
+			// return pt;
+		// }
 		return get_expression_from_single_token(tks[0]);
 	}
 
@@ -713,7 +716,9 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 	std::vector<int> landmark_positions = {0};
 	std::vector<token> tokens;
 
+	/// FIXME: casualty
 	for (auto & arg : fn->args.pattern) {
+		/*
 		if (!arg.is_expression) {
 			unsigned long pos;
 			if (!landmark_positions.empty()) {
@@ -737,6 +742,7 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 				}
 			}
 		}
+		*/
 	}
 
 
@@ -765,7 +771,7 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 		else {
 			/// Create a pattern with something in it so that when we try to match against nothing it fails
 			pattern_match out;
-			out.pattern.emplace_back("Invalid Pattern");
+			out.pattern.push_back(pattern_tokens::oper("Invalid Pattern"));
 			return out;
 		}
 	}
@@ -781,6 +787,8 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 
 	int landmark_chunk_index = 0;
 	for (auto & arg : fn->args.pattern) {
+		/// FIXME: Casualty
+		/*
 		if (!arg.is_expression) {
 			desired_chunk_sizes.push_back(0);
 			landmarks.emplace_back(arg.oper);
@@ -804,6 +812,7 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 		else {
 			desired_chunk_sizes.back()++;
 		}
+		*/
 	}
 
 	/// If there are no landmark use all the tokens to create one expression
@@ -812,7 +821,7 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 		pattern_match out;
 		std::shared_ptr<expression> expr = get_expression_from_tokens(tks);
 		if (expr) {
-			out.pattern.emplace_back(expr);
+			out.pattern.push_back(pattern_tokens::variable(expr));
 		}
 		return out;
 	}
@@ -861,10 +870,10 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 	int expr_index = 0;
 	for (int i = 0; out.pattern.size() < landmark_chunk_expressions.size() + landmarks.size() && i < desired_chunk_sizes.size(); i++) {
 		for (int j = 0; j < desired_chunk_sizes[i]; j++) {
-			out.pattern.emplace_back(landmark_chunk_expressions[expr_index++]);
+			out.pattern.push_back(pattern_tokens::variable(landmark_chunk_expressions[expr_index++]));
 		}
 		if (i < landmarks.size()) {
-			out.pattern.emplace_back(landmarks[i].string);
+			out.pattern.push_back(pattern_tokens::oper(landmarks[i].string));
 		}
 	}
 
@@ -1054,11 +1063,14 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_function(const std::
 	pattern_match fn_call_pattern = get_pattern_from_tokens(get_tokens_in_parentheses(tks, start_index));
 	std::string pattern_string;
 	for (auto &arg: fn_call_pattern.pattern) {
+		// FIXME: casualty
+		/*
 		if (arg.is_expression) {
 			pattern_string += arg.expr->get_type().name + ' ';
 		} else {
 			pattern_string += arg.oper + ' ';
 		}
+		*/
 	}
 	throw_error("Unknown function or conditional \"" + name.string + "(" + pattern_string + ")\"", name);
 	return {};
