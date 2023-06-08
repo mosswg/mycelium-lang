@@ -28,8 +28,6 @@ namespace mycelium {
 
 		token get_current_token() const;
 
-		token get_next_non_whitespace_token();
-
 		std::vector<mycelium::token> get_next_non_whitespace_tokens_until(const std::string& until);
 
 		std::vector<mycelium::token> get_tokens_inside_grouping();

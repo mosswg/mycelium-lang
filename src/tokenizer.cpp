@@ -88,20 +88,6 @@ mycelium::token mycelium::tokenizer::get_current_token() const {
 	return this->tokens[current_token_index-1];
 }
 
-mycelium::token mycelium::tokenizer::get_next_non_whitespace_token() {
-	if (current_token_index >= this->tokens.size()) {
-		return {};
-	}
-
-	if (this->tokens[current_token_index].type != mycelium::whitespace) {
-		return this->tokens[current_token_index++];
-	}
-
-	while (this->tokens[++current_token_index].type == mycelium::whitespace && current_token_index < tokens.size()) {}
-
-	return this->tokens[current_token_index++];
-}
-
 std::vector<mycelium::token> mycelium::tokenizer::get_next_non_whitespace_tokens_until(const std::string& until) {
 	std::vector<mycelium::token> out;
 

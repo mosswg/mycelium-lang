@@ -484,18 +484,18 @@ std::shared_ptr<mycelium::function> mycelium::parser::parse_function(bool get_bo
 
 	token = this->tokenizer.get_next_token();
 
-	mycelium::token next_token = this->tokenizer.get_next_non_whitespace_token();
+	mycelium::token next_token = this->tokenizer.get_next_token();
 
 	if (next_token.string == "<") {
 		ret = this->tokenizer.get_next_non_whitespace_tokens_until(">");
-		name = this->tokenizer.get_next_non_whitespace_token();
+		name = this->tokenizer.get_next_token();
 	}
 	else {
 		ret = {};
 		name = next_token;
 	}
 
-	next_token = this->tokenizer.get_next_non_whitespace_token();
+	next_token = this->tokenizer.get_next_token();
 
 	if (next_token.string == "(") {
 		args = this->tokenizer.get_next_non_whitespace_tokens_until(")");
