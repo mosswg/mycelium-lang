@@ -10,7 +10,7 @@ func main {
     // Add all the multiples of 5 from 5 to 999 to sum
     i = 5
     while (i < 1000) {
-    // Ignore multiples of three (we've already added them to sum)
+    // Ignore multiples of three since we've already added them to sum
         if (i % 3 != 0) {
             sum += i
         }

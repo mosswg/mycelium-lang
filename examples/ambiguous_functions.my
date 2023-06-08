@@ -1,0 +1,13 @@
+func ambig(int a) {
+	println(a)
+}
+
+func ambig(int a + int b) {
+	println(a)
+	println(" + ")
+	println(b)
+}
+
+
+
+ambig(1 + 2)

@@ -1,0 +1,16 @@
+func main {
+  int a = fib(10)
+  println(a);
+}
+
+func<int> fib(int n) {
+  int a = 0
+  int b = 1
+  while (n > 0) {
+    int tmp = a + b
+    a = b
+    b = tmp
+    n--
+  }
+  return b
+}

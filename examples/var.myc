@@ -1,5 +1,12 @@
-int a = 17
+func main {
+	int a = 17
+	int b = 10
 
-int b = 10 + a * 4
+	a = (15 + (5 * 4) + 5)
 
-println(b)
+	println(a)
+
+	println(a = (10 + 4))
+
+	println(a)
+}

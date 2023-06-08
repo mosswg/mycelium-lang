@@ -1,0 +1,12 @@
+list test
+
+test.push_back(14)
+test.push_back(5)
+
+
+int i = 0
+while (i < test.length()) {
+	println(test[i++])
+}
+
+println(test)

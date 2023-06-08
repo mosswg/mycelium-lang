@@ -1,0 +1,6 @@
+string a = " "
+
+if (a == " " || a == "\t") {
+	println("ws")
+}
+println("all done")

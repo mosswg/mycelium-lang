@@ -1,13 +1,13 @@
-func<int> print(int a) {
+func<int> prinnnnnt(int a) {
     // do stuff
 }
 
 func<string, int> get_string(int num) {
-    string out = to_string(num)
+    string out = num.to_string()
     return out, out.length
 }
 
-print(1);
+prinnnnnt(1);
 
 func set_string(int num) {}
 

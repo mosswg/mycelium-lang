@@ -1,0 +1,8 @@
+oper<int> <int a[int b]> {
+	println(a.to_string() + " indexed at " + b.to_string())
+}
+
+
+int a = 4
+
+a[5]

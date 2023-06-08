@@ -1,0 +1,5 @@
+list split;
+split.push(" ")
+string test = "hello world"
+list line_tokens = test.split(split)
+println(line_tokens)

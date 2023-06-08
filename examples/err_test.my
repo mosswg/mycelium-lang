@@ -1,0 +1,6 @@
+func<int> test {
+	return 123
+}
+
+println(test() + 1)
+println(2 * test())

@@ -1,0 +1,9 @@
+oper<int><print int a> {
+	println(a)
+}
+
+
+int b = 4
+
+
+print b

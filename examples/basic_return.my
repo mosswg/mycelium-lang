@@ -1,0 +1,15 @@
+func<int> test {
+	return 256
+}
+
+oper<int> <int a x int b>{
+	return a * b
+}
+
+int a = test()
+
+println(a)
+
+println(a + test())
+
+println(a x 5)

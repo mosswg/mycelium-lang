@@ -1,0 +1,7 @@
+int a = 4
+
+func test(int aoeu) {
+	println(aoeu)
+}
+
+test(a)

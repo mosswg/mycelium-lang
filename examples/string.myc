@@ -1,6 +1,6 @@
 string hello = "Hello"
 string world = "World!"
 
-string result = hello + " " + world
+string result = (hello + " " + world)
 
-println(result)
+println(hello + " " + world)

@@ -1,0 +1,13 @@
+oper<><string a # string b> {
+	print(a)
+	print(" says hi to ")
+	println(b)
+}
+
+string a = "kim"
+string b = "xevin"
+
+a#b
+
+
+"xevin" # "kim"

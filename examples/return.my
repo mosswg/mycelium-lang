@@ -1,0 +1,15 @@
+func test {
+	return
+}
+
+func<int> test2 {
+	return 3
+}
+
+func<int> test3 {
+	return 1 + 2
+}
+
+func<int, int> test4 {
+	return 1, 2
+}
