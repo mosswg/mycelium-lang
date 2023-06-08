@@ -560,12 +560,11 @@ std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_bod
 			}
 			ret.push_back(token);
 		}
+		tokenizer.skip_to_index(angle_bracket_ending_index + 1);
 	}
 	else {
 		throw_error("operator definitions must contain a context", keyword_token);
 	}
-
-	tokenizer.skip_to_index(angle_bracket_ending_index + 1);
 
 	next_token = tokenizer.get_next_token_without_increment();
 
@@ -586,7 +585,6 @@ std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_bod
 			context.push_back(token);
 		}
 		ret.clear();
-		tokenizer.current_token_index--;
 	}
 
 	pattern_match context_pattern = pattern_match::create_from_tokens(context);
