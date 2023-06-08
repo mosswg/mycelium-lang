@@ -3,6 +3,11 @@
 //
 
 #include "base.h"
+#include "type.h"
+#include "token.h"
+#include "pattern.h"
+#include "parsed_token.h"
+#include "function.h"
 
 const mycelium::type mycelium::type::reference(0, "reference", 8);
 const mycelium::type mycelium::type::integer(1, "int", 8);

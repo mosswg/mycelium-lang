@@ -268,6 +268,9 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 
 	for (auto& op : operators) {
 		pattern_match op_use_pattern = this->generate_pattern_from_function(op, tks);
+		if (!op_use_pattern.pattern.empty()) {
+			std::cout << "oup: " << op_use_pattern.to_string() << " from " << op->to_string() << "\n";
+		}
 		if (op->args.is_match(op_use_pattern)) {
 			return std::make_shared<operator_use>(op, op_use_pattern.get_expressions());
 		}
@@ -319,11 +322,13 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 		}
 	}
 
+
 	switch (current_token.type) {
 		case token_type::op:
 			throw_error("Unknown Operator: " + current_token.string, current_token);
 		case keyword:
 			if (current_token.string == token::return_keyword) {
+				std::cout << "getting ret: " << tokens_to_string(tokens) << " at " << index << "\n";
 				return parse_return(tokens, index);
 			}
 
@@ -391,6 +396,10 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 					int starting_body_index, ending_body_index;
 
 					auto body = get_tokens_in_curlies(tokens, index, starting_body_index, ending_body_index);
+
+					if (show_debug_lines) {
+						std::cout << "cond body: " << tokens_to_string(body) << "\n";
+					}
 
 					std::shared_ptr<mycelium::scope> pushed_scope = current_scope;
 					change_scope(cn->body_scope);
@@ -760,6 +769,10 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 			return out;
 		}
 	}
+//	std::cout << "getpatfrm: " << fn->to_string() << ":\n";
+//	for (auto& tk : tks) {
+//		std::cout << "\t" << tk.string << "\n";
+//	}
 
 	std::vector<std::vector<token>> landmark_chunks;
 	std::vector<int> desired_chunk_sizes = {0};
@@ -817,6 +830,19 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 		return {};
 	}
 
+	/*
+	std::cout << "lmc:\n";
+	for (auto& lmc : landmark_chunks) {
+		std::cout << "\t{";
+		for (auto& chunk : lmc) {
+			std::cout << chunk.string;
+			if (&chunk != &lmc.back()) {
+				std::cout << ", ";
+			}
+		}
+		std::cout << "}\n";
+	}
+	*/
 
 	std::vector<std::shared_ptr<expression>> landmark_chunk_expressions;
 
@@ -1426,12 +1452,19 @@ std::shared_ptr<mycelium::variable> builtin_string_split(std::vector<std::shared
 			out.push_back(mycelium::constant::make_constant(str.substr(prev_pos, min_pos - prev_pos)));
 		}
 
+		std::cout << "adding " << split << " to out\n";
 		out.push_back(mycelium::constant::make_constant(split));
 
 		prev_pos = min_pos + split.length();
 	}
+
 	if (min_pos >= str.length()) {
 		out.push_back(mycelium::constant::make_constant(str.substr(prev_pos, min_pos - prev_pos)));
+	}
+
+	std::cout << "out:\n";
+	for (auto& var : out) {
+		std::cout << "\t" << var->to_string() << "\n";
 	}
 
 	return mycelium::constant::make_constant(out);
@@ -1801,14 +1834,19 @@ std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_op
 
 	/// Lists
 	out.push_back(
-			std::make_shared<builtin_operator>("[]", std::vector<token>({token("list"), token("a"), token("["), token("int"), token("b"), token("]")}), "builtin_index_list", std::vector<type>({type::integer}),
+			std::make_shared<builtin_operator>("[]", std::vector<token>({token("list"), token("a"), token("["), token("int"), token("b"), token("]")}), "builtin_index_list_string", std::vector<type>({type::string}),
+											   builtin_index_list, 99, generate_new_scope())
+	);
+
+	out.push_back(
+			std::make_shared<builtin_operator>("[]", std::vector<token>({token("list"), token("a"), token("["), token("int"), token("b"), token("]")}), "builtin_index_list_int", std::vector<type>({type::integer}),
 											   builtin_index_list, 99, generate_new_scope())
 	);
 
 
 	out.push_back(
-			std::make_shared<builtin_operator>("[]", std::vector<token>({token("list"), token("a"), token("["), token("int"), token("b"), token("]")}), "builtin_index_list", std::vector<type>({type::string}),
-											   builtin_index_list, 99, generate_new_scope())
+			std::make_shared<builtin_operator>("=", std::vector<token>({token("list"), token("a"), token("="), token("list"), token("b")}), "builtin_assign_list", std::vector<type>({type::list}),
+											   builtin_assign_list, 99, generate_new_scope())
 	);
 
 	out.push_back(
@@ -1835,6 +1873,19 @@ std::shared_ptr<mycelium::variable> builtin_while_conditional(std::vector<std::s
 	std::vector<std::shared_ptr<mycelium::variable>> inside_args({});
 	while (args[1]->get_value()->value) {
 		args[0]->get_value()->fn_ptr->call(inside_args);
+	}
+	return mycelium::constant::make_constant(out);
+}
+
+std::shared_ptr<mycelium::variable> builtin_for_conditional(std::vector<std::shared_ptr<mycelium::expression>>& args) {
+	// Execute the first statement
+	args[1]->get_value();
+	// Check the second
+	bool out = (args[2]->get_value()->value);
+	std::vector<std::shared_ptr<mycelium::variable>> inside_args({});
+	while (args[2]->get_value()->value) {
+		args[0]->get_value()->fn_ptr->call(inside_args);
+		args[3]->get_value();
 	}
 	return mycelium::constant::make_constant(out);
 }

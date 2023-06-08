@@ -7,6 +7,7 @@
 
 #include "base.h"
 #include "tokenizer.h"
+#include "function.h"
 
 namespace mycelium {
 
