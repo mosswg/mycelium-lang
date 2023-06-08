@@ -1,7 +1,7 @@
 list test
 
-test.push_back(14)
-test.push_back(5)
+test.push(14)
+test.push(5)
 
 
 int i = 0

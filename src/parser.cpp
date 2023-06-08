@@ -1461,7 +1461,6 @@ std::shared_ptr<mycelium::variable> builtin_string_split(std::vector<std::shared
 			out.push_back(mycelium::constant::make_constant(str.substr(prev_pos, min_pos - prev_pos)));
 		}
 
-		std::cout << "adding " << split << " to out\n";
 		out.push_back(mycelium::constant::make_constant(split));
 
 		prev_pos = min_pos + split.length();
@@ -1469,11 +1468,6 @@ std::shared_ptr<mycelium::variable> builtin_string_split(std::vector<std::shared
 
 	if (min_pos >= str.length()) {
 		out.push_back(mycelium::constant::make_constant(str.substr(prev_pos, min_pos - prev_pos)));
-	}
-
-	std::cout << "out:\n";
-	for (auto& var : out) {
-		std::cout << "\t" << var->to_string() << "\n";
 	}
 
 	return mycelium::constant::make_constant(out);

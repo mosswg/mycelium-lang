@@ -1,4 +1,4 @@
-file current = "examples/todo.txt"
+file current = "examples/file.my"
 
 while (current.has_line()) {
 	println(current.get_line())

@@ -1,4 +1,4 @@
-pattern func print_expr(int a + int b) {
+func print_expr(int a + int b) {
     print(a)
     print(" + ")
     print(b)

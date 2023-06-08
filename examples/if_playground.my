@@ -1,6 +1,6 @@
 string a = " "
 
 if (a == " " || a == "\t") {
-	println("ws")
+	println("string '" + a + "' is whitespace")
 }
 println("all done")
