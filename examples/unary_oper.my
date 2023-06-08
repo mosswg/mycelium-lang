@@ -1,4 +1,4 @@
-oper<int><print int a> {
+oper<print int a> {
 	println(a)
 }
 

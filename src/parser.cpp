@@ -784,7 +784,8 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 
 	std::vector<std::vector<token>> landmark_chunks;
 	std::vector<int> desired_chunk_sizes = {0};
-	int number_of_chunks = 1;
+	int number_of_chunks = 0;
+	bool last_was_oper = true;
 	std::vector<token> landmarks;
 
 	int landmark_chunk_index = 0;
@@ -806,12 +807,16 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 			// Skip the operator after we check if it exists
 			landmark_chunk_index++;
 
-			if (&arg != &fn->args.pattern.back()) {
-				number_of_chunks++;
-			}
+			last_was_oper = true;
 		}
 		else {
+			// Increas the number of chunks every time we switch between operator and value.
+			// This ensures that we only increase this counter when we actuall need a new chunk
+			if (last_was_oper) {
+				number_of_chunks++;
+			}
 			desired_chunk_sizes.back()++;
+			last_was_oper = false;
 		}
 	}
 
@@ -828,8 +833,12 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 
 	/// If the last pattern token is a land mark then we don't want get the last chunk as there isn't one
 	if (landmark_chunk_index < tks.size()) {
+		/// Add a new landmark chunk only if the current one is not empty
+		/// This avoids having an empty landmark_chunk for operators that start with a landmark e.g. print <value>.
+		if (!landmark_chunks.back().empty()) {
+			landmark_chunks.emplace_back();
+		}
 		/// Get the last tokens into a chunk if there is one
-		landmark_chunks.emplace_back();
 		for (int i = landmark_chunk_index; i < tks.size(); i++) {
 			landmark_chunks.back().push_back(tks[i]);
 		}
