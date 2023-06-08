@@ -73,4 +73,23 @@ namespace mycelium {
 		}
 	};
 
+
+	inline std::string token_vec_to_string(std::vector<token> tokens) {
+		if (tokens.empty()) {
+			return "{}";
+		}
+
+		std::string out = "{";
+
+		for (auto& token : tokens) {
+			out += token.string;
+			if (&token != &tokens.back()) {
+				out += ", ";
+			}
+		}
+		out += "}";
+
+		return out;
+	}
+
 }

@@ -144,7 +144,7 @@ std::shared_ptr<mycelium::pattern_token> mycelium::parser::get_pattern_token(con
 		/// I think we should just treat them like string in this case
 		   return make_pattern_token(tk.string);
 	} else if (tk.type == word) {
-		std::shared_ptr<variable> var = get_word_variable(tk);
+		std::shared_ptr<mycelium::variable> var = get_word_variable(tk);
 		if (var.get()) {
 			return make_pattern_token(var);
 		} else {
@@ -384,7 +384,6 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 				}
 
 				if (op) {
-					std::cout << op->to_string() << " = " << op->get_value()->get_as_string() << "\n";
 					skip_to_newline(tokens, index);
 					return op;
 				}
@@ -550,10 +549,12 @@ std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_bod
 	std::shared_ptr<mycelium::scope> scope = generate_new_scope();
 	token name_token;
 
-	token next_token = tokenizer.get_next_non_whitespace_token();
+	token next_token = tokenizer.get_next_token_without_increment();
+
+	int tmp, angle_bracket_ending_index = 0;
 
 	if (next_token.string == "<") {
-		for (auto& token : get_tokens_in_angle_brackets(tokenizer.tokens, tokenizer.current_token_index)) {
+		for (auto& token : get_tokens_in_angle_brackets(tokenizer.tokens, tokenizer.current_token_index, tmp, angle_bracket_ending_index)) {
 			if (show_debug_lines) {
 				std::cout << "ret: " << token.string << std::endl;
 			}
@@ -564,15 +565,18 @@ std::shared_ptr<mycelium::operatr> mycelium::parser::parse_operator(bool get_bod
 		throw_error("operator definitions must contain a context", keyword_token);
 	}
 
-	next_token = tokenizer.get_next_token();
+	tokenizer.skip_to_index(angle_bracket_ending_index + 1);
+
+	next_token = tokenizer.get_next_token_without_increment();
 
 	if (next_token.string == "<") {
-		for (auto& token : get_tokens_in_angle_brackets(tokenizer.tokens, tokenizer.current_token_index)) {
+		for (auto& token : get_tokens_in_angle_brackets(tokenizer.tokens, tokenizer.current_token_index, tmp, angle_bracket_ending_index)) {
 			if (show_debug_lines) {
 				std::cout << "context: " << token.string << std::endl;
 			}
 			context.push_back(token);
 		}
+		tokenizer.skip_to_index(angle_bracket_ending_index + 1);
 	}
 	else {
 		if (show_debug_lines) {
@@ -997,7 +1001,7 @@ std::vector<mycelium::token> mycelium::parser::get_tokens_in_grouping(const std:
 inline std::vector<mycelium::token> mycelium::parser::get_tokens_in_angle_brackets(const std::vector<token>& tks, int search_index) {
 	int tmp1,tmp2;
 
-	return get_tokens_in_curlies(tks, search_index, tmp1, tmp2);
+	return get_tokens_in_angle_brackets(tks, search_index, tmp1, tmp2);
 }
 
 
@@ -1226,7 +1230,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression(const s
 			return expr;
 		}
 		else {
-			throw_error("Unknown variable \"" + next_token.string + "\"", next_token);
+			throw_error("Unknown expression \"" + token_vec_to_string(line_tokens) + "\"", next_token);
 			return {};
 		}
 	}
@@ -1634,6 +1638,12 @@ std::shared_ptr<mycelium::variable> builtin_append_string(std::vector<std::share
 	return mycelium::constant::make_constant(*args[0]->str + *args[1]->str);
 }
 
+
+std::shared_ptr<mycelium::variable> builtin_append_in_place_string(std::vector<std::shared_ptr<mycelium::variable>>& args) {
+	*args[0]->str += *args[1]->str;
+	return args[0];
+}
+
 std::shared_ptr<mycelium::variable> builtin_assign_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
 	args[0]->value = args[1]->value;
 	return args[0];
@@ -1670,7 +1680,7 @@ std::shared_ptr<mycelium::variable> builtin_and_bool(std::vector<std::shared_ptr
 
 
 std::shared_ptr<mycelium::variable> builtin_plus_equals_int(std::vector<std::shared_ptr<mycelium::variable>>& args) {
-	args[0]->value = args[0]->value + args[1]->value;
+	args[0]->value += args[1]->value;
 	return args[0];
 }
 
@@ -1739,6 +1749,11 @@ std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_op
 	out.push_back(
 			std::make_shared<builtin_operator>("+", std::vector<token>({token("string"), token("a"), token("+"), token("string"), token("b")}), "builtin_append_string", std::vector<type>({type::string}), builtin_append_string, 20, generate_new_scope())
 	);
+
+	out.push_back(
+			std::make_shared<builtin_operator>("+=", std::vector<token>({token("string"), token("a"), token("+="), token("string"), token("b")}), "builtin_append_in_place_string", std::vector<type>({type::string}), builtin_append_in_place_string, 20, generate_new_scope())
+	);
+
 
 	out.push_back(
 			std::make_shared<builtin_operator>("=", std::vector<token>({token("string"), token("a"), token("="), token("string"), token("b")}), "builtin_assign_string", std::vector<type>({type::string}), builtin_assign_string, 99, generate_new_scope())

@@ -1,0 +1,9 @@
+oper<string><int a and int b> {
+    string out
+    out += b.to_string()
+    out += " and "
+    out += a.to_string()
+	return out
+}
+
+println("hello " + 1 and 2)

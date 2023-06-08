@@ -45,5 +45,7 @@ namespace mycelium {
 		std::vector<token> tokens_until_newline();
 
 		void skip_to_newline();
+
+		void skip_to_index(int index);
 	};
 }

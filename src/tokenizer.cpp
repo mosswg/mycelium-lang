@@ -53,6 +53,7 @@ void mycelium::tokenizer::tokenize() {
 			}
 
 			token_type type = token::find_type(token_string);
+			// Ignore all whitespace
 			if (type != whitespace) {
 				if (type == string_literal) {
 					tokens.emplace_back(type, token_string.substr(1, token_string.size() - 2), line_index);
@@ -96,7 +97,7 @@ mycelium::token mycelium::tokenizer::get_next_non_whitespace_token() {
 		return this->tokens[current_token_index++];
 	}
 
-	while (this->tokens[++current_token_index].type == mycelium::whitespace && current_token_index < tokens.size());
+	while (this->tokens[++current_token_index].type == mycelium::whitespace && current_token_index < tokens.size()) {}
 
 	return this->tokens[current_token_index++];
 }
@@ -219,4 +220,10 @@ void mycelium::tokenizer::skip_to_newline() {
 
 	for (; this->get_next_token().line == current_line && this->get_current_token().string != ";";);
 	this->current_token_index--;
+}
+
+
+
+void mycelium::tokenizer::skip_to_index(int index) {
+	this->current_token_index = index;
 }
