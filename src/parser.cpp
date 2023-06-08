@@ -236,10 +236,9 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 		/// If all we have is a single token we want to try to match that to a pattern or return that as either a variable or nothing
 		int tmp = 0;
 		auto pt = get_pattern_token(tks, tmp);
-		// if (pt.type == parsed_token_type::expr) {
-			/// FIXME: casualty
-			// return pt;
-		// }
+		if (pt->type == pattern_token_type::pt_expr) {
+			return (std::static_pointer_cast<pattern_tokens::variable>(pt))->value;
+		}
 		return get_expression_from_single_token(tks[0]);
 	}
 
@@ -272,7 +271,9 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 	for (auto& op : operators) {
 		pattern_match op_use_pattern = this->generate_pattern_from_function(op, tks);
 		if (!op_use_pattern.pattern.empty()) {
-			std::cout << "oup: " << op_use_pattern.to_string() << " from " << op->to_string() << "\n";
+			if (mycelium::show_debug_lines) {
+				std::cout << "oup: " << op_use_pattern.to_string() << " from " << op->to_string() << "\n";
+			}
 		}
 		if (op->args.is_match(op_use_pattern)) {
 			return std::make_shared<operator_use>(op, op_use_pattern.get_expressions());
@@ -331,7 +332,6 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 			throw_error("Unknown Operator: " + current_token.string, current_token);
 		case keyword:
 			if (current_token.string == token::return_keyword) {
-				std::cout << "getting ret: " << tokens_to_string(tokens) << " at " << index << "\n";
 				return parse_return(tokens, index);
 			}
 
@@ -716,33 +716,33 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 	std::vector<int> landmark_positions = {0};
 	std::vector<token> tokens;
 
-	/// FIXME: casualty
+	/// Convert the single token 'tk' into multiple tokens in 'tokens'.
+	/// This is done going over all function arguments and finding "landmarks". These are only operators for now but this might change in the future.
 	for (auto & arg : fn->args.pattern) {
-		/*
-		if (!arg.is_expression) {
+		if (arg->type == pattern_token_type::pt_oper) {
 			unsigned long pos;
+			std::string arg_string = std::static_pointer_cast<pattern_tokens::oper>(arg)->value;
 			if (!landmark_positions.empty()) {
-				if ((pos = tk.string.find(arg.oper, landmark_positions.back())) != std::string::npos) {
+				if ((pos = tk.string.find(arg_string, landmark_positions.back())) != std::string::npos) {
 					if (pos != 0) {
 						tokens.emplace_back(tk.string.substr(landmark_positions.back(), pos - landmark_positions.back()));
 					}
-					tokens.emplace_back(tk.string.substr(pos, arg.oper.length()));
+					tokens.emplace_back(tk.string.substr(pos, arg_string.length()));
 
-					landmark_positions.push_back(pos + arg.oper.length());
+					landmark_positions.push_back(pos + arg_string.length());
 				}
 			}
 			else {
-				if ((pos = tk.string.find(arg.oper, 0) != std::string::npos)) {
+				if ((pos = tk.string.find(arg_string, 0) != std::string::npos)) {
 					if (pos != 0) {
 						tokens.emplace_back(tk.string.substr(0, pos));
 					}
-					tokens.emplace_back(tk.string.substr(pos, arg.oper.length()));
+					tokens.emplace_back(tk.string.substr(pos, arg_string.length()));
 
-					landmark_positions.push_back(pos + arg.oper.length());
+					landmark_positions.push_back(pos + arg_string.length());
 				}
 			}
 		}
-		*/
 	}
 
 
@@ -787,18 +787,17 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 
 	int landmark_chunk_index = 0;
 	for (auto & arg : fn->args.pattern) {
-		/// FIXME: Casualty
-		/*
-		if (!arg.is_expression) {
+		if (arg->type == pattern_token_type::pt_oper) {
+			std::string arg_string = std::static_pointer_cast<pattern_tokens::oper>(arg)->value;
 			desired_chunk_sizes.push_back(0);
-			landmarks.emplace_back(arg.oper);
+			landmarks.emplace_back(arg_string);
 			landmark_chunks.emplace_back();
-			for (; landmark_chunk_index < tks.size() && tks[landmark_chunk_index].string != arg.oper; landmark_chunk_index++) {
+			for (; landmark_chunk_index < tks.size() && tks[landmark_chunk_index].string != arg_string; landmark_chunk_index++) {
 				landmark_chunks.back().push_back(tks[landmark_chunk_index]);
 			}
 
 			/// If we don't find the landmark this pattern is invalid.
-			if (landmark_chunk_index >= tks.size() || tks[landmark_chunk_index].string != arg.oper) {
+			if (landmark_chunk_index >= tks.size() || tks[landmark_chunk_index].string != arg_string) {
 				return {};
 			}
 
@@ -812,7 +811,6 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 		else {
 			desired_chunk_sizes.back()++;
 		}
-		*/
 	}
 
 	/// If there are no landmark use all the tokens to create one expression
@@ -945,7 +943,6 @@ std::vector<mycelium::token> mycelium::parser::get_tokens_until_newline(const st
 	if (current_line == tokens.back().line) {
 		for (int i = index; i < tokens.size(); i++) {
 			if (tokens[i].type == separator && tokens[i].string == ";") {
-				std::cout << "sgun\n";
 				break;
 			}
 			out.push_back(tokens[i]);
@@ -957,7 +954,6 @@ std::vector<mycelium::token> mycelium::parser::get_tokens_until_newline(const st
 	token next;
 	for (; (next = tokens[index++]).line == current_line;) {
 		if (next.type != string_literal && next.string == ";") {
-			std::cout << "stopping gun: " << next.string << "\n";
 			break;
 		}
 		out.push_back(next);
@@ -1061,17 +1057,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_function(const std::
 
 
 	pattern_match fn_call_pattern = get_pattern_from_tokens(get_tokens_in_parentheses(tks, start_index));
-	std::string pattern_string;
-	for (auto &arg: fn_call_pattern.pattern) {
-		// FIXME: casualty
-		/*
-		if (arg.is_expression) {
-			pattern_string += arg.expr->get_type().name + ' ';
-		} else {
-			pattern_string += arg.oper + ' ';
-		}
-		*/
-	}
+	std::string pattern_string = fn_call_pattern.to_string();
 	throw_error("Unknown function or conditional \"" + name.string + "(" + pattern_string + ")\"", name);
 	return {};
 }

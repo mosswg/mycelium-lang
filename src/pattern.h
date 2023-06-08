@@ -13,7 +13,7 @@ namespace mycelium {
 		pt_oper = 0,
 		pt_expr,
 		pt_metatype,
-		pt_metalist,
+		pt_list,
 
 	};
 
@@ -91,9 +91,9 @@ namespace mycelium {
 			std::vector<std::shared_ptr<pattern_token>> value;
 			bool allow_zero_length = false;
 
-			list() : pattern_token(pt_oper), value({}) {}
+			list() : pattern_token(pt_list), value({}) {}
 
-			list(const std::vector<std::shared_ptr<pattern_token>>& list) : pattern_token(pt_oper), value(list) {}
+			list(const std::vector<std::shared_ptr<pattern_token>>& list) : pattern_token(pt_list), value(list) {}
 
 
 			static list create_from_tokens(const std::vector<token>& tokens) {
@@ -230,16 +230,16 @@ namespace mycelium {
 		}
 
 		std::vector<std::shared_ptr<expression>> get_expressions() {
-			/*
 			std::vector<std::shared_ptr<expression>> out;
 			for (auto& pt : pattern) {
-				if (pt.type == pt_expr) {
-					out.push_back(pt.expr);
+				if (pt->type == pt_expr) {
+					out.push_back(std::static_pointer_cast<pattern_tokens::variable>(pt)->value);
+				}
+				else if (pt->type == pt_list) {
+					throw_error("List to expression not implemented");
 				}
 			}
 			return out;
-			*/
-			return {};
 		}
 
 		bool is_match(const pattern_match& test_pattern) {
