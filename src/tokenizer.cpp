@@ -8,7 +8,7 @@ void mycelium::tokenizer::tokenize() {
 
 	tokens.clear();
 
-	if (show_debug_lines) {
+	if (mycelium::show_debug_lines) {
 		std::cout << lines << std::endl;
 	}
 

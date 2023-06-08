@@ -19,8 +19,6 @@ bool test_pattern_match() {
 
 	auto list = mycelium::pattern_tokens::list::create_from_tokens(tokens);
 
-	std::cout << list.to_string() << "\n";
-
 
 	tokens.clear();
 	tokens.emplace_back(mycelium::token_type::ttype, "int");
@@ -95,9 +93,6 @@ bool test_pattern_match() {
 	}
 	print_test_name("pattern list empty input");
 
-	return test_passed;
-
-	/*
 
 	tokens.emplace_back(mycelium::token_type::ttype, "int");
 	tokens.emplace_back(mycelium::token_type::word, "var1");
@@ -105,7 +100,7 @@ bool test_pattern_match() {
 	tokens.emplace_back(mycelium::token_type::ttype, "int");
 	tokens.emplace_back(mycelium::token_type::word, "var2");
 
-	mycelium::pattern_match pm(tokens);
+	mycelium::pattern_match pm = mycelium::pattern_match::create_from_tokens(tokens);
 
 	std::string test = "int var1 + int var2";
 	mycelium::tokenizer tk({ test });
@@ -115,14 +110,12 @@ bool test_pattern_match() {
 	if (!pm.is_match(tk.tokens)) {
 		test_passed = false;
 		print_failed();
-		print_test_name("pattern match");
-		std::cerr << test << std::endl;
 	}
 	else {
 		print_success();
-		print_test_name("pattern match");
-		std::cout << test << std::endl;
 	}
+	print_test_name("pattern match " + test);
+
 
 
 	test = "int a + int b";
@@ -133,14 +126,11 @@ bool test_pattern_match() {
 	if (!pm.is_match(tk.tokens)) {
 		test_passed = false;
 		print_failed();
-		print_test_name("pattern match");
-		std::cerr << test << std::endl;
 	}
 	else {
 		print_success();
-		print_test_name("pattern match");
-		std::cout << test << std::endl;
 	}
+	print_test_name("pattern match " + test);
 
 
 	test = "string a + string b";
@@ -151,14 +141,11 @@ bool test_pattern_match() {
 	if (pm.is_match(tk.tokens)) {
 		test_passed = false;
 		print_failed();
-		print_test_name("pattern match");
-		std::cerr << test << std::endl;
 	}
 	else {
 		print_success();
-		print_test_name("pattern match");
-		std::cout << test << std::endl;
 	}
+	print_test_name("pattern match " + test);
 
 
 	test = "string a + int b";
@@ -169,15 +156,11 @@ bool test_pattern_match() {
 	if (pm.is_match(tk.tokens)) {
 		test_passed = false;
 		print_failed();
-		print_test_name("pattern match");
-		std::cerr << test << std::endl;
 	}
 	else {
 		print_success();
-		print_test_name("pattern match");
-		std::cout << test << std::endl;
 	}
+	print_test_name("pattern match " + test);
 
 	return test_passed;
-	*/
 }

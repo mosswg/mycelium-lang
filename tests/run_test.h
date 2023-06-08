@@ -16,5 +16,5 @@ void print_success() {
 }
 
 void print_test_name(const std::string& name) {
-	std::cerr << mycelium::colored_text::YELLOW << name << mycelium::colored_text::RESET << " ";
+	std::cerr << mycelium::colored_text::YELLOW << name << mycelium::colored_text::RESET << "\n";
 }

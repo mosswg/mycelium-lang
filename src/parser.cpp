@@ -137,7 +137,7 @@ void mycelium::parser::parse() {
 	change_scope(pushed_scope);
 }
 
-mycelium::pattern_token mycelium::parser::get_pattern_token(const std::vector<mycelium::token>& tks, int& index) {
+std::shared_ptr<mycelium::pattern_token> mycelium::parser::get_pattern_token(const std::vector<mycelium::token>& tks, int& index) {
 	token tk = tks[index++];
 	if (tk.type == ttype) {
 		/// Still not sure what the right thing to do about types is but
@@ -176,7 +176,7 @@ mycelium::pattern_match mycelium::parser::get_pattern_from_tokens(int number_of_
 	pattern_match pattern;
 	token current_type;
 	while (pattern.pattern.size() < number_of_tokens) {
-		pattern_token new_token = get_pattern_token(tokenizer.tokens, tokenizer.current_token_index);
+		auto new_token = get_pattern_token(tokenizer.tokens, tokenizer.current_token_index);
 		/*
 		if (!new_token.is_expression && new_token.oper.empty()) {
 			// Return when we have an empty token because that means we have an invalid token e.g. a type
@@ -771,7 +771,7 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 		else {
 			/// Create a pattern with something in it so that when we try to match against nothing it fails
 			pattern_match out;
-			out.pattern.push_back(pattern_tokens::oper("Invalid Pattern"));
+			out.pattern.push_back(make_pattern_token("Invalid Pattern"));
 			return out;
 		}
 	}
@@ -821,7 +821,7 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 		pattern_match out;
 		std::shared_ptr<expression> expr = get_expression_from_tokens(tks);
 		if (expr) {
-			out.pattern.push_back(pattern_tokens::variable(expr));
+			out.pattern.push_back(make_pattern_token(expr));
 		}
 		return out;
 	}
@@ -870,10 +870,10 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 	int expr_index = 0;
 	for (int i = 0; out.pattern.size() < landmark_chunk_expressions.size() + landmarks.size() && i < desired_chunk_sizes.size(); i++) {
 		for (int j = 0; j < desired_chunk_sizes[i]; j++) {
-			out.pattern.push_back(pattern_tokens::variable(landmark_chunk_expressions[expr_index++]));
+			out.pattern.push_back(make_pattern_token(landmark_chunk_expressions[expr_index++]));
 		}
 		if (i < landmarks.size()) {
-			out.pattern.push_back(pattern_tokens::oper(landmarks[i].string));
+			out.pattern.push_back(make_pattern_token(landmarks[i].string));
 		}
 	}
 

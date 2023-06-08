@@ -84,9 +84,9 @@ namespace mycelium {
 			pattern_match out;
 
 			for (auto& arg : args) {
-				out.pattern.push_back(pattern_tokens::variable(arg));
+				out.pattern.push_back(make_pattern_token(arg));
 				if (&arg != &args.back()) {
-					out.pattern.push_back(pattern_tokens::oper(","));
+					out.pattern.push_back(make_pattern_token(","));
 				}
 			}
 
@@ -391,9 +391,7 @@ namespace mycelium {
 			std::string out = "conditional ";
 			out += name.string;
 			out += '(';
-			for (const auto & arg : args.pattern) {
-				out += arg.to_string();
-			}
+			out += args.to_string();
 			out += ')';
 			out += ": ";
 			for (int i = 0; i < ret.size(); i++) {

@@ -6,6 +6,8 @@
 int main() {
 	bool tests_passed = true;
 
+	mycelium::show_debug_lines = false;
+
 	if (!test_pattern_match()) {
 		tests_passed = false;
 	}
