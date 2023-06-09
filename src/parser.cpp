@@ -223,7 +223,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_sing
 std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_tokens(const std::vector<token>& tks) {
 
 	if (show_debug_lines) {
-		std::cout << "Getting Expression From: " << tokens_to_string(tks) << "\n";
+		std::cout << "\n\nGetting Expression From: " << tokens_to_string(tks) << "\n";
 	}
 
 	if (tks.empty()) {
@@ -268,6 +268,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 		return get_function(tks, tmp);
 	}
 
+	std::vector<std::shared_ptr<operator_use>> matched_operators;
 	for (auto& op : operators) {
 		pattern_match op_use_pattern = this->generate_pattern_from_function(op, tks);
 		if (!op_use_pattern.pattern.empty()) {
@@ -276,8 +277,25 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 			}
 		}
 		if (op->args.is_match(op_use_pattern)) {
-			return std::make_shared<operator_use>(op, op_use_pattern.get_expressions());
+			matched_operators.push_back(std::make_shared<operator_use>(op, op_use_pattern.get_expressions()));
 		}
+	}
+
+	if (!matched_operators.empty()) {
+		/// Note that we find the highest proirity here althogh the smallest priority is computed first. E.G. int + int has priority of 50 while int = int has priority of 99.
+		/// This is because we do a reverse search. We find the highest priority as the first search element then the next highest and so on. But we execute the last found operator first.
+		/// For example, 'a = b + c' we find "int = int" and then we compress "b + c" into int and so the result is "a = (b + c)". Hope this makes sense.
+		auto& highest_priority = matched_operators.front();
+
+		/// Find the matched operator with the highest priority. This ensures we dont do silly things like treat "a = b + c" as "(a = b) + c" which was happening before.
+		/// TODO: Allow users to define proirity
+		for (auto& oper : matched_operators) {
+			if (oper->op->priority > highest_priority->op->priority) {
+				highest_priority = oper;
+			}
+		}
+
+		return highest_priority;
 	}
 
 	if (tks[1].string == ".") {
