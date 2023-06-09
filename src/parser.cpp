@@ -6,7 +6,7 @@
 #include "parser.h"
 
 
-bool spam_debug_output = mycelium::show_debug_lines && false;
+bool spam_debug_output = mycelium::show_debug_lines && true;
 
 std::vector<std::string> mycelium::parser::program_args = {};
 
@@ -142,10 +142,15 @@ void mycelium::parser::parse() {
 std::shared_ptr<mycelium::pattern_token> mycelium::parser::get_pattern_token(const std::vector<mycelium::token>& tks, int& index) {
 	token tk = tks[index++];
 	if (tk.type == ttype) {
-		/// Still not sure what the right thing to do about types is but
-		/// I think we should just treat them like string in this case
-		warn("Using type as variable creation", tk);
-		return make_pattern_token(std::make_shared<variable>(tks[++index], type::types[type::validate_type(tk)]));
+		if (index < tks.size() && tks[index].type == word) {
+			/// Still not sure what the right thing to do about types is but I think is okay
+			warn("Using type as variable creation", tk);
+			return make_pattern_token(current_scope->make_variable(tks[index++], type::types[type::validate_type(tk)]));
+		}
+		else {
+			warn("Using type as operator: " + tk.string, tk);
+			return make_pattern_token(tk.string);
+		}
 	} else if (tk.type == word) {
 		std::shared_ptr<mycelium::variable> var = get_word_variable(tk);
 		if (var.get()) {
@@ -238,8 +243,9 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 		return {};
 	}
 
-	if (tks.size() == 1) {
+	if (tks.size() == 1 || tks[0].type == ttype) {
 		/// If all we have is a single token we want to try to match that to a pattern or return that as either a variable or nothing
+		/// or if we have a type we want to still treat it as a variable, just a new one.
 		int tmp = 0;
 		auto pt = get_pattern_token(tks, tmp);
 		if (pt->type == pattern_token_type::pt_expr) {

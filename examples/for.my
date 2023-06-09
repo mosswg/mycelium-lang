@@ -1,6 +1,5 @@
 func main {
-	int a;
-	for (a in 0 .. 5) {
+	for (int a in 0 .. 5) {
 		println(a)
 	}
 }
