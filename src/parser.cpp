@@ -6,6 +6,8 @@
 #include "parser.h"
 
 
+bool spam_debug_output = mycelium::show_debug_lines && false;
+
 std::vector<std::string> mycelium::parser::program_args = {};
 
 template <typename T>
@@ -142,7 +144,8 @@ std::shared_ptr<mycelium::pattern_token> mycelium::parser::get_pattern_token(con
 	if (tk.type == ttype) {
 		/// Still not sure what the right thing to do about types is but
 		/// I think we should just treat them like string in this case
-		   return make_pattern_token(tk.string);
+		warn("Using type as variable creation", tk);
+		return make_pattern_token(std::make_shared<variable>(tks[++index], type::types[type::validate_type(tk)]));
 	} else if (tk.type == word) {
 		std::shared_ptr<mycelium::variable> var = get_word_variable(tk);
 		if (var.get()) {
@@ -200,8 +203,11 @@ mycelium::pattern_match mycelium::parser::get_pattern_from_tokens(int start_inde
 
 mycelium::pattern_match mycelium::parser::get_pattern_from_tokens(const std::vector<token>& tks) {
 	pattern_match pattern;
-	for (int i = 0; i < tks.size(); i++) {
-		pattern.pattern.push_back(get_pattern_token(tks, i));
+	for (int i = 0; i < tks.size();) {
+		std::cout << "getting pt from " << tks[i].string << "\n";
+		auto pt = get_pattern_token(tks, i);
+		std::cout << "got pt: " << pt->to_string() << "\n";
+		pattern.pattern.push_back(pt);
 	}
 
 	return pattern;
@@ -222,8 +228,8 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_sing
 
 std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_tokens(const std::vector<token>& tks) {
 
-	if (show_debug_lines) {
-		std::cout << "\n\nGetting Expression From: " << tokens_to_string(tks) << "\n";
+	if (spam_debug_output) {
+		std::cout << "Getting Expression From: " << tokens_to_string(tks) << "\n";
 	}
 
 	if (tks.empty()) {
@@ -263,6 +269,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 		return get_expression_from_tokens(out);
 	}
 
+	/// TODO: This should support more than just the second token. E.G. 'list_of_functions[0]()' should be supported. Although we need to do a lot of work before we can have lists of functions
 	if (tks[1].string == "(" && tks.back().string == ")") {
 		int tmp = 0;
 		return get_function(tks, tmp);
@@ -298,8 +305,10 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 		return highest_priority;
 	}
 
-	if (tks[1].string == ".") {
-		return get_object_function(tks, 0);
+	auto obj_func = get_object_function(tks, 0);
+	if (obj_func.get()) {
+		std::cout << "gotobj: " << obj_func->to_string() << "\n";
+		return obj_func;
 	}
 
 
@@ -336,6 +345,9 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 
 	// Don't check if there's nothing to check!
 	if (!remaining_line_tokens.empty()) {
+		if (spam_debug_output) {
+			std::cout << "checking for ops: " << token_vec_to_string(remaining_line_tokens) << "\n";
+		}
 		std::shared_ptr<expression> op = get_expression_from_tokens(remaining_line_tokens);
 
 		if (op) {
@@ -378,6 +390,9 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 
 			/// Check again for operators
 			remaining_line_tokens = get_tokens_until_newline(tokens, index);
+			if (spam_debug_output) {
+				std::cout << "checking again for ops: " << token_vec_to_string(remaining_line_tokens) << "\n";
+			}
 			std::shared_ptr<expression> op = get_expression_from_tokens(remaining_line_tokens);
 
 			if (op) {
@@ -395,6 +410,9 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 			if (current_token.string == "(") {
 				index--;
 				std::vector<token> tokens_inside_grouping = get_tokens_in_parentheses(tokens, index);
+				if (spam_debug_output) {
+					std::cout << "checking for ops in grouping: " << token_vec_to_string(tokens_inside_grouping) << "\n";
+				}
 				std::shared_ptr<expression> op = get_expression_from_tokens(tokens_inside_grouping);
 
 				for (auto& tk : tokens_inside_grouping) {
@@ -703,6 +721,9 @@ std::shared_ptr<mycelium::return_from_function> mycelium::parser::parse_return(c
 			throw_error("Returning Multiple Values is Not Yet Supported", remaining_line_tokens[0]);
 		}
 
+		if (spam_debug_output) {
+			std::cout << "parsing return expression: " << token_vec_to_string(remaining_line_tokens) << "\n";
+		}
 		std::shared_ptr<expression> value = get_expression_from_tokens(remaining_line_tokens);
 
 		if (!value.get()) {
@@ -842,6 +863,9 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 	if (landmarks.empty()) {
 		landmark_chunks.emplace_back();
 		pattern_match out;
+		if (spam_debug_output) {
+			std::cout << "creating expression from tokens in getpat: " << token_vec_to_string(tks) << "\n";
+		}
 		std::shared_ptr<expression> expr = get_expression_from_tokens(tks);
 		if (expr) {
 			out.pattern.push_back(make_pattern_token(expr));
@@ -883,6 +907,9 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 	std::vector<std::shared_ptr<expression>> landmark_chunk_expressions;
 
 	for (int i = 0; i < landmark_chunks.size(); i++) {
+		if (spam_debug_output) {
+			std::cout << "creating expression from chunk: " << token_vec_to_string(landmark_chunks[i]) << "\n";
+		}
 		std::shared_ptr<expression> expr = get_expression_from_tokens(landmark_chunks[i]);
 		if (!expr) {
 			/// If we get an invalid expression then the pattern is not valid
@@ -905,7 +932,7 @@ mycelium::pattern_match mycelium::parser::generate_pattern_from_function(const s
 	}
 
 	if (show_debug_lines) {
-		std::cout << "got pattern: " << out.to_string() << "\n";
+		// std::cout << "got pattern: " << out.to_string() << "\n";
 	}
 
 	return out;
@@ -1175,6 +1202,9 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_object_function(cons
 					new_function_tokens.push_back(tk);
 				}
 			}
+			if (!found_seperator) {
+				return {};
+			}
 			return get_object_function(func, new_function_tokens, new_other_tokens);
 		}
 
@@ -1215,18 +1245,28 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_object_function(cons
 		}
 	}
 
+	if (!found_seperator) {
+		return {};
+	}
+
 	if (object_tokens.empty()) {
-		throw_error("Stray dot!", tks[0]);
+		/// TODO: Invalid object function. (Should we treat this as an error and do some more checks before calling this function
+		return {};
 	}
 
 	if (function_call_tokens.empty()) {
-		throw_error("Stray dot!", tks.back());
+		/// TODO: Invalid object function. (Should we treat this as an error and do some more checks before calling this function
+		return {};
 	}
 
 	if (multiple_seperators && other_tokens.empty()) {
-		throw_error("Stray dot!", tks.back());
+		/// TODO: Invalid object function. (Should we treat this as an error and do some more checks before calling this function
+		return {};
 	}
 
+	if (spam_debug_output) {
+		std::cout << "getting object in object function: " << token_vec_to_string(object_tokens) << "\n";
+	}
 	std::shared_ptr<expression> object = get_expression_from_tokens(object_tokens);
 
 	if (!object.get()) {
@@ -1237,7 +1277,13 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_object_function(cons
 				out += " ";
 			}
 		}
-		throw_error("Unknown Object " + out, object_tokens[0]);
+		/// FIXME: This really should be an error. However we are checking everything for object functions. This means that we have a soft fail.
+		/// Meaning if we don't find an object or function we assume no error has taken place and continue trying to figure out what the expression should be.
+		/// For example, 'string a = b.to_string()' would try to match 'string a = b' as an object with the member function 'to_string'. What we really want is 'string a = (b.to_string())'.
+		/// I think this is an issue higher up (calling get_expression_from_tokens when it is not strictly needed).
+		/// This behavior does not produce any error in functionality but if user produces an error in the mycelium code (E.G. trying to use a member function on a non-existant object) they will get no help from this when they should.
+		warn("Unknown Object " + out, object_tokens[0]);
+		return {};
 	}
 
 
@@ -1250,6 +1296,9 @@ std::shared_ptr<mycelium::expression> mycelium::parser::parse_expression(const s
 
 	if (index >= tokens.size() || tokens[index].string != "(") {
 		std::vector<token> line_tokens = get_tokens_until_newline(tokens, index);
+		if (spam_debug_output) {
+			std::cout << "getting expression from line in parse expression: " << token_vec_to_string(line_tokens) << "\n";
+		}
 		std::shared_ptr<expression> expr = get_expression_from_tokens(line_tokens);
 		if (expr.get()) {
 			return expr;
@@ -1742,7 +1791,6 @@ std::vector<std::shared_ptr<mycelium::operatr>> mycelium::parser::create_base_op
 	std::vector<std::shared_ptr<operatr>> out;
 
 	/// TODO: Make these priority value not just made up
-
 	/// Math
 	out.push_back(
 			std::make_shared<builtin_operator>("+", std::vector<token>({token("int"), token("a"), token("+"), token("int"), token("b")}), "builtin_add_int", std::vector<type>({type::integer}), builtin_add_int, 20, generate_new_scope())
@@ -1922,6 +1970,17 @@ std::shared_ptr<mycelium::variable> builtin_for_conditional(std::vector<std::sha
 	return mycelium::constant::make_constant(out);
 }
 
+std::shared_ptr<mycelium::variable> builtin_for_index_conditional(std::vector<std::shared_ptr<mycelium::expression>>& args) {
+	std::vector<std::shared_ptr<mycelium::variable>> inside_args({});
+	bool out = false;
+	for (int i = args[2]->get_value()->value; i < args[3]->get_value()->value; i++) {
+		std::static_pointer_cast<mycelium::variable>(args[1])->value = i;
+		args[0]->get_value()->fn_ptr->call(inside_args);
+		out = true;
+	}
+	return mycelium::constant::make_constant(out);
+}
+
 std::vector<std::shared_ptr<mycelium::conditional>> mycelium::parser::create_base_conditionals() {
 	std::vector<std::shared_ptr<conditional>> out;
 
@@ -1935,6 +1994,12 @@ std::vector<std::shared_ptr<mycelium::conditional>> mycelium::parser::create_bas
 	out.push_back(
 			std::make_shared<mycelium::builtin_conditional>("while", std::vector<mycelium::type>({type::boolean}),
 															builtin_while_conditional, generate_new_scope())
+	);
+
+
+	out.push_back(
+			std::make_shared<mycelium::builtin_conditional>("for", std::vector<token>({token("int"), token("a"), token("in"), token("int"), token("b"), token(".."), token("int"), token("c")}),
+															builtin_for_index_conditional, generate_new_scope())
 	);
 
 	return out;
