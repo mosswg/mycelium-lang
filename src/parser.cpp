@@ -1206,7 +1206,11 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_object_function(cons
 		return func;
 	}
 	else {
-		throw_error("Unknown member function of " + object->to_string(), function_tokens[0]);
+		std::string function_as_string;
+		for (auto& tk : function_tokens) {
+			function_as_string += tk.string;
+		}
+		throw_error("Unknown member function \"" + function_as_string + "\" of " + object->to_string(), function_tokens[0]);
 		return {};
 	}
 }
