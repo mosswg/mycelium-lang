@@ -330,6 +330,10 @@ namespace mycelium {
 			std::vector<std::shared_ptr<variable>> var_args;
 			for (auto& arg : args) {
 				var_args.push_back(arg->get_value());
+				// If we get an invalid value throw an error
+				if (!var_args.back().get()) {
+					throw_error("Failed to get value from \"" + arg->to_string() + "\" in \"" + this->to_string() + "\"");
+				}
 			}
 			op->call(var_args);
 		}

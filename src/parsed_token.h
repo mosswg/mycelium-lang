@@ -6,6 +6,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <unordered_map>
 
 
 namespace mycelium {
@@ -109,6 +110,10 @@ namespace mycelium {
 		variable(mycelium::token name, std::shared_ptr<std::vector<std::shared_ptr<variable>>> list_ptr) : expression(std::move(name)), type(type::list), list_ptr(std::move(list_ptr)) {}
 
 		variable(mycelium::token name, const std::vector<std::shared_ptr<variable>>& list_ptr) : expression(std::move(name)), type(type::list), list_ptr(std::make_shared<std::vector<std::shared_ptr<variable>>>(list_ptr)) {}
+
+		variable(mycelium::token name, std::shared_ptr<variable> other) : expression(std::move(name)), type(other->type) {
+			set_value(other);
+		}
 
 		~variable() override {
 			this->destroy();
@@ -287,8 +292,51 @@ namespace mycelium {
 	public:
 		std::shared_ptr<scope> parent_scope;
 		std::vector<std::shared_ptr<variable>> variables = {};
+		std::unordered_map<int, std::shared_ptr<variable>> registered_variables = {};
+		int next_available_reg_index = 0;
 
 		explicit scope(std::shared_ptr<scope> parent_scope) : parent_scope(std::move(parent_scope)) {}
+
+		/// I think this is how I want to do this. I don't really want to create the variable until were actually executing the program but I think this is an okay compromise.
+		/// Register is kind of a weird name but thats okay
+
+		int register_variable(token name, type type) {
+			auto var = std::make_shared<variable>(name, type);
+			// TODO: I think we should explicitly allow multiple of the same name here but disallow once we are converting to regular variable. Make sure thats right.
+			int id = next_available_reg_index++;
+			this->registered_variables.emplace(id, var);
+			return id;
+		}
+
+		void unregister_variable(int id, token name) {
+			if (id == -1 || registered_variables.find(id) == registered_variables.end()) {
+				return;
+			}
+			auto& var = this->registered_variables[id];
+			if (!var.get() || var->token.type == invalid || var->token != name) {
+				warn("Unregister: Invalid registered variable with id: " + std::to_string(id));
+				return;
+			}
+			this->registered_variables.erase(id);
+		}
+
+
+		std::shared_ptr<variable> make_variable_from_registered_variable(int id, std::shared_ptr<expression> initial_value = {}) {
+			if (id == -1 || registered_variables.find(id) == registered_variables.end()) {
+				warn("Unknown registered variable id: " + std::to_string(id));
+				return {};
+			}
+			auto var = this->registered_variables[id];
+			if (get_variable_in_current_scope_only(var->token.string)) {
+				throw_error("Cannot create variable from registered variabled with name \"" + var->token.string + "\" because a variable with that name already exists");
+			}
+			if (initial_value.get()) {
+				var->set_value(initial_value->get_value());
+			}
+			this->variables.push_back(var);
+			this->registered_variables.erase(id);
+			return var;
+		}
 
 
 		std::shared_ptr<variable> make_variable(std::shared_ptr<variable> out) {
@@ -298,6 +346,11 @@ namespace mycelium {
 			this->variables.push_back(out);
 			return out;
 		}
+
+		std::shared_ptr<variable> make_variable(const mycelium::token& name, std::shared_ptr<variable> value) {
+			return make_variable(std::make_shared<variable>(name, value));
+		}
+
 		std::shared_ptr<variable> make_variable(const mycelium::token& name, const mycelium::type& type) {
 			return make_variable(std::make_shared<variable>(name, type));
 		}
@@ -324,6 +377,12 @@ namespace mycelium {
 					return var;
 				}
 			}
+			// Allow referencing registered variables
+			for (auto& reg_var : registered_variables) {
+				if (reg_var.second->token.string == name) {
+					return reg_var.second;
+				}
+			}
 			if (parent_scope) {
 				return parent_scope->get_variable(name);
 			}
@@ -338,6 +397,7 @@ namespace mycelium {
 			}
 			return {};
 		}
+
 
 		std::string to_string() const {
 			std::string out;
@@ -355,6 +415,7 @@ namespace mycelium {
 			return out;
 		}
 	};
+
 
 	class constant : public variable {
 	public:
@@ -409,6 +470,72 @@ namespace mycelium {
 		}
 	};
 
+
+	class variable_creation : public expression {
+
+	public:
+		mycelium::type var_type;
+		int registered_variable_id = -1;
+		std::shared_ptr<expression> var_value;
+		std::shared_ptr<scope> var_scope;
+		std::shared_ptr<variable> var;
+
+
+		variable_creation(mycelium::token var_name, std::shared_ptr<expression> initial_value, std::shared_ptr<scope> scope) : expression(var_name), var_type(initial_value->get_type()), var_value(initial_value), var_scope(scope) {
+			registered_variable_id = scope->register_variable(var_name, var_type);
+		}
+
+		variable_creation(mycelium::token var_name, mycelium::type var_type, std::shared_ptr<scope> scope) : expression(var_name), var_type(var_type), var_scope(scope) {
+			registered_variable_id = scope->register_variable(var_name, var_type);
+		}
+
+		~variable_creation() {
+			if (registered_variable_id != -1) {
+				var_scope->unregister_variable(registered_variable_id, token);
+			}
+		}
+
+		std::string to_string() const override {
+			std::string out = "variable creation of " + var_type.to_string() + " " + token.string + " " + std::to_string(registered_variable_id) + " ";
+			if (var_value.get()) {
+				out += " <- " + var_value->to_string();
+			}
+			return out;
+		}
+
+		void execute() override {
+			if (var_value.get()) {
+				var = var_scope->make_variable_from_registered_variable(registered_variable_id, var_value);
+			}
+			else {
+				var = var_scope->make_variable_from_registered_variable(registered_variable_id);
+			}
+			registered_variable_id = -1;
+		}
+
+		bool is_similar(std::shared_ptr<parsed_token> compare) override {
+			return false;
+		}
+
+		std::shared_ptr<variable> get_value() override {
+			// UNSURE: Should execute always be called before this function. As it stands execute is only called in the case where variable creation is alone. E.G. `int a`k.
+			if (!var.get()) {
+				this->execute();
+			}
+			return var;
+		}
+
+		mycelium::type get_type() override {
+			if (var.get()) {
+				return var->get_type();
+			}
+			else if (var_value.get()) {
+				return var_value->get_type();
+			}
+
+			return var_type;
+		}
+	};
 
 
 }

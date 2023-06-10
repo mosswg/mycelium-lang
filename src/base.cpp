@@ -54,10 +54,13 @@ std::string mycelium::token::boolean_true = "true";
 std::string mycelium::token::boolean_false = "false";
 
 void mycelium::throw_error(const std::string& error) {
-	std::cerr << "ERROR: " << error << std::endl;
+	std::cerr << colored_text::RED << "ERROR: " << colored_text::RESET << error << std::endl;
 	exit(1);
 }
 
+void mycelium::warn(const std::string& warning) {
+	std::cerr << colored_text::YELLOW << "WARNING: " << colored_text::RESET << warning << std::endl;
+}
 
 void mycelium::initialize_static_values() {
 

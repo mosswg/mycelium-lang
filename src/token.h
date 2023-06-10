@@ -71,6 +71,10 @@ namespace mycelium {
 		bool operator==(const token& tk) const {
 			return this->type == tk.type && this->string == tk.string;
 		}
+
+		bool operator!=(const token& tk) const {
+			return this->type != tk.type || this->string != tk.string;
+		}
 	};
 
 

@@ -142,15 +142,8 @@ void mycelium::parser::parse() {
 std::shared_ptr<mycelium::pattern_token> mycelium::parser::get_pattern_token(const std::vector<mycelium::token>& tks, int& index) {
 	token tk = tks[index++];
 	if (tk.type == ttype) {
-		if (index < tks.size() && tks[index].type == word) {
-			/// Still not sure what the right thing to do about types is but I think is okay
-			warn("Using type as variable creation", tk);
-			return make_pattern_token(current_scope->make_variable(tks[index++], type::types[type::validate_type(tk)]));
-		}
-		else {
 			warn("Using type as operator: " + tk.string, tk);
 			return make_pattern_token(tk.string);
-		}
 	} else if (tk.type == word) {
 		std::shared_ptr<mycelium::variable> var = get_word_variable(tk);
 		if (var.get()) {
@@ -243,7 +236,7 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 		return {};
 	}
 
-	if (tks.size() == 1 || tks[0].type == ttype) {
+	if (tks.size() == 1) {
 		/// If all we have is a single token we want to try to match that to a pattern or return that as either a variable or nothing
 		/// or if we have a type we want to still treat it as a variable, just a new one.
 		int tmp = 0;
@@ -290,7 +283,8 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 			}
 		}
 		if (op->args.is_match(op_use_pattern)) {
-			matched_operators.push_back(std::make_shared<operator_use>(op, op_use_pattern.get_expressions()));
+			auto gexp = op_use_pattern.get_expressions();
+			matched_operators.push_back(std::make_shared<operator_use>(op, gexp));
 		}
 	}
 
@@ -308,6 +302,14 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 			}
 		}
 
+		if (spam_debug_output) {
+			std::cout << "Using: " << highest_priority->to_string() << "\n";
+			auto oexp = highest_priority->args;
+			for (const auto& exp : oexp) {
+				std::cout << "\texp: " << exp->to_string() << "\n";
+			}
+		}
+
 		return highest_priority;
 	}
 
@@ -317,6 +319,9 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 		return obj_func;
 	}
 
+	if (tks.size() == 2 && tks[0].type == ttype) {
+		return std::make_shared<variable_creation>(tks[1], type::types[type::validate_type(tks[0])], current_scope);
+	}
 
 	return {};
 }
@@ -383,22 +388,7 @@ std::shared_ptr<mycelium::parsed_token> mycelium::parser::parse_token(const std:
 		case string_literal:
 			return parse_expression(tokens, index);
 		case ttype: {
-			int type = type::validate_type(current_token);
-
-			if (next_token.type != token_type::word) {
-				throw_error("Type with no following variable name found", current_token);
-			}
-
-			std::shared_ptr<variable> var = parse_variable(tokens, index, type);
-			if (show_debug_lines) {
-				std::cout << "Got variable: " << var->type.name << ": " << var->token.string << "\n";
-			}
-
-			/// Check again for operators
-			remaining_line_tokens = get_tokens_until_newline(tokens, index);
-			if (spam_debug_output) {
-				std::cout << "checking again for ops: " << token_vec_to_string(remaining_line_tokens) << "\n";
-			}
+			warn("Misplaced Type Token", current_token);
 			std::shared_ptr<expression> op = get_expression_from_tokens(remaining_line_tokens);
 
 			if (op) {
