@@ -1980,6 +1980,18 @@ std::shared_ptr<mycelium::variable> builtin_for_index_conditional(std::vector<st
 	return mycelium::constant::make_constant(out);
 }
 
+
+std::shared_ptr<mycelium::variable> builtin_for_list_conditional(std::vector<std::shared_ptr<mycelium::expression>>& args) {
+	std::vector<std::shared_ptr<mycelium::variable>> inside_args({});
+	bool out = false;
+	for (auto& i : *args[2]->get_value()->list_ptr) {
+		std::static_pointer_cast<mycelium::variable>(args[1])->set_value(i->get_value());
+		args[0]->get_value()->fn_ptr->call(inside_args);
+		out = true;
+	}
+	return mycelium::constant::make_constant(out);
+}
+
 std::vector<std::shared_ptr<mycelium::conditional>> mycelium::parser::create_base_conditionals() {
 	std::vector<std::shared_ptr<conditional>> out;
 
@@ -1999,6 +2011,18 @@ std::vector<std::shared_ptr<mycelium::conditional>> mycelium::parser::create_bas
 	out.push_back(
 			std::make_shared<mycelium::builtin_conditional>("for", std::vector<token>({token("int"), token("a"), token("in"), token("int"), token("b"), token(".."), token("int"), token("c")}),
 															builtin_for_index_conditional, generate_new_scope())
+	);
+
+
+	out.push_back(
+			std::make_shared<mycelium::builtin_conditional>("for", std::vector<token>({token("int"), token("a"), token("in"), token("list"), token("b")}),
+															builtin_for_list_conditional, generate_new_scope())
+	);
+
+
+	out.push_back(
+			std::make_shared<mycelium::builtin_conditional>("for", std::vector<token>({token("string"), token("a"), token("in"), token("list"), token("b")}),
+															builtin_for_list_conditional, generate_new_scope())
 	);
 
 	return out;

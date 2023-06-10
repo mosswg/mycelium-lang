@@ -1,0 +1,10 @@
+func main {
+	list l
+	l.push("hello")
+	l.push("hi")
+	l.push("hey there")
+
+	for (string element in l) {
+		println(element)
+	}
+}
