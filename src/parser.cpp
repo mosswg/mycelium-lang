@@ -315,7 +315,6 @@ std::shared_ptr<mycelium::expression> mycelium::parser::get_expression_from_toke
 
 	auto obj_func = get_object_function(tks, 0);
 	if (obj_func.get()) {
-		std::cout << "gotobj: " << obj_func->to_string() << "\n";
 		return obj_func;
 	}
 

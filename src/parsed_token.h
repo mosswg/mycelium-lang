@@ -321,6 +321,7 @@ namespace mycelium {
 		}
 
 
+
 		std::shared_ptr<variable> make_variable_from_registered_variable(int id, std::shared_ptr<expression> initial_value = {}) {
 			if (id == -1 || registered_variables.find(id) == registered_variables.end()) {
 				warn("Unknown registered variable id: " + std::to_string(id));
@@ -485,11 +486,13 @@ namespace mycelium {
 			registered_variable_id = scope->register_variable(var_name, var_type);
 		}
 
-		variable_creation(mycelium::token var_name, mycelium::type var_type, std::shared_ptr<scope> scope) : expression(var_name), var_type(var_type), var_scope(scope) {
+		variable_creation(mycelium::token var_name, mycelium::type var_type, std::shared_ptr<scope> scope) : expression(var_name), var_type(var_type), var_scope(scope), var_value({}) {
 			registered_variable_id = scope->register_variable(var_name, var_type);
 		}
 
 		~variable_creation() {
+			// NOTE: If we do not call execute. Destructor will cause a SIGSEGV error.
+			// This can happen if this is passed directly to a call instead of calling 'get_value' then passing the result. Like I just fixed smh. What kind of idiot would make that mistake lmao.
 			if (registered_variable_id != -1) {
 				var_scope->unregister_variable(registered_variable_id, token);
 			}

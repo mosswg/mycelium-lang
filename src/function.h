@@ -470,7 +470,13 @@ namespace mycelium {
 		}
 
 		void execute() override {
-			cn->call(args);
+			std::vector<std::shared_ptr<expression>> var_args;
+			/// NOTE: We are getting the value of the body. However, since we are storing the body as a function variable rather than a function call this does not call the function instead it simply returns the function variable as a shared ptr
+			/// If we change how we are storing the 'exec' function we might need to change this.
+			for (auto& arg : args) {
+				var_args.push_back(arg->get_value());
+			}
+			cn->call(var_args);
 		}
 
 		bool is_similar(std::shared_ptr<parsed_token> compare) override {
