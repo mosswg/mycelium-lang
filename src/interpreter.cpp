@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 	std::vector<std::string> program;
 
 	while (true) {
-		getline(in_file, line);
+		std::getline(in_file, line);
 		program.emplace_back(line);
 		if (!in_file.good()) {
 			break;

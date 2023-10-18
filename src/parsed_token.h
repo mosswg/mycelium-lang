@@ -73,6 +73,7 @@ namespace mycelium {
 		std::shared_ptr<std::string> str;
 		std::shared_ptr<mycelium::function> fn_ptr;
 		std::shared_ptr<std::fstream> file;
+		bool good; // used for file
 		std::shared_ptr<std::vector<std::shared_ptr<variable>>> list_ptr;
 
 		variable(mycelium::token name, const mycelium::type& type) : expression(std::move(name)), type(type) {
@@ -85,6 +86,7 @@ namespace mycelium {
 			if (type == type::file) {
 				this->str = std::make_shared<std::string>();
 				this->file = std::make_shared<std::fstream>();
+				this->good = true;
 			}
 			else if (type == type::list) {
 				this->list_ptr = std::make_shared<std::vector<std::shared_ptr<variable>>>();
@@ -207,6 +209,7 @@ namespace mycelium {
 				else if (this->type == type::file) {
 					*this->str = *other.str;
 					this->file = std::make_shared<std::fstream>(*other.str, std::fstream::in | std::fstream::out);
+					this->good = other.good;
 				}
 			}
 			else if (other.type == type::func) {
@@ -261,9 +264,19 @@ namespace mycelium {
 			}
 			else if (type == type::file) {
 				if (this->str.get()) {
-					return "file(" + *this->str + ")";
+					if (this->good) {
+						return "file(" + *this->str + ")";
+					}
+					else {
+						return "file*(" + *this->str + ")";
+					}
 				}
-				return "file";
+				if (this->good) {
+					return "file";
+				}
+				else {
+					return "file*";
+				}
 			}
 			else if (type == type::boolean) {
 				return this->value ? "true" : "false";

@@ -1465,13 +1465,15 @@ std::shared_ptr<mycelium::variable> builtin_exit(std::vector<std::shared_ptr<myc
 std::shared_ptr<mycelium::variable> builtin_file_get_line(std::vector<std::shared_ptr<mycelium::variable>>& args) {
 	std::string line;
 
-	getline(*args[0]->file, line);
+	std::getline(*args[0]->file, line);
+
+	args[0]->good = std::ios::goodbit;
 
 	return mycelium::constant::make_constant(line);
 }
 
 std::shared_ptr<mycelium::variable> builtin_file_has_line(std::vector<std::shared_ptr<mycelium::variable>>& args) {
-	return mycelium::constant::make_bool_constant(args[0]->file->good());
+	return mycelium::constant::make_bool_constant(args[0]->good);
 }
 
 
@@ -1583,6 +1585,10 @@ std::vector<std::shared_ptr<mycelium::function>> mycelium::parser::create_base_f
 
 	out.push_back(
 			std::make_shared<builtin_function>("println", std::vector<type>({}), std::vector<type>({}), builtin_println, generate_new_scope())
+	);
+
+	out.push_back(
+			std::make_shared<builtin_function>("println", std::vector<type>({}), std::vector<type>({type::file}), builtin_println, generate_new_scope())
 	);
 
 
@@ -1985,7 +1991,7 @@ std::shared_ptr<mycelium::variable> builtin_for_list_conditional(std::vector<std
 	std::vector<std::shared_ptr<mycelium::variable>> inside_args({});
 	bool out = false;
 	for (auto& i : *args[2]->get_value()->list_ptr) {
-		std::static_pointer_cast<mycelium::variable>(args[1])->set_value(i->get_value());
+		std::static_pointer_cast<mycelium::variable>(args[1]->get_value())->set_value(i->get_value());
 		args[0]->get_value()->fn_ptr->call(inside_args);
 		out = true;
 	}
