@@ -16,7 +16,7 @@ namespace mycelium {
 
 		std::vector<std::string> lines;
 
-		int current_token_index = 0;
+		size_t current_token_index = 0;
 
 		explicit tokenizer(std::vector<std::string> lines) : lines(std::move(lines)) {}
 

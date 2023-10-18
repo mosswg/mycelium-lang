@@ -28,7 +28,7 @@ void mycelium::tokenizer::tokenize() {
 
 	int line_index = 1;
 	for (auto& line : split_lines) {
-		for (int i = 0; i < line.size(); i++) {
+		for (size_t i = 0; i < line.size(); i++) {
 			std::string token_string = line[i];
 			// Check for comments
 			if (token_string.size() == 2 && token_string[0] == '/' && token_string[1] == '/') {
@@ -174,10 +174,10 @@ std::vector<mycelium::token> mycelium::tokenizer::tokens_until_newline() {
 	int pushed_index = this->current_token_index;
 	std::vector<token> out;
 	/// Decrementing so that we get the current token
-	int count, current_line = this->tokens[--current_token_index].line;
+	int current_line = this->tokens[--current_token_index].line;
 	/// If we're on the last line we just want to return the remaining tokens
 	if (this->tokens[current_token_index - 1].line == this->tokens.back().line) {
-		for (int i = current_token_index; i < this->tokens.size(); i++) {
+		for (size_t i = current_token_index; i < this->tokens.size(); i++) {
 			if (tokens[i].string == ";") {
 				break;
 			}
@@ -189,7 +189,7 @@ std::vector<mycelium::token> mycelium::tokenizer::tokens_until_newline() {
 
 
 	token next;
-	for (count = 0; (next = this->get_next_token()).line == current_line && next.string != ";"; count++) {
+	for (;(next = this->get_next_token()).line == current_line && next.string != ";";) {
 		out.push_back(next);
 	}
 	this->current_token_index = pushed_index;

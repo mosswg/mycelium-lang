@@ -3,11 +3,13 @@ project(mycelium)
 
 if( BUILD_INTERPRETER )
 	add_compile_options("-Wunused-result")
+	add_compile_options("-Wall")
         add_executable(interpreter
                 src/base.cpp
                 src/interpreter.cpp
                 src/tokenizer.cpp
                 src/parser.cpp
+                src/function.cpp
                 )
 endif()
 

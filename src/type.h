@@ -40,7 +40,7 @@ namespace mycelium {
 		static std::vector<type> types;
 
 		static int validate_type(const mycelium::token& type) {
-			for (int i = 0; i < type::strings.size(); i++) {
+			for (size_t i = 0; i < type::strings.size(); i++) {
 				if (type::strings[i] == type.string) {
 					if (show_debug_lines) {
 						//    std::cout << "type \"" << type.string << "\" validated" << std::endl;

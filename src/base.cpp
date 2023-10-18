@@ -117,7 +117,7 @@ std::ostream& mycelium::operator<<(std::ostream& os, const std::vector<T>& dt) {
 		return os;
 	}
 
-	int i = 0;
+	size_t i = 0;
 
 	os << "{ ";
 
@@ -147,17 +147,17 @@ std::vector<std::string> mycelium::string_split(const std::string& str, const st
 
 	std::vector<std::string> out;
 
-	size_t pos;
-	size_t prev_pos = 0;
-	size_t min_pos;
+	long pos;
+	long prev_pos = 0;
+	long min_pos;
 	std::string split;
 
-	while (prev_pos < str.length()) {
+	while (prev_pos < (long)str.length()) {
 
 		min_pos = -1;
 
 		for (auto &comp: spl) {
-			if ((pos = str.find(comp, prev_pos)) != std::string::npos) {
+			if ((size_t)(pos = str.find(comp, prev_pos)) != std::string::npos) {
 				if (pos < min_pos || min_pos == -1) {
 					min_pos = pos;
 					split = comp;
@@ -177,7 +177,7 @@ std::vector<std::string> mycelium::string_split(const std::string& str, const st
 
 		prev_pos = min_pos + split.length();
 	}
-	if (min_pos >= str.length()) {
+	if ((size_t)min_pos >= str.length()) {
 		out.push_back(str.substr(prev_pos, min_pos - prev_pos));
 	}
 
@@ -187,7 +187,7 @@ std::vector<std::string> mycelium::string_split(const std::string& str, const st
 
 
 mycelium::token_type mycelium::token::find_type(const std::string &string) {
-	for (int type = 0; type < string_lists.size(); type++) {
+	for (size_t type = 0; type < string_lists.size(); type++) {
 		auto& token_string_list = string_lists[type];
 		if (mycelium::vector_contains(token_string_list, string)) {
 			return (token_type)type;
@@ -217,7 +217,7 @@ mycelium::token_type mycelium::token::find_type(const std::string &string) {
 }
 
 std::string mycelium::token::get_closing_grouping(const std::string &opening_grouping) {
-	for (int i = 0; i < token::grouping_strings.size(); i++) {
+	for (size_t i = 0; i < token::grouping_strings.size(); i++) {
 		if (token::grouping_strings[i] == opening_grouping) {
 			return token::grouping_strings[i + 1];
 		}
@@ -237,7 +237,7 @@ std::string mycelium::operatr::generate_name_from_context(std::vector<mycelium::
 		std::cout << context.size() << std::endl;
 	}
 
-	for (int i = 0; i < context.size(); i++) {
+	for (size_t i = 0; i < context.size(); i++) {
 		if (show_debug_lines) {
 			std::cout << "i: " << i << "\ttoken: " << context[i].string << std::endl;
 		}
@@ -305,7 +305,7 @@ std::string mycelium::function_to_string(const std::shared_ptr<mycelium::functio
 
 std::string mycelium::escape_string(std::string string) {
 	std::string out;
-	for (int i = 0; i < string.size(); i++) {
+	for (size_t i = 0; i < string.size(); i++) {
 		if (string[i] != '\\') {
 			out += string[i];
 			continue;

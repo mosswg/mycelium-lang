@@ -148,7 +148,7 @@ namespace mycelium {
 			/// HACK: This is a very stupid conversion in the sense that it doesn't care about anything other than types.
 			/// Might want to change this later.
 			std::vector<std::shared_ptr<variable>> out;
-			for (int i = 0; i < tks.size(); i++) {
+			for (size_t i = 0; i < tks.size(); i++) {
 				if (tks[i].type == ttype) {
 					int type_code = type::validate_type(tks[i]);
 					const mycelium::token& name = tks[i + 1];
@@ -499,7 +499,7 @@ namespace mycelium {
 			registered_variable_id = scope->register_variable(var_name, var_type);
 		}
 
-		variable_creation(mycelium::token var_name, mycelium::type var_type, std::shared_ptr<scope> scope) : expression(var_name), var_type(var_type), var_scope(scope), var_value({}) {
+		variable_creation(mycelium::token var_name, mycelium::type var_type, std::shared_ptr<scope> scope) : expression(var_name), var_type(var_type), var_value({}), var_scope(scope) {
 			registered_variable_id = scope->register_variable(var_name, var_type);
 		}
 
