@@ -56,7 +56,8 @@ void mycelium::tokenizer::tokenize() {
 			// Ignore all whitespace
 			if (type != whitespace) {
 				if (type == string_literal) {
-					tokens.emplace_back(type, token_string.substr(1, token_string.size() - 2), line_index);
+					std::string string = mycelium::escape_string(token_string.substr(1, token_string.size() - 2));
+					tokens.emplace_back(type, string , line_index);
 				}
 				else {
 					tokens.emplace_back(type, token_string, line_index);

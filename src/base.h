@@ -45,6 +45,8 @@ namespace mycelium {
 	template<typename T>
 	bool vector_contains(const std::vector<T> &vec, const T &con);
 
+	std::string escape_string(std::string string);
+
 
 
 

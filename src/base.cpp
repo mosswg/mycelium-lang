@@ -303,7 +303,47 @@ std::string mycelium::function_to_string(const std::shared_ptr<mycelium::functio
 }
 
 
+std::string mycelium::escape_string(std::string string) {
+	std::string out;
+	for (int i = 0; i < string.size(); i++) {
+		if (string[i] != '\\') {
+			out += string[i];
+			continue;
+		}
 
-	std::shared_ptr<mycelium::pattern_token> mycelium::make_pattern_token(const std::vector<mycelium::token>&) {
-		return std::make_shared<pattern_tokens::oper>("this doesn't work yet");
+		if (i + 1 >= string.size()) {
+			mycelium::throw_error("Stray backslash at end of string \"" + string + "\"");
+		}
+
+		switch (string[i + 1]) {
+			case 'n':
+				out += '\n';
+				break;
+			case 't':
+				out += '\t';
+				break;
+			case 'r':
+				out += '\r';
+				break;
+			case 'b':
+				out += '\b';
+				break;
+			case '0':
+				out += (char)0;
+				break;
+			case '\\':
+				out += '\\';
+				break;
+			case '"':
+				out += '"';
+				break;
+			case '\'':
+				out += '\'';
+				break;
+			default:
+				mycelium::warn("Unknown escape char: " + (char)(string[i + 1]));
+		}
+		i++;
 	}
+	return out;
+}
