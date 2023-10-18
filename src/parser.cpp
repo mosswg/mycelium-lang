@@ -2013,7 +2013,7 @@ std::shared_ptr<mycelium::variable> builtin_for_index_conditional(std::vector<st
 	std::vector<std::shared_ptr<mycelium::variable>> inside_args({});
 	bool out = false;
 	for (int i = args[2]->get_value()->value; i < args[3]->get_value()->value; i++) {
-		std::static_pointer_cast<mycelium::variable>(args[1])->value = i;
+		std::static_pointer_cast<mycelium::variable>(args[1]->get_value())->value = i;
 		args[0]->get_value()->fn_ptr->call(inside_args, return_value);
 		out = true;
 	}

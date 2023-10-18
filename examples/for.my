@@ -1,5 +1,5 @@
 func main {
-	for (int a in 0 .. 5) {
-		println(a)
+	for (int index in 0..100) {
+		println(index)
 	}
 }
